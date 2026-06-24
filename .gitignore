@@ -1,0 +1,80 @@
+## Core build outputs
+bin/
+obj/
+
+## IDE specific files and folders
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Data and local app secrets
+appsettings.Development.json
+secrets.json
+*.db
+*.db-shm
+*.db-wal
+
+## Packages and publish artifacts
+*.nupkg
+**/Properties/PublishProfiles/*.pubxml
+**/dist/
+**/out/
+
+## Operating System files
+Thumbs.db
+.DS_Store
+
+## ------------------------------------------------------------------
+## REACT NATIVE DEPENDENCIES & BUILD OUTPUTS
+## ------------------------------------------------------------------
+node_modules/
+.expo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+## Android specific
+android/app/build/
+android/.gradle/
+android/local.properties
+*.apk
+*.aar
+*.keystore
+!android/app/debug.keystore
+
+## iOS specific
+ios/Pods/
+ios/build/
+ios/DerivedData/
+*.xcworkspace
+!ios/Pods/Pods.xcodeproj
+*.moved-aside
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+## Metro Bundler and Cache
+.metro/
+.cache/
+.jest/
+coverage/
+
+## Environment variables (Tránh lộ API Key)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
