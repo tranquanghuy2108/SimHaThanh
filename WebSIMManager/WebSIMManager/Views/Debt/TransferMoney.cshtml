@@ -1,0 +1,253 @@
+﻿@model Models.ViewModels.TransferMoneyFilterModel;
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Phiếu chuyển tiền";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Phiếu chuyển tiền</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="row">
+                    <div class="col-sm-6 text-left">
+                        @* @if (role.Contains("Tạo mới phiếu chuyển tiền"))
+                        {
+                        <a class="btn btn-primary" asp-action="CreateTransferMoney" asp-controller="Debt">Thêm loại công nợ</a>
+                        } *@
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <form class="form-inline d-none d-sm-inline-block">
+                            <div class="input-group input-group-navbar">
+                                <input type="text" asp-for="keyword" class="form-control" placeholder="Nhập từ khóa..." aria-label="Search">
+                                <div class="input-group-append">
+                                    <button class="btn" type="submit" asp-action="DebtType" asp-controller="Debt">
+                                        <i class="align-middle" data-feather="search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-3">
+                <div class="col-12 rows">
+                    @if (role.Contains("Duyệt phiếu chuyển tiền"))
+                    {
+                        <a class="btn btn-primary m-3" onclick="OnApprovedTransferMoney(2,0);">Duyệt phiếu</a>
+                        <a class="btn btn-danger m-3" onclick="OnApprovedTransferMoney(3,0);">Hủy phiếu</a>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-3">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:2%">
+                            <input type="checkbox" value="" id="checkAll" onclick="OnClickCheckAll()">
+                            <input type="hidden" id="lstDebt">
+                        </th>
+                        <th>Mã phiếu</th>
+                        <th>Người chuyển</th>
+                        <th>Người nhận</th>
+                        <th>Số tiền chuyển</th>
+                        <th>Mô tả</th>
+                        <th>Ghi chú</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        foreach (var item in @ViewBag.DataView)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="checkbox" value="@item.Id" id="@item.Id" onclick="OnClickCheckBox(@item.Id)">
+                                </td>
+                                <td>@item.Code</td>
+                                <td>@item.RemittersId</td>
+                                <td>@item.ReceiverId</td>
+                                <td>@item.Amount.ToString("#,##0.##")</td>
+                                <td>@item.Description</td>
+                                <td>@item.Note</td>
+                                <td>@item.approvedStatus</td>
+                                <td class="table-action">
+                                    @if (role.Contains("Duyệt phiếu chuyển tiền"))
+                                    {
+                                        <a onclick="OnApprovedTransferMoney(2,@item.Id);" title="Duyệt phiếu chuyển tiền"><i class="align-middle fa fa-check"></i></a>
+                                        <a onclick="OnApprovedTransferMoney(3,@item.Id);" title="Hủy phiếu chuyển tiền"><i class="align-middle fa fa-times"></i></a>
+                                    }
+                                    @if (role.Contains("Xóa phiếu chuyển tiền"))
+                                    {
+                                        <a onclick="OnClickDelete(@item.Id);" title="Xóa phiếu chuyển tiền"><i class="align-middle" data-feather="trash"></i></a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                    @if (ViewBag.Pager.TotalPages > 0)
+                    {
+                        @if (ViewBag.Pager.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="DebtType"
+                                   asp-route-pageIndex="1"
+                                   asp-route-keyword="@ViewBag.Pager.Key.keyword">
+                                    Trang đầu
+                                </a>
+                            </li>
+                        }
+                        @for (var pge = ViewBag.Pager.StartPage; pge <= ViewBag.Pager.EndPage; pge++)
+                        {
+                            <li class="page-item @(pge == ViewBag.Pager.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   asp-action="DebtType"
+                                   asp-route-pageIndex="@pge"
+                                   asp-route-pageIndex="@ViewBag.Pager.TotalPages"
+                                   asp-route-keyword="@ViewBag.Pager.Key.keyword">@pge</a>
+                            </li>
+                        }
+                        @if (ViewBag.Pager.CurrentPage < ViewBag.Pager.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="DebtType"
+                                   asp-route-pageIndex="@ViewBag.Pager.TotalPages"
+                                   asp-route-keyword="@ViewBag.Pager.Key.keyword">
+                                    Trang cuối
+                                </a>
+                            </li>
+                        }
+                    }
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#DebtCollapse').removeClass("collapsed");
+        $('#debt').addClass("show");
+        $('#transferMoney').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    var lstDebt = [];
+    function OnClickCheckAll() {
+        var chkVal = document.getElementById('checkAll');
+        if (chkVal.checked === true) {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            lstDebt = [];
+            $('tr td input').each(function () {
+                var debtId = parseInt($(this).val());
+                lstDebt.push(debtId);
+                document.getElementById(debtId).checked = true;
+            })
+            console.log('result ' + lstDebt);
+        } else {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            $('tr td input').each(function () {
+                var debtId = parseInt($(this).val());
+                document.getElementById(debtId).checked = false;
+            })
+            lstDebt = [];
+            console.log('result ' + lstDebt);
+        }
+    }
+    function OnClickCheckBox(debtId) {
+        var chkVal = document.getElementById(debtId);
+        if (chkVal.checked === true) {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            lstDebt.push(debtId);
+            console.log('result ' + lstDebt);
+        } else {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            const index = lstDebt.indexOf(debtId);
+            if (index > -1) {
+                lstDebt.splice(index, 1);
+            }
+            console.log('result ' + lstDebt);
+        }
+    }
+    function OnApprovedTransferMoney(status, debtId) {
+        if (debtId == 0) {
+            if (lstDebt.length > 0) {
+                var dataReq = {
+                    "TransferMoneyIds": lstDebt.join(','),
+                    "Status": status
+                }
+                $.ajax({
+                    url: '@Url.Action("OnApprovedTransferMoney","Debt")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(dataReq),
+                    success: function (data) {
+                        alert(data.message)
+                        if (data.code == "1") {
+                            window.location.href = '@Url.Action("TransferMoney","Debt")';
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                    }
+                });
+            } else {
+                alert('Bạn chưa chọn item');
+            }
+        }
+        else {
+            var dataReq = {
+                "TransferMoneyIds": debtId.toString(),
+                "Status": status
+            }
+            $.ajax({
+                url: '@Url.Action("OnApprovedTransferMoney","Debt")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(dataReq),
+                success: function (data) {
+                    alert(data.message)
+                    if (data.code == "1") {
+                        window.location.href = '@Url.Action("TransferMoney","Debt")';
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+    function OnClickDelete(id) {
+        if (confirm("Bạn có chắc chắn xóa!") == true) {
+            $.ajax({
+                url: '@Url.Action("DeleteTransferMoney", "Debt")?id=' + id + '',
+                type: "GET",
+                contentType: "application/json",
+                success: function (data) {
+                    alert(data.message)
+                    if (data.code == "1") {
+                        window.location.href = '@Url.Action("TransferMoney", "Debt")';
+                    }
+                },
+                error: function (xhr) {
+                    alert('Có lỗi trong quá trình xóa dữ liệu')
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+</script>

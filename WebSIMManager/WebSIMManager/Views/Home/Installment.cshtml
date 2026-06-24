@@ -1,0 +1,271 @@
+﻿@using Commons.Enums;
+@model Models.Requests.GetSIMRequest
+@{
+    bool IsMobile = ViewBag.IsMobile;
+    ViewData["Title"] = "Sim trả góp";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@if (!IsMobile)
+{
+    <div class="sidebar pt-3 pb-1" style="background:#182f33; color:white;">
+        <div class="sidebar-item search-form">
+            <form>
+                <input type="text" asp-for="keyword" class="form-control" placeholder="Số SIM..." aria-label="Search">
+                <button type="submit" asp-action="Search" asp-controller="Home">Tìm kiếm</button>
+            </form>
+            <div class="pt-3">
+                <ul style=" padding-left: 15px; ">
+                    <li>
+                        <label for="search-input">
+                            Tìm sim có số <strong>6789</strong> bạn hãy gõ <strong>6789</strong>
+                        </label>
+                    </li>
+                    <li>
+                        Tìm sim có đầu <strong>090 </strong>đuôi <strong>8888</strong> hãy gõ <strong>090 <font size="2">*</font>8888 </strong>
+                    </li>
+                    <li>
+                        Tìm sim bắt đầu bằng <strong>0914</strong> đuôi bất kỳ, hãy gõ:&nbsp; <strong>
+                            0914 <font size="2">*</font>
+                        </strong>
+                    </li>
+                </ul>
+            </div>
+        </div><!-- End sidebar search formn-->
+    </div>
+
+    <div class="block mt-15">
+        <div class="block-body pt-3 px-0 pb-0">
+            <div class="sim-table--body col-12 px-0">
+                <table id="sim-datatable" class="cell-border" style="width:100%">
+                    <thead>
+                        <tr>
+                            @*<th style="width:2%;"></th>*@
+                            <th style="width:25%">Số điện thoại</th>
+                            <th style="width:20%">Giá</th>
+                            <th style="width:18%">Nhà mạng</th>
+                            <th style="width:18%">Loại SIM</th>
+                            <th style="width:17%"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            foreach (var item in @ViewBag.DataView)
+                            {
+                                <tr>
+                                    @*<td><span class="">@item.stt</span></td>*@
+                                    <td>
+                                        <a asp-controller="Home" asp-action="CreateOrder" asp-route-id="@item.Id">
+                                            <span class="tb-sim-num">@Html.Raw(item.SIMNumber)</span>
+                                        </a>
+                                    </td>
+                                    <td><span class="tb-sim-price">@item.SIMPrice đ</span></td>
+                                    <td><span class="">@item.SIMNetwork</span></td>
+                                    <td><span class="tb-sim-type">@item.SIMType</span></td>
+                                    <td class="table-action">
+                                        <a class="btn btn-warning" asp-controller="Home" asp-action="CreateOrder" asp-route-id="@item.Id" style="font-size: 12px;">Chi tiết</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <h4 class="text-center m-2"><strong>TÌM KIẾM SIM</strong></h4>
+    <div class="x-scrollbar sim-tab">
+        <div class="row m-1" style="width: 1000px;">
+            <!--Network-->
+            @{
+                foreach (var item in ViewBag.SIMNetworks)
+                {
+                    <a id="@item.HtmlId" class="sim-tab_item v2"
+                       asp-action="Search"
+                       asp-controller="Home"
+                       asp-route-searchType="@SearchType.mang"
+                       asp-route-keyword="@item.HtmlId">@item.NetworkName</a>
+                }
+            }
+            <!--Price-->
+            <a id="gia5l" class="sim-tab_item v2"
+               asp-action="Search"
+               asp-controller="Home"
+               asp-route-searchType="@SearchType.gia"
+               asp-route-keyword="gia5l">
+                <span>Sim dưới 500k</span>
+            </a>
+            <a id="gia5l-1m" class="sim-tab_item v2"
+               asp-action="Search"
+               asp-controller="Home"
+               asp-route-searchType="@SearchType.gia"
+               asp-route-keyword="gia5l-1m">
+                <span>500k - 1triệu</span>
+            </a>
+            <a id="gia1m-3m" class="sim-tab_item v2"
+               asp-action="Search"
+               asp-controller="Home"
+               asp-route-searchType="@SearchType.gia"
+               asp-route-keyword="gia1m-3m">
+                <span>1-3 triệu</span>
+            </a>
+            <a id="gia3m-5m" class="sim-tab_item v2"
+               asp-action="Search"
+               asp-controller="Home"
+               asp-route-searchType="@SearchType.gia"
+               asp-route-keyword="gia3m-5m">
+                <span>3-5 triệu</span>
+            </a>
+            <a id="gia5m-10m" class="sim-tab_item v2"
+               asp-action="Search"
+               asp-controller="Home"
+               asp-route-searchType="@SearchType.gia"
+               asp-route-keyword="gia5m-10m">
+                <span>5-10 triệu</span>
+            </a>
+            <a id="gia10m-50m" class="sim-tab_item v2"
+               asp-action="Search"
+               asp-controller="Home"
+               asp-route-searchType="@SearchType.gia"
+               asp-route-keyword="gia10m-50m">
+                <span>10-20 triệu</span>
+            </a>
+            <a id="gia50m-100m" class="sim-tab_item v2"
+               asp-action="Search"
+               asp-controller="Home"
+               asp-route-searchType="@SearchType.gia"
+               asp-route-keyword="gia50m-100m">
+                <span>50-100 triệu</span>
+            </a>
+            <a id="gia100m-200m" class="sim-tab_item v2"
+               asp-action="Search"
+               asp-controller="Home"
+               asp-route-searchType="@SearchType.gia"
+               asp-route-keyword="gia100m-200m">
+                <span>100-200 triệu</span>
+            </a>
+            <a id="gia200m-500m" class="sim-tab_item v2"
+               asp-action="Search"
+               asp-controller="Home"
+               asp-route-searchType="@SearchType.gia"
+               asp-route-keyword="gia200m-500m">
+                <span>200-500 triệu</span>
+            </a>
+            <a id="gia500m" class="sim-tab_item v2"
+               asp-action="Search"
+               asp-controller="Home"
+               asp-route-searchType="@SearchType.gia"
+               asp-route-keyword="gia500m">
+                <span>Trên 500 triệu</span>
+            </a>
+            <!--SIM Type-->
+            @{
+                foreach (var item in ViewBag.SIMTypes)
+                {
+                    <a id="@item.HtmlId" class="sim-tab_item v2"
+                       asp-action="Search"
+                       asp-controller="Home"
+                       asp-route-searchType="@SearchType.namsinh"
+                       asp-route-keyword="@item.HtmlId">
+                        <span>@item.Name</span>
+                    </a>
+                }
+            }
+        </div>
+    </div>
+    <div class="block mt-15">
+        <div class="block-head">KẾT QUẢ</div>
+        <div class="block-body pt-3 px-0 pb-0">
+            <div class="sim-table--body col-12 px-0">
+                <div class="sim-table--wrap">
+                    @if (@ViewBag.DataView.Count > 0)
+                    {
+                        <div class="row">
+                            @foreach (var item in @ViewBag.DataView)
+                            {
+
+                                <div class="col-6 col-xl-4 pl-0">
+                                    <div class="container sim-item sim-hot">
+                                        <a asp-controller="Home" asp-action="CreateOrder" asp-route-id="@item.Id">
+                                            <div class="row">
+                                                <div style="max-width: 55px;">
+                                                    @if (item.SIMNetwork.ToLower().Contains("viettel"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-vietel.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.SIMNetwork.ToLower().Contains("vina"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.SIMNetwork.ToLower().Contains("mobi"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-mobi.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.SIMNetwork.ToLower().Contains("vietnamobile"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.SIMNetwork.ToLower().Contains("gmobile"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-gmobile.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.SIMNetwork.ToLower().Contains("itel"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-itel.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.SIMNetwork.ToLower().Contains("reddi"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-reddi.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                </div>
+                                                <div style="max-width: 110px;">
+                                                    <p>
+                                                        <span class="sim-item--number">@Html.Raw(item.SIMNumber)</span>
+                                                        <span class="sim-item--price">@item.SIMPrice đ</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <h4>Không tìm thấy sản phẩm nào.</h4>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<script>
+    window.onload = function () {
+        new DataTable('#sim-datatable', {
+            pageLength: 30,
+            bLengthChange: false,
+            bInfo: false,
+            sPagingType: 'simple',
+            language: {
+                'paginate': {
+                    'previous': 'Trang trước',
+                    'next': 'Trang sau'
+                }
+            },
+            columnDefs: [{ orderable: false, targets: [0, 4] }]
+        });
+        var menuTop = document.getElementById("tra-gop");
+        menuTop.classList.add("active");
+
+        var itemNav = document.getElementById('@ViewBag.Pager.Key');
+        itemNav.classList.add("list-group-item-secondary");
+    };
+</script>
+

@@ -1,0 +1,123 @@
+﻿@* @{
+    ViewData["Title"] = "Báo cáo tồn kho";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Báo cáo tồn kho</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <input id="startDate" type="date" class="form-control" placeholder="Nhập ngày bắt đầu" />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <input id="endDate" type="date" class="form-control" placeholder="Nhập ngày kết thúc" />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <select id="agentId" type="text" asp-items="@ViewBag.Agents" data-live-search="true" placeholder="Chọn đại lý">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filter()">Tìm kiếm</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:5%">Stt</th>
+                        <th style="width:15%">Tên sản phẩm</th>
+                        <th style="width:25%">Mô tả sản phẩm</th>
+                        <th style="width:10%">Số lượng tồn kho</th>
+                        <th style="width:15%">Đại lý</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+         <div id="paging" class="px-3">
+        <nav aria-label="Page navigation example">
+        <ul class="pagination pagination-md">
+        </ul>
+        </nav>
+        </div> 
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#ReportCollapse').removeClass("collapsed");
+        $('#report').addClass("show");
+        $('#DebtCustomer').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    window.onload = filter();
+    var lstOrder = [];
+    function filter() {
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        var agent = $('#agentId').val();
+        var data = { "startDate": startDate, "endDate": endDate, "agentId": agent };
+        $.ajax({
+            url: '@Url.Action("SearchInventory","Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                data.data.forEach((el) => {
+                    newBody += '<tr>'
+                        + '<td>' + el.stt + '</td>'
+                        + '<td>' + el.productName + '</td>'
+                        + '<td>' + el.productDesc + '</td>'
+                        + '<td>' + el.inventoryAmount + '</td>'
+                        + '<td>' + el.owner + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                //write paging
+                // console.log(data.pager);
+                // var paging = $("#paging .pagination")
+                // paging.children().remove();
+                // var pagingItem = "";
+                // if (data.pager.totalPages > 0) {
+                //     if (data.pager.currentPage > 1) {
+                //         pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterSIM(1)" >Trang đầu</a></li>'
+                //     };
+                //     for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                //         if (pge == data.pager.currentPage)
+                //             pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterSIM(' + pge + ')" >' + pge + '</a></li>'
+                //         else
+                //             pagingItem += '<li class="page-item "><a class="page-link" onclick="filterSIM(' + pge + ')" >' + pge + '</a></li>'
+                //     }
+                //     if (data.pager.currentPage < data.pager.totalPages) {
+                //         pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterSIM(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                //     };
+                // }
+                // paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    };
+</script> *@

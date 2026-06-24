@@ -1,0 +1,303 @@
+﻿@{
+    ViewData["Title"] = "Tìm sim phong thủy";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div>
+    <div class="block-head">Tìm sim phong thủy</div>
+</div>
+
+<div class="sidebar " style="background:white;">
+    <div class="sidebar-item px-1">
+        <div class="">
+            <div class="row">
+                <div class="col-7">
+                    <div class="row">
+                        <div class="col-4">
+                            <label class="form-label">Ngày</label>
+                            <select class="form-select" id="dateOfBirth">
+                                @for (int i = 1; i <= 31; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Tháng</label>
+                            <select class="form-select" id="monthOfBirth">
+                                @for (int i = 1; i <= 12; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Năm</label>
+                            <select class="form-select" id="yearOfBirth">
+                                @for (int i = 1925; i <= 2018; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <label class="form-label">Giờ</label>
+                    <select class="form-select pr-3" id="giosinh">
+                        <option selected="selected" value="1">Tý (23-12h)</option>
+                        <option value="2">Sửu (1h-3h)</option>
+                        <option value="3">Dần (3h-5h)</option>
+                        <option value="4">Mão (5h-7h)</option>
+                        <option value="5">Thìn (7h-9h)</option>
+                        <option value="6">Tỵ (9h-11h)</option>
+                        <option value="7">Ngọ (11h-13h)</option>
+                        <option value="8">Mùi (13h-15h)</option>
+                        <option value="9">Thân (15h-17h)</option>
+                        <option value="10">Dậu (17h-19h)</option>
+                        <option value="11">Tuất (19h-21h)</option>
+                        <option value="12">Hợi (21h-23h)</option>
+                    </select>
+                </div>
+                <div class="col-2">
+                    <label class="form-label">Nam/Nữ</label>
+                    <select class="form-select pr-3" id="giosinh">
+                        <option selected="selected" value="1">Nam</option>
+                        <option value="0">Nữ</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-5 position-relative text-center">
+                <button type="button" class="btn btn-danger" width="300px" onclick="SearchSimPT(1);">Tìm phong thủy</button>
+            </div>
+        </div>
+    </div><!-- End sidebar search formn-->
+</div>
+
+<div class="card">
+    <div>
+        <div class="block-head">Mệnh chủ</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+            <img id="congiap" width="100%" class="thumbnail" src="/congiap/dau.png">
+        </div>
+        <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+            <ul>
+                <li>
+                    <strong>Thân chủ: </strong>
+                    <span id="thanchu">
+                    </span>
+                </li>
+                <li>
+                    <strong>Năm can chi:</strong>
+                    <span id="canchi">
+                    </span>
+                </li>
+                <li>
+                    <strong>Mệnh cung sinh:</strong>
+                    <span id="menhsinh">
+                    </span>
+                </li>
+                <li>
+                    <strong>Ngũ hành:</strong>
+                    <span id="nguhanh">
+                    </span>
+                </li>
+                <li>
+                    <strong>Mệnh cung phi:</strong>
+                    <span id="cungphi">
+                    </span>
+                </li>
+                <li>
+                    <strong>Con giáp:</strong>
+                    <span id="congiap">
+                    </span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<div class="" style="padding: 30px; background-color:#fff;">
+    <div class="w3-row">
+        <div class="">
+            <div class="row" id="fengshui-result">
+            </div>
+            <div class="col-12 p-3 m3 text-center">
+                <a class="btn btn-danger" onclick="SearchSimPT();">Xem thêm ...</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var pageIndex = 0;
+    window.onload = function () {
+        SearchSimPT(0);
+        var menuTop = document.getElementById("tra-gop");
+        menuTop.classList.add("active");
+    };
+
+    function SearchSimPT(i) {
+        if (i == 0)
+            pageIndex++;
+        else
+            pageIndex = 1;
+        var dateOfBirth = $("#dateOfBirth").val();
+        var monthOfBirth = $("#monthOfBirth").val();
+        var yearOfBirth = $("#yearOfBirth").val();
+        var hourOfBirth = $("#giosinh").val();
+        var gioitinh = $("#gioitinh").val();
+        var dataReq = {
+            "pageIndex": pageIndex,
+            "pageSize": 20,
+            "yearOfBirth": yearOfBirth,
+            "monthOfBirth": monthOfBirth,
+            "dateOfBirth": dateOfBirth,
+            "hourOfBirth": hourOfBirth,
+            "minuteOfBirth": 0,
+            "isMale": gioitinh,
+        }
+        $.ajax({
+            url: '@Url.Action("TimSimPhongThuy","Home")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(dataReq),
+            xhrFields: {
+                withCredentials: true // Gửi kèm cookie (nếu bạn đang dùng cookie auth)
+            },
+            success: function (data) {
+                if (data != undefined) {
+                    window.scrollTo(0, 0);
+                    //
+                    //
+                    var congiap = document.getElementById("congiap");
+                    switch (true) {
+                        case data.menhchu.canChi.includes("Tý"):
+                            congiap.src = 'congiap/ti.png';
+                            break;
+                        case data.menhchu.canChi.includes("Sửu"):
+                            congiap.src = 'congiap/suu.png';
+                            break;
+                        case data.menhchu.canChi.includes("Dần"):
+                            congiap.src = 'congiap/dan.png';
+                            break;
+                        case data.menhchu.canChi.includes("Mão"):
+                            congiap.src = 'congiap/mao.png';
+                            break;
+                        case data.menhchu.canChi.includes("Thìn"):
+                            congiap.src = 'congiap/thin.png';
+                            break;
+                        case data.menhchu.canChi.includes("Tỵ"):
+                            congiap.src = 'congiap/ty.png';
+                            break;
+                        case data.menhchu.canChi.includes("Ngọ"):
+                            congiap.src = 'congiap/ngo.png';
+                            break;
+                        case data.menhchu.canChi.includes("Mùi"):
+                            congiap.src = 'congiap/mui.png';
+                            break;
+                        case data.menhchu.canChi.includes("Thân"):
+                            congiap.src = 'congiap/than.png';
+                            break;
+                        case data.menhchu.canChi.includes("Dậu"):
+                            congiap.src = 'congiap/dau.png';
+                            break;
+                        case data.menhchu.canChi.includes("Tuất"):
+                            congiap.src = 'congiap/tuat.png';
+                            break;
+                        default:
+                            congiap.src = 'congiap/hoi.png';
+                            break;
+                    }
+
+                    //
+                    //Mệnh chủ
+                    $("#thanchu").text('Sinh ngày ' + data.birthDay + ' (' + data.lunarBirthDay + ' Âm lịch)');
+                    $("#canchi").text(data.menhchu.canChi);
+                    $("#menhsinh").text(data.menhchu.cungSinh1 + ' - ' + data.menhchu.cungSinh2);
+                    $("#nguhanh").text(data.menhchu.nguHanh);
+                    $("#cungphi").text(data.menhchu.cungPhi1 + ' - ' + data.menhchu.cungPhi2);
+                    $("#congiap").text(data.menhchu.conGiap);
+
+
+                    var fengshuiResult = $("#fengshui-result");
+                    fengshuiResult.children().remove();
+
+                    var simCard = "";
+                    data.simPhongThuys.forEach((el) => {
+                        console.log(el);
+                        var network = "";
+                        var color = "";
+                        switch (el.networkId) {
+                            case 1:
+                                network = 'Vietel';
+                                color = "#c1212d";
+                                break;
+                            case 2:
+                                network = 'Vinaphone';
+                                color = "#009fe4";
+                                break;
+                            case 3:
+                                network = 'Mobiphone';
+                                color = "#007bff";
+                                break;
+                            case 4:
+                                network = 'Vietnamobile';
+                                color = "#fd7e14";
+                                break;
+                            case 5:
+                                network = 'Gmobile';
+                                color = "#ffc107";
+                                break;
+                            case 6:
+                                network = 'Itelecom';
+                                color = "#dc3545";
+                                break;
+                            default:
+                                network = 'Vinaphone';
+                                color = "#009fe4";
+                                break;
+                        };
+                        simCard += '<div class="">'
+                            + '<div class="card border-danger mb-3">'
+                            + '<div class="px-3">'
+                            + '<div class="row mt-2 mx-0 mb-2">'
+                            + '<div class="col-8 p-0">'
+                            + '<div class="fs-4" style="color: #e24122;"><strong id="simNumber">' + el.simNumber + '</strong></div>'
+                            + '</div>'
+                            + '<div class="col-4 p-0">'
+                            + '<div class="lists-sim-item-img">'
+                            + '<div class="fs-6 text-end" style="color: ' + color + ';"><strong id="simNetwork">' + network + '</strong></div>'
+                            + '</div>'
+                            + '</div>'
+                            + '</div>'
+                            + '<div class="text-danger fw-bold m-0">'
+                            + '<span id="simPrice">' + formatNumber(el.price.toString()) + 'đ </span>'
+                            + '</div>'
+                            + '<div class="m-0">'
+                            + '<div><strong>Điểm phong thủy: </strong> <span class="" id="scoreFengShui" style="color: #2caf0c;">' + el.point + '/10</span></div>'
+                            + '<div><strong>Ngũ hành sim: </strong> <span class="" id="nguHanh" style="color: #1064b1;">' + el.nguHanhSim + '</span></div>'
+                            + '<div><strong>Quẻ kinh dịch: </strong> <span class="" id="queKinhDich" style="color: #1064b1;">' + el.queKinhDich + '</span></div>'
+                            + '<div><strong>Ý nghĩa: </strong> <span class="" id="dichNghia">' + el.yNghiaQue + '</span></div>'
+                            + '</div>'
+                            + '<div class="lists-sim-item-button">'
+                            + '<div class="text-center m-3">'
+                            + '<a class="btn btn-warning" type="button" href="/buy-sim?id=' + el.simId + '">Đặt mua sim</a>'
+                            + '</div>'
+                            + '</div>'
+                            + '</div>'
+                            + '</div>'
+                            + '</div>';
+                    });
+                    fengshuiResult.append(simCard);
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    }
+</script>

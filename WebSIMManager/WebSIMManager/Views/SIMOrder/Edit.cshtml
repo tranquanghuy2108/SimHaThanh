@@ -1,0 +1,465 @@
+﻿@using Commons.Enums;
+@using Models.ViewModels
+@model SIMOrderModel
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Chỉnh sửa đơn hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Cập nhật thông tin đơn hàng</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <form method="post" onsubmit="Onloading();">
+                        @Html.HiddenFor(m => m.Id)
+                        @if (Model?.simInOrders != null && Model.simInOrders.Count > 0)
+                        {
+                            @for (int i = 0; i < Model.simInOrders.Count; i++)
+                            {
+                                var item = Model.simInOrders[i];
+                                var simId = item.simId;
+                                <div class="sim-in-order-item mb-2">
+                                    <!-- Hidden inputs for model binding -->
+                                    <input type="hidden" id="simId_@simId" name="simInOrders[@i].simId" value="@item.simId" />
+                                    <input type="hidden" id="simPrice_@simId" name="simInOrders[@i].simPrice" value="@item.simPrice" />
+                                    <input type="hidden" id="usingEsim_@simId" name="simInOrders[@i].usingEsim" value="@(item.usingEsim == true ? "true" : "false")" />
+                                </div>
+                            }
+                        }
+
+                        <input type="hidden" id="simIds" value="@ViewBag.SimIDs" />
+
+                        <div class="mt-3 row">
+                            <div class="col-md-4 row">
+                                <label for="UserBuyId" class="col-sm-4 col-form-label required">KH/Đại lý</label>
+                                <div class="col-sm-8">
+                                    <select asp-for="UserBuyId" asp-items="@ViewBag.Agents" class="form-select" data-live-search="true"></select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 row">
+                                <label for="ContactId" class="col-sm-4 col-form-label required">Kênh mua</label>
+                                <div class="col-sm-8">
+                                    <select asp-for="ContactId" asp-items="@ViewBag.SPContacts" class="form-select" data-live-search="true"></select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 d-flex align-items-center">
+                                @if (role.Contains("Sửa KH/Đại lý"))
+                                {
+                                    <button type="button" class="btn btn-outline-info mx-2" onclick="UpdateAgent()" style="width:170px;">Cập nhật KH/Đại lý</button>
+                                }
+                                @if (role.Contains("Tạo mới KH/Đại lý"))
+                                {
+                                    <a class="btn btn-outline-success mx-2" asp-action="Create" asp-controller="Agent" style="width:170px;">Tạo mới KH/Đại lý</a>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mt-3 row">
+                            <div class="col-md-4 row">
+                                <label for="PhoneNum" class="col-sm-4 col-form-label required">Số ĐT</label>
+                                <div class="col-sm-8">
+                                    <input class="form-control" placeholder="Số điện thoại" asp-for="PhoneNum" id="PhoneNum" />
+                                </div>
+                            </div>
+                            <div class="col-md-8 row">
+                                <label for="Address" class="col-sm-2 col-form-label required">Địa chỉ</label>
+                                <div class="col-md-10">
+                                    <input class="form-control" placeholder="Địa chỉ" asp-for="Address" id="Address" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 mb-3 row">
+                            <div class="col-md-8 row">
+                                <label for="Note" class="col-sm-2 col-form-label">Ghi chú</label>
+                                <div class="col-sm-8 p-2">
+                                    <textarea class="form-control" placeholder="Ghi chú" asp-for="Note" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-3 mt-3">
+                            <div class="row">
+                                <div class="form-group col-md-3">
+                                    <label class="form-label">Loại giá sim</label>
+                                    <select asp-for="TypePriceSimOrder" asp-items="@ViewBag.TypePriceSimOrder" id="TypePriceSimOrder" class="form-select" data-live-search="true"></select>
+                                    <input type="hidden" id="retailPrice" />
+                                    <input type="hidden" id="agentPrice" />
+                                    <input type="hidden" id="collaboratorsPrice" />
+                                </div>
+
+                                <div class="col-md-9 row">
+                                    @if (@ViewBag.AllowXuatSim)
+                                    {
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Tổng giá trị đơn</label>
+                                            <input type="text" data-type="currency" class="form-control currency" asp-for="PriceOrder" id="PriceOrder" />
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Chiết khấu</label>
+                                            <input type="text" data-type="currency" class="form-control currency" asp-for="Discount" id="Discount" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Tổng giá trị đơn</label>
+                                            <input type="text" data-type="currency" class="form-control currency" asp-for="PriceOrder" id="PriceOrder" readonly />
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Chiết khấu</label>
+                                            <input type="text" data-type="currency" class="form-control currency" asp-for="Discount" id="Discount" readonly />
+                                        </div>
+                                    }
+
+                                    <div class="form-group col-md-3">
+                                        <label class="form-label">Tổng tiền sim</label>
+                                        <input type="text" data-type="currency" class="form-control currency" asp-for="PriceOfSim" id="PriceOfSim" readonly />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="form-group col-md-3">
+                                    <label class="form-label">Hình thức thanh toán</label>
+                                    <select asp-for="PaymentType" asp-items="@ViewBag.PayOrderType" id="PaymentType" class="form-select" data-live-search="true" disabled="@(ViewBag.AllowXuatSim ? null : "disabled")"></select>
+                                </div>
+
+                                <div class="col-md-9" id="traGopArea">
+                                    <div class="row">
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Số tiền trả ban đầu</label>
+                                            <input type="text" data-type="currency" class="form-control currency" asp-for="DownPayment" id="DownPayment" />
+                                            <input type="hidden" id="MinimumPaymentRate" value="@ViewBag.MinimumPaymentRate" />
+                                            <input type="hidden" asp-for="InterestRate" id="InterestRate" value="@ViewBag.DailyInterestRate" />
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Số tiền trả góp</label>
+                                            <input type="text" data-type="currency" class="form-control currency" asp-for="InstallmentPayment" id="InstallmentPayment" />
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Thời gian trả góp</label>
+                                            <select asp-for="InstallmentPeriod" id="InstallmentPeriod" class="form-select">
+                                                @for (int i = 1; i <= 12; i++) { <option value="@i">@i tháng</option> }
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Số tiền trả hàng tháng</label>
+                                            <input type="text" data-type="currency" class="form-control currency" asp-for="MonthlyInstallmentPayment" id="MonthlyInstallmentPayment" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div asp-validation-summary="All" class="text-danger"></div>
+
+                        <div class="mt-3">
+                            @if (ViewBag.AllowEdit)
+                            {
+                                <button type="submit" class="btn btn-success m-1" asp-action="Edit" asp-controller="SIMOrder">Cập nhật</button>
+                                <button type="button" class="btn btn-danger m-1" onclick="OnClickCancel()">Hủy đơn</button>
+                            }
+                            @if (ViewBag.AllowXuatSim)
+                            {
+                                <button type="button" class="btn btn-primary m-1" onclick="OnClickXuatSim()">Xuất sim</button>
+                            }
+                            <a class="btn btn-secondary m-1" asp-action="Index" asp-controller="SIMOrder">Trở về</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sim info -->
+        <div class="card-body px-3">
+            <table id="simInfoTbl" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Stt</th>
+                        <th>ESim</th>
+                        <th>Số điện thoại</th>
+                        <th>Seria</th>
+                        <th>Giá bán lẻ</th>
+                        <th>Giá cho đại lý</th>
+                        <th>Giá cho CTV</th>
+                        <th>Vị trí</th>
+                        <th>Đại lý có sim</th>
+                        <th>Số ĐT Đại lý</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const $ = window.jQuery;
+        var simPrice = 0;
+        var agentSIMPrice = 0;
+        var collaboratorsSIMPrice = 0;
+
+        // Utilities
+        const qs = id => document.getElementById(id);
+        const parseCurrency = v => {
+            if (v === undefined || v === null) return 0;
+            try { return parseFloat(String(v).replaceAll(',', '')) || 0; } catch { return 0; }
+        };
+        const setVal = (id, value) => { const el = qs(id); if (el) el.value = value; };
+        const ajaxPost = (url, data) => $.ajax({ url, type: 'POST', contentType: 'application/json', data: JSON.stringify(data) });
+        const safeFormat = () => { if (typeof fomatCurrencyInput === 'function') fomatCurrencyInput(); };
+
+        // Init bindings and state
+        function init() {
+            $('#OrderCollapse').removeClass('collapsed');
+            $('#order').addClass('show');
+            $('#SIMOrder').addClass('active');
+
+            // event bindings
+            $(document).on('change', '#UserBuyId', OnChangeAgent);
+            $(document).on('change', '#TypePriceSimOrder', OnChangeTypePrice);
+            $(document).on('change', '#PaymentType', OnChangePaymentType);
+            $(document).on('change', '#InstallmentPeriod', OnChangeInstallmentPeriod);
+            $(document).on('change', '#DownPayment', OnChangeDownPayment);
+            $(document).on('change', '#Discount', OnChangeDiscount);
+            $(document).on('change', '#MonthlyInstallmentPayment', OnChangeMonthlyInstallmentPayment);
+
+            GetSimInfos();
+            OnChangePaymentType();
+        }
+
+        function OnChangePaymentType() {
+            const traGopArea = qs('traGopArea');
+            const paymentType = $('#PaymentType').val();
+
+            traGopArea.classList.add('hidden');
+            if (paymentType === 'Installment') {
+                traGopArea.classList.remove('hidden');
+                if (parseCurrency(qs('DownPayment')?.value) === 0) OnChangeInstallmentPeriod();
+            } else {
+                OnChangeDiscount();
+                setVal('DownPayment', 0);
+                setVal('InstallmentPayment', 0);
+                setVal('MonthlyInstallmentPayment', 0);
+                setVal('InstallmentPeriod', 1);
+            }
+
+            safeFormat();
+        }
+
+        function OnChangeInstallmentPeriod() {
+            const price = parseCurrency(qs('PriceOfSim')?.value);
+            const discount = parseCurrency(qs('Discount')?.value);
+            const priceAfterDiscount = price - price * discount / 100;
+            const minimumRate = parseCurrency(qs('MinimumPaymentRate')?.value);
+            const interest = parseCurrency(qs('InterestRate')?.value) || 1;
+            const period = parseFloat(qs('InstallmentPeriod')?.value) || 1;
+
+            const cur = new Date();
+            const end = new Date(); end.setMonth(end.getMonth() + period);
+            const totalDays = (end.getTime() - cur.getTime()) / (1000 * 60 * 60 * 24);
+
+            const minPay = priceAfterDiscount * minimumRate / 100;
+            if (parseCurrency(qs('DownPayment')?.value) === 0) setVal('DownPayment', minPay);
+            const down = parseCurrency(qs('DownPayment')?.value);
+            const remaining = price - down;
+            const monthly = (remaining + remaining / interest * totalDays) / period;
+
+            setVal('InstallmentPayment', remaining);
+            setVal('MonthlyInstallmentPayment', monthly);
+            safeFormat();
+        }
+
+        function OnChangeMonthlyInstallmentPayment() { safeFormat(); }
+
+        function OnChangeDownPayment() {
+            const price = parseCurrency(qs('PriceOfSim')?.value);
+            const minRate = parseCurrency(qs('MinimumPaymentRate')?.value);
+            const down = parseCurrency(qs('DownPayment')?.value);
+            const minPay = price * minRate / 100;
+            if (down < minPay) {
+                setVal('DownPayment', minPay);
+                alert('Số tiền trả trước không thấp quá ' + minPay);
+            }
+            OnChangeInstallmentPeriod();
+        }
+
+        function OnChangeAgent() {
+            Onloading();
+            const customer = $('#UserBuyId').val();
+            const req = { agentId: customer, price: 0 };
+            ajaxPost('@Url.Action("OnAgentChange","SIMOrder")', req)
+                .done(data => {
+                    OnloadingSuccess();
+                    setVal('PhoneNum', data.phoneNumber);
+                    setVal('Address', data.address);
+                    OnChangePaymentType();
+                    GetDiscountOfUser();
+                    OnChangePaymentType();
+                })
+                .fail(xhr => { OnloadingSuccess(); console.log(xhr); });
+        }
+
+        function OnClickXuatSim() {
+            const orderId = $('#Id').val();
+            const req = { ids: [orderId] };
+            ajaxPost('@Url.Action("CheckListOrderIsAvalible","SIMOrder")', req)
+                .done(resp => {
+                    if (resp.code == '1') window.location.href = '@Url.Action("XuatSim","SIMOrder")' + '?orderIds=' + resp.data;
+                    else alert(resp.message);
+                })
+                .fail(xhr => console.log(xhr));
+        }
+
+        function OnClickCancel() {
+            const orderId = $('#Id').val();
+            const req = { orderIds: orderId.toString(), status: 2 };
+            ajaxPost('@Url.Action("OnApprovedOrder","SIMOrder")', req)
+                .done(resp => { alert(resp.message); if (resp.code == '1') window.location.href = '@Url.Action("Index","SIMOrder")'; })
+                .fail(xhr => console.log(xhr));
+        }
+
+        function UpdateAgent() { const userById = $('#UserBuyId').val(); window.location.href = '@Url.Action("Edit","Agent")?id=' + userById; }
+
+        function GetSimInfos() {
+            Onloading();
+            const orderId = $('#Id').val();
+            const simids = $('#simIds').val();
+            const req = { customerId: '', simids: simids , orderIds : orderId.toString()};
+            ajaxPost('@Url.Action("GetSimInfoByIds","SIMOrder")', req)
+                .done(resp => {
+                    OnloadingSuccess();
+                    simPrice = 0;
+                    agentSIMPrice = 0;
+                    collaboratorsSIMPrice = 0;
+                    const sims = resp.simInfos || [];
+                    if (sims.length || (resp.orderInfos || []).length) {
+                            if (sims.length) {
+                                const tbody = $('#simInfoTbl tbody'); tbody.empty();
+                                let rows = '';
+                                sims.forEach(el => {
+                                // accumulate totals (ensure numeric)
+                                simPrice += parseFloat(el.price) || 0;
+                                agentSIMPrice += parseFloat(el.agentSIMPrice) || 0;
+                                collaboratorsSIMPrice += parseFloat(el.collaboratorsSIMPrice) || 0;
+                                if(el.usingEsim) {
+                                    simPrice += 50000;
+                                    agentSIMPrice += 50000;
+                                    collaboratorsSIMPrice += 50000;
+                                }
+
+                                rows += `<tr>
+                                    <td>${el.stt}</td>
+                                    <td class="align-middle mt-1">
+                                        <input id="esim${el.id}" type="checkbox" value="${el.usingEsim}" onclick="OnClickESim(this, ${el.id})" ${el.usingEsim ? ' checked' : ''} />
+                                    </td>
+                                    <td>${el.number}</td>
+                                    <td>${el.seria || ''}</td>
+                                    <td>${formatCurrency(el.price)}</td>
+                                    <td>${formatCurrency(el.agentSIMPrice)}</td>
+                                    <td>${formatCurrency(el.collaboratorsSIMPrice)}</td>
+                                    <td>${el.position || ''}</td>
+                                    <td>${el.owner}</td>
+                                    <td>${el.ownerPhoneNumber}</td>
+                                </tr>`;
+                            });
+                            tbody.append(rows);
+                            // after building rows we have accumulated simPrice/agentSIMPrice/collaboratorsSIMPrice
+                            // ensure PriceOfSim reflects the current selected price type
+                            // (OnChangeTypePrice will read simPrice/agentSIMPrice/collaboratorsSIMPrice)
+                        }
+                        // store aggregated totals (not just the first sim)
+                        setVal('retailPrice', simPrice);
+                        setVal('agentPrice', agentSIMPrice);
+                        setVal('collaboratorsPrice', collaboratorsSIMPrice);
+                        OnChangeTypePrice();
+                        GetDiscountOfUser();
+                        safeFormat();
+                    }
+                })
+                .fail(xhr => console.log(xhr));
+        }
+
+        function OnChangeDiscount() {
+            // Compute PriceOrder according to request: PriceOrder = PriceOfSim * Discount / 100
+            const priceOfSim = parseCurrency(qs('PriceOfSim')?.value);
+            const discount = parseCurrency(qs('Discount')?.value);
+            const priceOrder = priceOfSim - priceOfSim * discount / 100;
+            setVal('PriceOrder', priceOrder);
+            safeFormat();
+        }
+
+        function OnChangeTypePrice() {
+            const priceType = qs('TypePriceSimOrder')?.value;
+            switch (priceType) {
+                case 'Defaul': setVal('PriceOfSim', parseCurrency(simPrice)); break;
+                case 'ForAgent': setVal('PriceOfSim', parseCurrency(agentSIMPrice)); break;
+                case 'ForCollaborators': setVal('PriceOfSim', parseCurrency(collaboratorsSIMPrice)); break;
+            }
+            OnChangeDiscount();
+            safeFormat();
+        }
+
+        function GetDiscountOfUser() {
+            Onloading();
+            const customer = $('#UserBuyId').val();
+            const price = parseCurrency(qs('PriceOfSim')?.value);
+            const req = { agentId: customer, price };
+            ajaxPost('@Url.Action("GetDiscountOfUser","SIMOrder")', req)
+                .done(data => { OnloadingSuccess(); setVal('Discount', data.discount); OnChangeDiscount(); safeFormat(); })
+                .fail(xhr => { OnloadingSuccess(); console.log(xhr); });
+        }
+
+        function OnClickESim(checkboxEl, id) {
+            // checkboxEl is the actual element (preferred). Fall back to getElementById if needed.
+            if (!checkboxEl) {
+                checkboxEl = document.getElementById('esim' + id);
+                if (!checkboxEl) {
+                    console.warn('esim checkbox not found for id', id);
+                    return;
+                }
+            }
+
+            const isChecked = !!checkboxEl.checked;
+            console.log(`esim${id} checked:`, isChecked);
+            setVal('usingEsim_' + id, isChecked);
+
+            // Example: adjust total if eSIM adds a surcharge (adjust to your logic)
+            const surcharge = 50000;
+            const current = parseCurrency(qs('PriceOfSim')?.value);
+            const newVal = isChecked ? current + surcharge : Math.max(0, current - surcharge);
+            setVal('PriceOfSim', newVal);
+
+            // Recompute dependent values
+            OnChangeDiscount();
+            safeFormat();
+        }
+
+        // Expose globals used by server-rendered inline attributes or other scripts
+        window.OnChangeAgent = OnChangeAgent;
+        window.OnClickXuatSim = OnClickXuatSim;
+        window.OnClickCancel = OnClickCancel;
+        window.UpdateAgent = UpdateAgent;
+        window.GetSimInfos = GetSimInfos;
+        window.OnChangePaymentType = OnChangePaymentType;
+        window.OnChangeInstallmentPeriod = OnChangeInstallmentPeriod;
+        window.OnChangeMonthlyInstallmentPayment = OnChangeMonthlyInstallmentPayment;
+        window.OnChangeDownPayment = OnChangeDownPayment;
+        window.OnChangeDiscount = OnChangeDiscount;
+        window.OnChangeTypePrice = OnChangeTypePrice;
+        window.GetDiscountOfUser = GetDiscountOfUser;
+        window.OnClickESim = OnClickESim;
+
+        $(init);
+    })();
+</script>

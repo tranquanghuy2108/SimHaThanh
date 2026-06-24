@@ -1,0 +1,343 @@
+﻿@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Kho SIM đại lý";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<input id="uRoles" type="hidden" value="@string.Join(", ", role)" />
+<h1>Danh sách Sim đại lý</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-2">
+                        <label class="form-label">Số điện thoại</label>
+                        <input id="keyword" type="text" class="form-control">
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">Loại sản phẩm</label>
+                        <div class="col-12 p-0">
+                            <select id="productTypes" type="text" multiple="multiple" asp-items="@ViewBag.ProductTypes" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">Nhà mạng</label>
+                        <div class="col-12 p-0">
+                            <select id="networks" type="text" multiple="multiple" asp-items="@ViewBag.Networks" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <select id="owners" type="text" multiple="multiple" asp-items="@ViewBag.Owners" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">Trạng thái sim</label>
+                        <div class="col-12 p-0">
+                            <select id="apprStatus" type="text">
+                                <option value="0" selected>Tất cả</option>
+                                <option value="1">Chờ duyệt</option>
+                                <option value="2">Đã duyệt</option>
+                                <option value="3">Đã hủy</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterSIM(1)">Tìm kiếm</button>
+                    <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
+                </div>
+            </div>
+
+            <div class="card p-3">
+                <div class="col-12 rows">
+                    @if (role.Contains("Tạo mới sim"))
+                    {
+                        <a class="btn btn-primary" asp-action="Create" asp-controller="SIM">Tạo mới sim</a>
+                    }
+                    @if (role.Contains("Import sim"))
+                    {
+                        <a class="btn btn-success mx-2" asp-action="ImportCSV" asp-controller="SIM">Import sim</a>
+                    }
+                    @if (role.Contains("Tạo mới đơn hỏi mua"))
+                    {
+                        <button class="btn btn-info mx-2" onclick="OnClickCreateOrder(0);">Đặt sim</button>
+                    }
+                    @if (role.Contains("Tạo mới đơn hỏi mua"))
+                    {
+                        <button class="btn btn-warning mx-2" onclick="OnClickApproved(0,2);">Duyệt sim</button>
+                    }
+                    @if (role.Contains("Tạo mới đơn hỏi mua"))
+                    {
+                        <button class="btn btn-danger mx-2" onclick="OnClickApproved(0,3);">Hủy sim</button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:3%">
+                            <input type="checkbox" value="" id="checkAll" onclick="OnClickCheckAll()">
+                            <input type="hidden" id="lstOrder">
+                        </th>
+                        <th>Số sim</th>
+                        <th>Seria</th>
+                        <th>Sim số đẹp</th>
+                        <th>Loại sim</th>
+                        <th>Nhà mạng</th>
+                        <th>Đơn giá nhập</th>
+                        <th>Đơn giá bán lẻ</th>
+                        <th>Chủ sở hữu</th>
+                        <th>Số liên hệ</th>
+                        <th>Ghi chú</th>
+                        <th>Ngày tạo</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#SIMCollapse').removeClass("collapsed");
+        $('#sim').addClass("show");
+        $('#SIMLstOfAgent').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    window.onload = filterSIM(1);
+    var lstOrder = [];
+    function filterSIM(page) {
+        Onloading();
+        var keyword = $('#keyword').val();
+        var productTypes = $('#productTypes').val();
+        var networks = $('#networks').val();
+        var owners = $('#owners').val();
+        var apprStatus = parseInt($('#apprStatus').val());
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 50, "keyword": keyword, "productTypes": productTypes, "networks": networks, "owners": owners, "IsMySim": false, "IsConsignment": true, "ApprStatus": apprStatus };
+        $.ajax({
+            url: '@Url.Action("SearchSimInventoryCompany", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                data.data.forEach((el) => {
+                    var action = ""
+                    if (el.status == 'Sẵn sàng') {
+                        var role = $('#uRoles').val();
+                        if (role.includes("Sửa sim"))
+                            action += '<a class="m-1" href="@Url.Action("Edit","SIM")?id=' + el.id + '" title="Sửa sim"><i class="fa fa-edit"></i></a>';
+                        if (role.includes("Xóa sim"))
+                            action += '<a class="m-1" href="@Url.Action("DeleteAgentSIM", "SIM")/' + el.id + '" title="Xóa sim"><i class="fa fa-trash"></i></a>';
+                        if (role.includes("Tạo mới đơn hỏi mua"))
+                            action += '<a class="m-1"  onclick="OnClickCreateOrder(' + el.id + ');" title="Đặt sim"><i class="fa fa-shopping-cart"></i></a>';
+                        if (role.includes("Tạo mới đơn hỏi mua"))
+                            action += '<a class="m-1"  onclick="OnClickApproved(' + el.id + ',2);" title="Duyệt sim"><i class="fa fa-check"></i></a>';
+                        if (role.includes("Tạo mới đơn hỏi mua"))
+                            action += '<a class="m-1"  onclick="OnClickApproved(' + el.id + ',3);" title="Hủy sim"><i class="fa fa-times"></i></a>';
+                    }
+                    newBody += '<tr>'
+                        + '<td><input type="checkbox" value="' + el.id + '" id="' + el.id + '" onclick="OnClickCheckBox(' + el.id + ')"></td>'
+                        + '<td>' + (el.simNumber ?? '') + '</td>'
+                        + '<td>' + (el.simSeriaNumber ?? '') + '</td>'
+                        + '<td>' + (el.simType ?? '') + '</td>'
+                        + '<td>' + (el.productType ?? '') + '</td>'
+                        + '<td>' + (el.network ?? '') + '</td>'
+                        + '<td>' + formatCurrency(el.simPriceOfAgent) + '</td>'
+                        + '<td>' + formatCurrency(el.simPrice) + '</td>'
+                        + '<td>' + (el.ownerName ?? '') + '</td>'
+                        + '<td>' + (el.ownerPhoneNumber ?? '') + '</td>'
+                        + '<td>' + (el.description ?? '') + '</td>'
+                        + '<td>' + formatDate(new Date(el.createTime)) + '</td>'
+                        + '<td>' + (el.status) + '</td>'
+                        + '<td class="table-action" >'
+                        + action
+                        + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                //write paging
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterSIM(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterSIM(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterSIM(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterSIM(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+    function OnClickCheckAll() {
+        var chkVal = document.getElementById('checkAll');
+        if (chkVal.checked === true) {
+            lstOrder = [];
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                lstOrder.push(orderId);
+                document.getElementById(orderId).checked = true;
+            })
+        } else {
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                document.getElementById(orderId).checked = false;
+            })
+            lstOrder = [];
+        }
+    }
+    function OnClickCheckBox(orderId) {
+        var chkVal = document.getElementById(orderId);
+        if (chkVal.checked === true) {
+            lstOrder.push(orderId);
+        } else {
+            const index = lstOrder.indexOf(orderId);
+            if (index > -1) {
+                lstOrder.splice(index, 1);
+            }
+        }
+    }
+    function OnClickCreateOrder(simId) {
+        if (simId == 0) {
+            if (lstOrder.length > 0) {
+                var dataReq = {
+                    "ids": lstOrder
+                }
+                $.ajax({
+                    url: '@Url.Action("CheckSimIdIsAvaliable","SIMOrder")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(dataReq),
+                    success: function (resp) {
+                        if (resp.length > 0) {
+                            window.location.href = '@Url.Action("Create","SIMOrder")?simIds=' + resp;
+                        } else {
+                            alert('Sim bạn chọn đã được đặt hoặc chưa sẵn sàng giao dịch.')
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                    }
+                });
+            } else {
+                alert('Bạn chưa chọn item');
+            }
+        }
+        else {
+            window.location.href = '@Url.Action("Create","SIMOrder")?simIds=' + simId;
+        }
+    }
+    function exportReport() {
+        Onloading();
+        var keyword = $('#keyword').val();
+        var productTypes = $('#productTypes').val();
+        var networks = $('#networks').val();
+        var owners = $('#owners').val();
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 50, "keyword": keyword, "productTypes": productTypes, "networks": networks, "owners": owners, "IsMySim": false, "IsConsignment": true };
+        $.ajax({
+            url: '@Url.Action("ExportSimInventoryCompany", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao kho so cong ty.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+
+    function OnClickApproved(simId, status) {
+        if (simId == 0) {
+            if (lstOrder.length > 0) {
+                var dataReq = {
+                    "simIds": lstOrder,
+                    "status": status
+                }
+                $.ajax({
+                    url: '@Url.Action("OnApprovedSimOfAgent","SIM")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(dataReq),
+                    success: function (resp) {
+                        alert(resp.message)
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                    }
+                });
+            } else {
+                alert('Bạn chưa chọn item');
+            }
+        }
+        else {
+            var dataReq = {
+                "simIds": simId,
+                "status": status
+            }
+            $.ajax({
+                url: '@Url.Action("OnApprovedSimOfAgent","SIM")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(dataReq),
+                success: function (resp) {
+                    alert(resp.message)
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+</script>

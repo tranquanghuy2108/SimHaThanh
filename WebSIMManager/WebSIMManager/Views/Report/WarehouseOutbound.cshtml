@@ -1,0 +1,184 @@
+﻿@{
+    ViewData["Title"] = "Báo cáo xuất hàng hoá";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Báo cáo xuất hàng hoá</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">Từ ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="startDate" type="date" class="form-control" placeholder="Nhập ngày bắt đầu" />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Đến ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="endDate" type="date" class="form-control" placeholder="Nhập ngày kết thúc" />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Tên sản phẩm</label>
+                        <select id="materialIds" type="text" class="form-control" asp-items="@ViewBag.Materials" multiple="multiple"></select>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterReport(1)">Tìm kiếm</button>
+                    <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3" style="overflow: auto;">
+            <table id="myTable" class="table table-bordered table-striped" style="min-width:1500px;">
+                <thead>
+                    <tr>
+                        <th>Loại SP</th>
+                        <th>Mã</th>
+                        <th>Tên</th>
+                        <th>Mã phiếu xuất</th>
+                        <th>SL Xuất </th>
+                        <th>Đ/G gốc</th>
+                        <th>Đ/G bán</th>
+                        <th>Thành tiền bán</th>
+                        <th>Ngày xuất</th>
+                        <th>Khách hàng</th>
+                        <th>Kho</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#ReportCollapse').removeClass("collapsed");
+        $('#report').addClass("show");
+        $('#WarehouseOutbound').addClass("active");
+    });
+</script>
+
+<script type="text/javascript">
+    window.onload = filterReport(1);
+    var lstOrder = [];
+    function filterReport(page) {
+        Onloading();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        var materialIds = $('#materialIds').val();
+        if (startDate === '') {
+            startDate = null;
+        }
+        if (endDate === '') {
+            endDate = null;
+        }
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 50, "startDate": startDate, "endDate": endDate, "materialIds": materialIds };
+        $.ajax({
+            url: '@Url.Action("SearchWarehouseOutbound", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+
+                data.data.forEach((el) => {
+                    var invoidCode = '<a href="@Url.Action("EditGoodsDeliveryNote","Warehouse")?id=' + el.invoiceId + '" title="Chi tiết PXK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+                    newBody += '<tr>'
+                        + '<td>' + el.productTypeId + '-' + el.productType + '</td>'
+                        + '<td>' + el.code + '</td>'
+                        + '<td>' + (el.name ? el.name : '') + '</td>'
+                        + '<td>' + invoidCode + '</td>'
+                        + '<td>' + formatCurrency(el.quantity) + '</td>'
+                        + '<td>' + formatCurrency(el.originalPrice) + '</td>'
+                        + '<td>' + formatCurrency(el.sellingPrice) + '</td>'
+                        + '<td>' + formatCurrency(el.totalSellingAmount) + '</td>'
+                        + '<td>' + formatDate(new Date(el.exportDate)) + '</td>'
+                        + '<td>' + (el.customer ? el.customer : '') + '</td>'
+                        + '<td>' + (el.warehouse ? el.warehouse : '') + '</td>'
+                        + '<td>' + (el.note ? el.note : '') + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+    function exportReport() {
+        Onloading();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        var materialIds = $('#materialIds').val();
+        if (startDate === '') {
+            startDate = null;
+        }
+        if (endDate === '') {
+            endDate = null;
+        }
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 50, "startDate": startDate, "endDate": endDate, "materialIds": materialIds };
+        $.ajax({
+            url: '@Url.Action("ExportWarehouseOutbound", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao xuat hang hoa.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+</script>

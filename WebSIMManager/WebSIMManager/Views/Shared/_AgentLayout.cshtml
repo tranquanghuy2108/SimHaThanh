@@ -1,0 +1,212 @@
+﻿@using Commons.Constants
+@using Models.ViewModels;
+@using Newtonsoft.Json;
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    //var userInfo = JsonConvert.DeserializeObject<UserInfoModels>(HttpContextAccessor.HttpContext?.Session.GetString(CommonConstants.PERSON_INFO_SESSION));
+    string fullName = HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList() ?? new List<string>();
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Responsive Web UI Kit &amp; Dashboard Template based on Bootstrap">
+    <meta name="author" content="AdminKit">
+    <meta name="keywords" content="adminkit, bootstrap, web ui kit, dashboard template, admin template">
+
+    <title>@ViewData["Title"] - Sim Hà Thành</title>
+
+    <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+    <link href="css/app.css" rel="stylesheet">
+    <link href="assets/css/custom.css" rel="stylesheet" />
+    <link href="~/css/style.css" rel="stylesheet" />
+    <script src="~/js/script.js"></script>
+    <script src="js/app.js"></script>
+    <link href="~/datatable/jquery.datatables.min.css" rel="stylesheet" />
+    <link href="~/css/bootstrap-select.min.css" rel="stylesheet" />
+    <link href="~/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/lib/font-awesome/css/all.css" rel="stylesheet" />
+    <link href="~/lib/font-awesome/css/all.min.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="spinner-wrapper" id="loading-page">
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    </div>
+    <div class="wrapper">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-content js-simplebar">
+                <a class="sidebar-brand" asp-action="Index" asp-controller="AppAgent">
+                    <span class="">Quản trị sim</span>
+                </a>
+
+                <ul class="sidebar-nav">
+
+                    <li class="sidebar-item" id="mySim">
+                        <a class="sidebar-link" asp-action="Index" asp-controller="AppAgent">
+                            <i class="align-middle" data-feather="sliders"></i> <span class="align-middle">Sim của tôi</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item" id="myColaborators">
+                        <a class="sidebar-link" asp-action="AgentGroup" asp-controller="AppAgent">
+                            <i class="align-middle" data-feather="sliders"></i> <span class="align-middle">Nhóm cộng tác viên</span>
+                        </a>
+                    </li>
+
+                </ul>
+
+            </div>
+        </nav>
+
+        <div class="main">
+            <nav class="navbar navbar-expand navbar-light navbar-bg">
+                <a class="sidebar-toggle d-flex">
+                    <i class="hamburger align-self-center"></i>
+                </a>
+
+                <div class="navbar-collapse collapse">
+                    <ul class="navbar-nav navbar-align">
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-icon dropdown-toggle d-inline-block d-sm-none" href="#" data-toggle="dropdown">
+                                <i class="align-middle" data-feather="settings"></i>
+                            </a>
+
+                            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-toggle="dropdown">
+                                <img src="img/avatars/avatar.jpg" class="avatar img-fluid rounded mr-1" alt="Charles Hall" />
+                                <span class="text-dark">@fullName</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" asp-action="Profile" asp-controller="User"><i class="align-middle mr-1" data-feather="user"></i> Hồ sơ</a>
+
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" asp-action="Logout" asp-controller="Admin">Đăng xuất</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="content">
+                @RenderBody()
+            </main>
+
+            <footer class="footer">
+                <div class="container-fluid">
+                    <div class="row text-muted">
+                        <div class="col-6 text-left">
+                            <p class="mb-0">
+                                <a href="https://tigergames.vn/" class="text-muted"><strong>Tigergame ,.JSC</strong></a> &copy;
+                            </p>
+                        </div>
+                        <div class="col-6 text-right">
+                            <ul class="list-inline">
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Support</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Help Center</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Privacy</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Terms</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    @await RenderSectionAsync("Scripts", false)
+    <style>
+        .required:after {
+            content: " *";
+            color: red;
+        }
+    </style>
+    @RenderSection("scripts", required: false)
+
+    <script src="~/datatable/jquery.datatables.min.js"></script>
+    <script src="~/js/jquery-3.6.0.min.js"></script>
+    <script src="~/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/bootstrap-select.min.js"></script>
+    <script>
+        $(function () {
+            $('select').selectpicker({
+                selectAllText: 'All',
+                deselectAllText: 'None'
+            });
+        });
+        function format(inp) {
+            var start = inp.selectionStart,  // get the selection start
+                end = inp.selectionEnd;    // and end, as per the linked post
+            var s1 = inp.value.split(",").length - 1; //count the commas before edit
+            inp.value = numberWithCommas(inp.value.replace(/,|[^\d.]/g, ''));
+            var s2 = inp.value.split(",").length - s1 - 1; //count the commas after edit so as to know where to place the cursor, as the position changes, if there are new commas or some commas have been removed
+            inp.setSelectionRange(start + s2, end + s2); // set the selection start and end, as per the linked post
+        }
+        function numberWithCommas(str) {
+            var a = str.split('.');
+            var p = /\B(?=(\d{3})+(?!\d))/g;
+            if (a.length > 1)
+                return a[0].toString().replace(p, ",") + "." + a[1];
+            else
+                return str.toString().replace(p, ",");
+        }
+        function formatDate(date) {
+            if (!date) return '';
+            var d = new Date(date),
+                month = '' + (d.getMonth() + 1),
+                day = '' + d.getDate(),
+                year = d.getFullYear();
+
+            if (month.length < 2)
+                month = '0' + month;
+            if (day.length < 2)
+                day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+        function formatFullDate(date) {
+            if (!date) return ''; // Check if date is null or undefined, then return an empty string
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        }
+
+        function formatCurrency(amount) {
+            if (isNaN(amount) || amount == null) {
+                return "0";
+            }
+
+            return amount.toFixed(0).replace(/\d(?=(\d{3})+$)/g, '$&,');
+        }
+
+        function convertDateFormat(dateString) {
+            var parts = dateString.split('-');
+
+            var newDateString = parts[2] + '/' + parts[1] + '/' + parts[0];
+
+            return newDateString;
+        }
+    </script>
+</body>
+</html>

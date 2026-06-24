@@ -1,0 +1,270 @@
+﻿@model Models.ViewModels.SIMOrderModel
+@{
+    var IsMobile = ViewBag.IsMobile;
+    ViewData["Title"] = "Đặt Sim Data";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="block row border-radius-3">
+    <form method="post" id="ordered" action="" class="form" onsubmit="return OrderSim();">
+        <div class="block-body p-3">
+            <h2 class="block-title text-center">@ViewBag.SimInfo.Name</h2>
+            <input type="hidden" id="ProductTypeId" value="@ViewBag.SimInfo.Id" />
+            <input type="hidden" id="simIds" value="@ViewBag.SimIds" />
+            <div class="box-order mt-15">
+                <div class="row">
+                    <div class="col-12">
+                        @Html.Raw(@ViewBag.SimInfo.Description)
+                        <p class="font-weight-bold mb-0 text-danger border rounded border-danger py-1 px-3 mb-2 d-inline-block">Giá chỉ từ : @ViewBag.SimInfo.DefaulPrice.ToString("#,##0") đ/tháng</p>
+                        <input hidden id="price" value="@ViewBag.TotalPrices" />
+                    </div>
+                </div>
+            </div>
+            <div class="box-order mt-3">
+                <h2 class="text-uppercase font-18 font-weight-bold text-center mt-2 mb-3">ĐẶT MUA SIM</h2>
+                <p class="font-italic">- Giao sim và đăng ký chính chủ miễn phí toàn quốc <br>- Nhận sim kiểm tra xong mới phải trả tiền</p>
+                <div class="form-group row mt-2">
+                    <div class="col-6"><input type="text" class="form-control form-control-sm" id="fullname" name="fullname" placeholder="Họ và Tên(*)" required="required"></div>
+                    <div class="col-6"><input type="tel" id="phone" class="form-control form-control-sm" name="phone" placeholder="Số điện thoại(*)" required="required" size="20" minlength="9" maxlength="14"></div>
+                </div>
+                <div class="form-group row mt-2">
+                    <div class="col-12 position-relative">
+                        <select id="city" class="form-control select-search select2-hidden-accessible" name="city" data-select2-id="city" tabindex="-1" aria-hidden="true">
+                            <option value="0" data-select2-id="2">Tỉnh/Thành phố</option>
+                            <option value="Hà Nội">Hà Nội</option>
+                            <option value="Hà Giang">Hà Giang</option>
+                            <option value="Cao Bằng">Cao Bằng</option>
+                            <option value="Bắc Kạn">Bắc Kạn</option>
+                            <option value="Tuyên Quang">Tuyên Quang</option>
+                            <option value="Lào Cai">Lào Cai</option>
+                            <option value="Điện Biên">Điện Biên</option>
+                            <option value="Lai Châu">Lai Châu</option>
+                            <option value="Sơn La">Sơn La</option>
+                            <option value="Yên Bái">Yên Bái</option>
+                            <option value="Hòa Bình">Hòa Bình</option>
+                            <option value="Thái Nguyên">Thái Nguyên</option>
+                            <option value="Lạng Sơn">Lạng Sơn</option>
+                            <option value="Quảng Ninh">Quảng Ninh</option>
+                            <option value="Bắc Giang">Bắc Giang</option>
+                            <option value="Phú Thọ">Phú Thọ</option>
+                            <option value="Vĩnh Phúc">Vĩnh Phúc</option>
+                            <option value="Bắc Ninh">Bắc Ninh</option>
+                            <option value="Hải Dương">Hải Dương</option>
+                            <option value="Hải Phòng">Hải Phòng</option>
+                            <option value="Hưng Yên">Hưng Yên</option>
+                            <option value="Thái Bình">Thái Bình</option>
+                            <option value="Hà Nam">Hà Nam</option>
+                            <option value="Nam Định">Nam Định</option>
+                            <option value="Ninh Bình">Ninh Bình</option>
+                            <option value="Thanh Hóa">Thanh Hóa</option>
+                            <option value="Nghệ An">Nghệ An</option>
+                            <option value="Hà Tĩnh">Hà Tĩnh</option>
+                            <option value="Quảng Bình">Quảng Bình</option>
+                            <option value="Quảng Trị">Quảng Trị</option>
+                            <option value="Thừa Thiên Huế">Thừa Thiên Huế</option>
+                            <option value="Đà Nẵng">Đà Nẵng</option>
+                            <option value="Quảng Nam">Quảng Nam</option>
+                            <option value="Quảng Ngãi">Quảng Ngãi</option>
+                            <option value="Bình Định">Bình Định</option>
+                            <option value="Phú Yên">Phú Yên</option>
+                            <option value="Khánh Hòa">Khánh Hòa</option>
+                            <option value="Ninh Thuận">Ninh Thuận</option>
+                            <option value="Bình Thuận">Bình Thuận</option>
+                            <option value="Kon Tum">Kon Tum</option>
+                            <option value="Gia Lai">Gia Lai</option>
+                            <option value="Đắk Lắk">Đắk Lắk</option>
+                            <option value="Đắk Nông">Đắk Nông</option>
+                            <option value="Lâm Đồng">Lâm Đồng</option>
+                            <option value="Bình Phước">Bình Phước</option>
+                            <option value="Tây Ninh">Tây Ninh</option>
+                            <option value="Bình Dương">Bình Dương</option>
+                            <option value="Đồng Nai">Đồng Nai</option>
+                            <option value="Bà Rịa - Vũng Tàu">Bà Rịa - Vũng Tàu</option>
+                            <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                            <option value="Long An">Long An</option>
+                            <option value="Tiền Giang">Tiền Giang</option>
+                            <option value="Bến Tre">Bến Tre</option>
+                            <option value="Trà Vinh">Trà Vinh</option>
+                            <option value="Vĩnh Long">Vĩnh Long</option>
+                            <option value="Đồng Tháp">Đồng Tháp</option>
+                            <option value="An Giang">An Giang</option>
+                            <option value="Kiên Giang">Kiên Giang</option>
+                            <option value="Cần Thơ">Cần Thơ</option>
+                            <option value="Hậu Giang">Hậu Giang</option>
+                            <option value="Sóc Trăng">Sóc Trăng</option>
+                            <option value="Bạc Liêu">Bạc Liêu</option>
+                            <option value="Cà Mau">Cà Mau</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row mt-2">
+                    <div class="col-12"><input type="text" class="form-control form-control-sm" id="address" placeholder="Địa chỉ(*)" required="required"></div>
+                </div>
+                <div class="col-6 mt-2" @(string.IsNullOrEmpty(ViewBag.SimIds) ? "" : "hidden")>
+                    <div class="col-form-label">Số lượng sim</div>
+                    <input type="number" class="form-control form-control-sm" id="amount" name="amount" placeholder="Số lượng(*)" required="required" value="1" onchange="CaculatePriceOrder();">
+                </div>
+                <div class="col-6 mt-2" @(string.IsNullOrEmpty(ViewBag.SimIds) ? "hidden" : "")>
+                    <div class="col-form-label">Số sim</div>
+                    <p class="form-control font-weight-bold" id="simNumbers">@ViewBag.SimNumbers</p>
+                </div>
+                <div class="col-6 form-check mt-2">
+                    <input class="form-check-input" type="checkbox" value="" id="buyESim" onclick="CaculatePriceOrder();">
+                    <label class="form-check-label" for="buyESim">
+                        Mua eSim (+ 50,000 đ khi mua eSim)
+                    </label>
+                </div>
+                <div class="form-group row mt-2">
+                    <div class="col-12"><textarea class="form-control form-control-sm" id="note" style="height: 80px;" placeholder="Nội dung cần ghi chú..."></textarea></div>
+                </div>
+                <div class="mt-3">
+                    <p class="font-weight-bold mb-0 text-danger border rounded border-danger py-1 px-3 mb-2 d-inline-block">Tổng tiền : <span id="priceOrder" class=""></span></p>
+                </div>
+                <div class="form-group row mt-2">
+                    <div class="col-12">
+                        <label class="d-block pl-2"><strong>Để được phục vụ nhanh hơn,</strong><span> hãy chọn thêm:</span></label>
+                        <div class="custom-control custom-radio custom-control-inline"><input type="radio" name="pay_method" value="Thanh toán khi nhận sim" class="custom-control-input" id="pay_method1"><label class="custom-control-label mx-2" for="pay_method1"> Thanh toán khi nhận sim</label></div>
+                        <div class="custom-control custom-radio custom-control-inline"><input type="radio" name="pay_method" value="Chuyển khoản ngân hàng" class="custom-control-input" id="pay_method2"><label class="custom-control-label mx-2" for="pay_method2"> Chuyển khoản ngân hàng</label></div>
+                        <span>
+                            (Số tài khoản : <strong>1210924420</strong></br>
+                            Chủ tài khoản : <strong>CÔNG TY TNHH VIỄN THÔNG CÔNG NGHỆ HÀ THÀNH</strong></br>
+                            Ngân hàng: <strong>Ngân hàng TMCP Đầu tư và Phát triển Việt Nam (BIDV). CN Hai Bà Trưng</strong>)</br>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" value="" id="agreePolicy" onclick="checkAgreePolice();">
+                    <label class="form-check-label" for="agreePolicy">
+                        Tôi đồng ý với <a class="font-italic" href="/p/chinh-sach-bao-mat">Chính sách bảo mật</a>
+                    </label>
+                </div>
+                <div class="form-group row mt-2">
+                    <div class="col-12 text-center"><button id="createOrderBtn" type="button" class="btn btn-warning btn-sm text-uppercase font-weight-bold px-5" onclick="OrderSim();">Đặt mua</button></div>
+                </div>
+            </div>
+            <div id="guideTouristSim" class="box-order mt-3 @(ViewBag.SimInfo.IsTouristSim == true ? "" : "hidden")">
+                <h3>Hướng dẫn sử dụng Sim du lịch</h3>
+                <ul>
+                    <li>Trong mỗi bao SIM có tặng kèm que lấy SIM. Nếu điện thoại của bạn có 2 khe SIM, vui lòng lắp SIM vào khe SIM 1.</li>
+                    <li>Lắp SIM vào điện thoại và bật chức năng <strong>Chuyển vùng dữ liệu (Data Roaming)</strong>&nbsp;sau khi đến nơi. Bạn có thể truy cập Internet sau vài phút.</li>
+                </ul>
+                <p style="padding-left: 40px;"><strong>iOS: </strong>Cài đặt (Setting) &gt; Di Động (Cellular) &gt; Tùy chọn dữ liệu di động (Cellular Data Options) &gt; Bật&nbsp;Chuyển vùng dữ liệu (Data Roaming)</p>
+                <p style="padding-left: 40px;"><strong>Android: </strong>Cài đặt (Setting) &gt; Kết nối (Connections) &gt; Các mạng di động (Mobile Network) &gt; Bật&nbsp;Chuyển vùng dữ liệu (Data Roaming)</p>
+                <p>Xem hướng dẫn chi tiết <a href="p/huong-dan-cai-dat-sim-data-nuoc-ngoai"><strong>tại đây</strong></a></p>
+            </div>
+            <div class="content-box mt-3">
+                <p style="text-align: center;"><strong><img alt="" class="img-responsive img-fluid" height="240" src="~/img/photos/a5.png" width="600"></strong></p>
+                <p>
+                    <span style="font-size:14px;">
+                        <strong><strong><strong><strong><strong><strong><strong><strong>✅ <a href="https://simhathanh.vn">Giao sim nhanh</a> </strong></strong></strong></strong></strong></strong></strong></strong>2h đồng hồ sau có sim luôn<br>
+                        (sim từ 1tr trở lên) (Sim nhỏ &lt; 300k. Phí cod + 30k)<br>
+                        ✅ Khách hàng đặt sim&nbsp;vui lòng điền đầy đủ thông tin<br>
+                        ✅ Shop sẽ gọi lại sau 5 - 10p (time: 8 - 21h)<br>
+                        ✅ Sau 21h. Sáng mai shop sẽ gọi lại sớm ạ.<br>
+                        ✅ 100% là đăng ký chính chủ. An toàn. uy tín chuyên nghiệp<br>
+                        ✅ Được kiểm tra sim trước khi thanh toán, rất yên tâm<br>
+                        ✅ Cảm ơn&nbsp;quý khách!<strong>
+                            <strong>
+                                <br>
+                                ----------------------
+                            </strong>
+                        </strong><br>■Phương châm:<br>
+                        ✅Nhanh - Chuẩn - An Toàn - Chuyên Nghiệp<br>
+                        ☎️0812345789<br>
+                        ✅Giaosimnhanh.vn sự lựa chọn đáng tin cậy của bạn.<strong><strong></strong></strong>
+                    </span>
+                </p>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(function () {
+        checkAgreePolice();
+        CaculatePriceOrder();
+    });
+    function checkAgreePolice() {
+        var agreePolicy = document.getElementById('agreePolicy');
+        var createOrderBtn = document.getElementById('createOrderBtn');
+
+        if (agreePolicy.checked === true) {
+            createOrderBtn.disabled = false;
+        } else {
+            createOrderBtn.disabled = true;
+        }
+    }
+    function CaculatePriceOrder() {
+        var buyESim = document.getElementById('buyESim').checked;
+        var amount = parseInt($("#amount").val());
+        var price = parseInt($("#price").val());
+        var priceOrder = price * amount;
+        if (buyESim)
+            priceOrder += amount * 50000;
+        document.getElementById('priceOrder').innerHTML = formatNumber(priceOrder.toString());
+        document.getElementById('priceOrder').value = priceOrder;
+    }
+    function OrderSim() {
+        var BuyEsim = document.getElementById('buyESim').checked;
+        var Amount = parseInt($("#amount").val());
+        var ProductTypeId = parseInt($("#ProductTypeId").val());
+        var PriceOrder = parseFloat($("#priceOrder").val());
+        var SimIds = $("#simIds").val();
+        var CusName = $("#fullname").val();
+        var CusPhone = $("#phone").val();
+        var CusAddress = $("#address").val();
+        var CusProvince = $("#city").val();
+        var CusNote = $("#note").val();
+        var PaymentMethod = 0;
+        if (document.getElementById("pay_method2").checked) {
+            PaymentMethod = 1;
+        }
+        if (ProductTypeId == "" || CusName == "" || CusPhone == "" || CusAddress == "" || CusProvince == "") {
+            alert("Bạn chưa nhập đủ dữ liệu đặt sim");
+            return;
+        }
+        if (Amount < 1) {
+            alert("Bạn chưa nhập số lượng sim");
+            return;
+        }
+        var dataReq = {
+            "SimIds" : SimIds,
+            "ProductTypeId": ProductTypeId,
+            "PriceOrder": PriceOrder,
+            "CusName": CusName,
+            "CusPhone": CusPhone,
+            "CusAddress": CusAddress,
+            "CusProvince": CusProvince,
+            "Amount": Amount,
+            "BuyEsim": BuyEsim,
+            "CusNote": CusNote,
+            "PaymentMethod": PaymentMethod,
+        }
+        $.ajax({
+            url: '@Url.Action("CreateSimDataOrder", "Home")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(dataReq),
+                xhrFields: {
+                    withCredentials: true // Gửi kèm cookie (nếu bạn đang dùng cookie auth)
+                },
+            success: function (data) {
+                if (data != undefined) {
+                    if (data.code == "1") {
+                        alert("Đơn hàng đã tạo thành công, chúng tôi sẽ liên hệ sớm với bạn để giao hàng, hãy giữ liên lạc nhé.");
+                        window.location.href = '@Url.Action("Index", "Home")';
+                    }
+                    else {
+                        alert("Có lỗi trong quá trình đặt sim, liên hệ trực tiếp theo số hỗ trợ để được đặt sim nhanh nhé.");
+                    }
+                }
+                else {
+                    alert('Có lỗi trong quá trình tạo đơn. Liên hệ với chúng tôi để đặt sim trực tiếp.');
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    }
+</script>

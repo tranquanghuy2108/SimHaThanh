@@ -1,0 +1,163 @@
+﻿@{
+    ViewData["Title"] = "ImportCSV";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>ImportCSV</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card">
+                <div class="row p-3">
+
+                    <form method="post" enctype="multipart/form-data">
+                        <div class="col-4 mx-2">
+                            <label for="formFile" class="form-label">Chọn file import</label>
+                            <input class="form-control" type="file" name="file" id="file">
+                        </div>
+                        <div class="col-4 m-2">
+                            <input type="submit" class="btn btn-primary" asp-controller="SIM" asp-action="ImportCSV" value="Đọc file Import">
+                            <input type="hidden" id="dataInFile" value="@ViewBag.CSVData">
+                            <a class="btn btn-info m-3" asp-action="DownloadTemplate" asp-controller="SIM">Tải file mẫu</a>
+                        </div>
+                    </form>
+                    <div class="col-12">
+                        <div class="col-6 m-2">
+                            <label class="form-label">KH/Đại lý</label>
+                            <div class="p-0">
+                                <select id="owners" type="text" asp-items="@ViewBag.Owners" data-live-search="true">
+                                </select>
+                            </div>
+                        </div>
+                        @* 
+                        <div class="col-6 m-2">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" rows="2" placeholder="" id="description"></textarea>
+                        </div> *@
+                    </div>
+
+                    <div class="col-12">
+                        <button class="btn btn-success m-3" onclick="importSIM();">Import dữ liệu</button>
+                        <a class="btn btn-secondary m-3" asp-action="Index" asp-controller="SIM">Trở về</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body px-3">
+                <table id="myTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:10%">Số điện thoại</th>
+                            <th style="width:8%">Giá bán</th>
+                            <th style="width:8%">Giá nhập</th>
+                            <th style="width:8%">Giá cho đại lý</th>
+                            <th style="width:8%">Giá cho CTV</th>
+                            <th style="width:10%">Seria</th>
+                            <th style="width:10%">Vị trí</th>
+                            <th style="width:10%">Loại sản phẩm Sim</th>
+                            <th style="width:10%">Nhà mạng</th>
+                            <th style="width:25%">Ghi chú</th>
+                            <th style="width:15%">Kết quả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.CSVData != null && ViewBag.CSVData.Count > 1)
+                        {
+                            for (int i = 1; i < ViewBag.CSVData.Count; i++)
+                            {
+                                <tr>
+                                    <td>@ViewBag.CSVData[i].phoneNumber</td>
+                                    <td>@ViewBag.CSVData[i].price</td>
+                                    <td>@ViewBag.CSVData[i].priceOfAgent</td>
+                                    <td>@ViewBag.CSVData[i].agentSIMPrice</td>
+                                    <td>@ViewBag.CSVData[i].collaboratorsSIMPrice</td>
+                                    <td>@ViewBag.CSVData[i].seria</td>
+                                    <td>@ViewBag.CSVData[i].position</td>
+                                    <td>@ViewBag.CSVData[i].productType</td>
+                                    <td>@ViewBag.CSVData[i].network</td>
+                                    <td>@ViewBag.CSVData[i].description</td>
+                                    <td>@ViewBag.CSVData[i].result</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div id="paging" class="px-3">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination pagination-md">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(function () {
+            $('#SIMCollapse').removeClass("collapsed");
+            $('#sim').addClass("show");
+            $('#SIMLst').addClass("active");
+        });
+    </script>
+    <script type="text/javascript">
+        function importSIM() {
+            try {
+                Onloading();
+                var owners = $('#owners').val();
+                var dataInFile = $('#dataInFile').val();
+
+                //
+                if (!owners) {
+                    OnloadingSuccess();
+                    alert('Bạn chưa nhập chủ sở hữu');
+                    return;
+                }
+                if (!dataInFile) {
+                    OnloadingSuccess();
+                    alert('Bạn chưa đọc file import');
+                    return;
+                }
+                var dataViewBag = '@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.CSVData))';
+                //var dataViewBagConvert = JSON.parse(dataViewBag);
+                var data = { "description": "", "owner": owners, "dataInFile": dataViewBag};
+                $.ajax({
+                    url: '@Url.Action("ImportSIM", "SIM")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(data),
+                    success: function (data) {
+                        OnloadingSuccess();
+                        //Write table tbody
+                        var tbody = $("#myTable tbody")
+                        tbody.children().remove();
+                        var newBody = "";
+                        data.forEach((el) => {
+                            newBody += '<tr>'
+                                + '<td>' + el.phoneNumber + '</td>'
+                                + '<td>' + el.price + '</td>'
+                                + '<td>' + el.priceOfAgent + '</td>'
+                                + '<td>' + el.agentSIMPrice + '</td>'
+                                + '<td>' + el.collaboratorsSIMPrice + '</td>'
+                                + '<td>' + el.seria + '</td>'
+                                + '<td>' + el.position + '</td>'
+                                + '<td>' + el.productType + '</td>'
+                                + '<td>' + el.network + '</td>'
+                                + '<td>' + el.description + '</td>'
+                                + '<td>' + el.result + '</td>'
+                                + '</tr>';
+                        });
+                        tbody.append(newBody);
+                    },
+                    error: function (xhr) {
+                        OnloadingSuccess();
+                        console.log(xhr);
+                    }
+                });
+
+            } catch (Err) {
+                OnloadingSuccess();
+                alert("Hãy kiểm tra dữ liệu của bạn trước khi import");
+            }
+            
+        };
+    </script>

@@ -1,0 +1,104 @@
+﻿@using Models.ViewModels
+@model FlashSaleModel
+@{
+    ViewData["Title"] = "Thêm mới flashsale";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Thêm mới flashsale</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                <div class="col-md-10 row">
+                    <div class="form-group col-md-4">
+                        <label class="form-label required">Tên phiên flashsale</label>
+                        <input type="text" class="form-control" placeholder="" asp-for="Name">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label class="form-label required">Thời gian băt đầu</label>
+                        <input type="datetime-local" class="form-control" placeholder="" asp-for="StartTime" format-value="yyyy-MM-ddTHH:mm">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label class="form-label required">Thời gian kết thúc</label>
+                        <input type="datetime-local" class="form-control" placeholder="" asp-for="EndTime" format-value="yyyy-MM-ddTHH:mm">
+                    </div>
+                </div>
+                @if (Model?.SimFlashSaleInfos != null)
+                {
+                    <div class="col-md-6">
+                        @if (Model?.SimFlashSaleInfos.Count > 0)
+                        {
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th style="width:5%">STT</th>
+                                        <th style="width:20%">Số sim</th>
+                                        <th style="width:20%">Giá bán</th>
+                                        <th style="width:20%">Chiết khấu</th>
+                                        <th style="width:20%">Giá flashsale</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model?.SimFlashSaleInfos.Count(); i++)
+                                    {
+                                        <tr id="row_@(i)">
+                                            <td>@(i + 1)</td>
+                                            <td>
+                                                <input type="text" class="form-control" asp-for="SimFlashSaleInfos[i].SimNumber" readonly />
+                                                <input type="hidden" asp-for="SimFlashSaleInfos[i].SimId" />
+                                                <input type="hidden" asp-for="SimFlashSaleInfos[i].NetworkId" />
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control" asp-for="SimFlashSaleInfos[i].SimPrice" readonly />
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control" asp-for="SimFlashSaleInfos[i].Discount" onchange="OnDiscountChange(@i)" />
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control" asp-for="SimFlashSaleInfos[i].SalePrice" onchange="OnSalePriceChange(@i)" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <i>Không có sim khả dụng</i>
+                        }
+                    </div>
+                }
+                <div class="form-group col-md-6">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Create" asp-controller="FlashSale" width="100px">Thêm mới</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="FlashSale" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $('#AppManagerCollapse').removeClass("collapsed");
+        $('#appManager').addClass("show");
+        $('#flashsales').addClass("active");
+    });
+    function OnDiscountChange(i) {
+        var simPrice = parseFloat($("#SimFlashSaleInfos_" + i + "__SimPrice").val());
+        var discount = parseFloat($("#SimFlashSaleInfos_" + i + "__Discount").val());
+        var salePrice = simPrice - (simPrice * discount / 100);
+        document.getElementById('SimFlashSaleInfos_' + i + '__SalePrice').value = salePrice;
+    }
+    function OnSalePriceChange(i) {
+        var simPrice = parseFloat($("#SimFlashSaleInfos_" + i + "__SimPrice").val());
+        var salePrice = parseFloat($("#SimFlashSaleInfos_" + i + "__SalePrice").val());
+        var discount = ((simPrice - salePrice) / simPrice) * 100;
+        document.getElementById('SimFlashSaleInfos_' + i + '__Discount').value = discount;
+    }
+</script>

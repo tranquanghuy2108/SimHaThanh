@@ -1,0 +1,46 @@
+﻿@using Models.ViewModels
+@model ShippingUnitModel
+@{
+    ViewData["Title"] = "Cập nhật đơn vị vận chuyển";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Cập nhật đơn vị vận chuyển</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Tên đơn vị vận chuyển</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Name">
+                    @Html.HiddenFor(x=>x.Id)
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">API liên kết đơn vị vận chuyển</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="APIUrl">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Token</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Token">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Edit" asp-controller="ShippingUnit" width="100px">Cập nhật</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="ShippingUnit" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $('#SettingsCollapse').removeClass("collapsed");
+        $('#settings').addClass("show");
+        $('#shippingLst').addClass("active");
+    });
+</script>

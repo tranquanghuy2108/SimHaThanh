@@ -1,0 +1,208 @@
+﻿@{
+    ViewData["Title"] = "Báo cáo lợi nhuận số đẹp";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Báo cáo lợi nhuận số đẹp</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">Loại phiếu</label>
+                        <div class="col-12 p-0">
+                            <select id="type" type="text" data-live-search="true" placeholder="Chọn loại phiếu">
+                                <option value="0">Tất cả</option>
+                                <option value="1">Phiếu xuất SIM</option>
+                                <option value="2">Phiếu xuất Kho</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Từ ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="startDate" type="date" class="form-control" placeholder="Nhập ngày bắt đầu" />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Đến ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="endDate" type="date" class="form-control" placeholder="Nhập ngày kết thúc" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterReport(1)">Tìm kiếm</button>
+                    <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th colspan="3">Thông tin phiếu</th>
+                        <th colspan="4">Thông tin sim</th>
+                        <th>Lãi</th>
+                        <th>Tổng</th>
+                        <th>Lãi</th>
+                        <th>Nhân viên thực hiện</th>
+                    </tr>
+                    <tr>
+                        <th>Ngày xuất</th>
+                        <th>Mã phiếu</th>
+                        <th>Tên KH</th>
+                        <th>Số sim</th>
+                        <th>Đại lý có sim</th>
+                        <th>Tiền nhập</th>
+                        <th>Tiền bán</th>
+                        <th>Chưa trừ phí</th>
+                        <th>Các chi phí</th>
+                        <th>Đã trừ phí</th>
+                        <th>Người lập</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#ReportCollapse').removeClass("collapsed");
+        $('#report').addClass("show");
+        $('#OrderProfit').addClass("active");
+    });
+</script>
+
+<script type="text/javascript">
+    window.onload = filterReport(1);
+    var lstOrder = [];
+    function filterReport(page) {
+        Onloading();
+        var type = $('#type').val();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (type === '') {
+            type = null;
+        }
+        if (startDate === '') {
+            startDate = null;
+        }
+        if (endDate === '') {
+            endDate = null;
+        }
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 50, "type": type, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("SearchOrderProfit", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+
+                console.log(data.data);
+                data.data.forEach((el) => {
+                    var invoiceCode = (el.invoiceCode ? el.invoiceCode : '');
+                    if (el.invoiceCode.includes("PXK"))
+                        invoiceCode = '<a href="@Url.Action("GoodsDeliveryNoteDetail","Warehouse")?id=' + el.invoiceId + '" title="Chi tiết PXK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+                    if (el.invoiceCode.includes("PXSim"))
+                        invoiceCode = '<a href="@Url.Action("XuatSimDetail","SIMOrder")?debtid=' + el.invoiceId + '" title="Chi tiết PNK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+
+                    newBody += '<tr>'
+                        + '<td>' + formatDate(new Date(el.exportDate)) + '</td>'
+                        + '<td>' + invoiceCode + '</td>'
+                        + '<td>' + (el.customerName ? el.customerName : '') + '</td>'
+                        + '<td>' + (el.simNumbers ? el.simNumbers : '') + '</td>'
+                        + '<td>' + (el.warehouse ? el.warehouse : '') + '</td>'
+                        + '<td>' + formatCurrency(el.importValue) + '</td>'
+                        + '<td>' + formatCurrency(el.exportValue) + '</td>'
+                        + '<td>' + formatCurrency(el.interest) + '</td>'
+                        + '<td>' + formatCurrency(el.cost) + '</td>'
+                        + '<td>' + formatCurrency(el.difference) + '</td>'
+                        + '<td>' + (el.creator ? el.creator : '') + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+    function exportReport() {
+        Onloading();
+        var type = $('#type').val();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (type === '') {
+            type = null;
+        }
+        if (startDate === '') {
+            startDate = null;
+        }
+        if (endDate === '') {
+            endDate = null;
+        }
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 50, "type": type, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("ExportOrderProfit", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao loi nhuan so dep.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+</script>

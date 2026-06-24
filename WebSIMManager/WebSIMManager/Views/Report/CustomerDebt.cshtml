@@ -1,0 +1,248 @@
+﻿@{
+    ViewData["Title"] = "Báo cáo Chi tiết công nợ khách hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Báo cáo Chi tiết công nợ khách hàng</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <select type="text" class="form-control col-12" id="userIds" multiple="multiple" asp-items="@ViewBag.UserIds" data-live-search="true" data-actions-box="true">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Từ ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="startDate" type="date" class="form-control" placeholder="Nhập ngày bắt đầu" />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Đến ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="endDate" type="date" class="form-control" placeholder="Nhập ngày kết thúc" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterReport(1)">Tìm kiếm</button>
+                    <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
+                    <a href="@Url.Action("CreateReceipt","Debt", new { agentId = @ViewBag.UserId })" class="btn btn-success">Lập phiếu thu/chi</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3" style="overflow: auto;">
+            <div class="form-group col-12 row">
+                <span style="font-weight:bold;" id="title">@ViewBag.TitleReport. <span id="timeReport"></span></span>
+            </div>
+            <div class="form-group col-12 row">
+                <div class="col-4">
+                    <span id="beginningBalance"></span>
+                </div>
+                <div class="col-4">
+                    <span id="incidentalDebt"></span>
+                </div>
+                <div class="col-4">
+                    <span id="endingBalance"></span>
+                </div>
+            </div>
+
+            <table id="myTable" class="table table-bordered table-striped" style="min-width:2500px;">
+                <thead>
+                    <tr>
+                        <th colspan="4">Thông tin phiếu</th>
+                        <th colspan="4">Thông tin phát sinh chi tiết</th>
+                        <th colspan="2">P/S trong kỳ</th>
+                        <th></th>
+                        <th colspan="4">Thông tin khác</th>
+                    </tr>
+                    <tr>
+                        <th>Ngày phát sinh</th>
+                        <th>Mã phiếu</th>
+                        <th>Loại phiếu</th>
+                        <th>Tên đại lý</th>
+                        <th>Số sim</th>
+                        <th>Giá niêm yết</th>
+                        <th>Giá thu về</th>
+                        <th>Phí PS</th>
+                        <th>P/S Tăng</th>
+                        <th>P/S Giảm</th>
+                        <th>Công nợ PS</th>
+                        <th> Diễn giải/Ghi chú</th>
+                        <th>Hình thức giao dịch</th>
+                        <th>COD </th>
+                        <th>Người lập</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#ReportCollapse').removeClass("collapsed");
+        $('#debt').addClass("show");
+        $('#AgencyGroup').addClass("active");
+        $("#userIds option[value='@ViewBag.UserId']").attr('selected', 'selected');
+        window.onload = filterReport(1);
+    });
+</script>
+
+<script type="text/javascript">
+    const url = new URL(window.location.href);
+    $('#startDate').val(url.searchParams.get('startDate'));
+    $('#endDate').val(url.searchParams.get('endDate'));
+
+    var lstOrder = [];
+    function filterReport(page) {
+        debugger
+        Onloading();
+        var agentId = $('#userIds').val();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        var timeReport = "";
+        if (startDate === '') {
+            startDate = null;
+        }
+        else {
+            timeReport += "Từ ngày " + convertDateFormat(startDate);
+        }
+        if (endDate === '') {
+            endDate = null;
+        }
+        else {
+            timeReport += " đến hết ngày " + convertDateFormat(endDate);
+        }
+        $('#timeReport').html(timeReport);
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 50, "agentId": agentId, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("SearchCustomerDebt", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+
+                console.log(data.data);
+                data.data.forEach((el) => {
+                    var invoiceCode = (el.invoiceCode ? el.invoiceCode : '');
+                    if (invoiceCode.includes("PXK"))
+                        invoiceCode = '<a href="@Url.Action("GoodsDeliveryNoteDetail","Warehouse")?id=' + el.invoiceId + '" title="Chi tiết PXK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+                    else if (invoiceCode.includes("PNK"))
+                        invoiceCode = '<a href="@Url.Action("GoodsReceivedNoteDetail","Warehouse")?id=' + el.invoiceId + '" title="Chi tiết PNK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+                    else if (invoiceCode.includes("PXSim"))
+                        invoiceCode = '<a href="@Url.Action("XuatSimDetail","SIMOrder")?debtid=' + el.invoiceId + '" title="Chi tiết PNK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+                    else 
+                        invoiceCode = '<a href="@Url.Action("ReceiptDetail","Debt")?id=' + el.invoiceId + '" title="Chi tiết PNK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+                    newBody += '<tr>'
+                        + '<td>' + formatFullDate(new Date(el.transactionDate)) + '</td>'
+                        //+ '<td>' + (el.invoiceCode ? el.invoiceCode : '') + '</td>'
+                        + '<td>' + invoiceCode + '</td>'
+                        + '<td>' + (el.invoiceType ? el.invoiceType : '') + '</td>'
+                        + '<td>' + (el.agentName) + '</td>'
+                        + '<td>' + (el.numberOfSIMs ? el.numberOfSIMs : '') + '</td>'
+                        + '<td>' + formatCurrency(el.listedPrice) + '</td>'
+                        + '<td>' + formatCurrency(el.actualPriceReceived) + '</td>'
+                        + '<td>' + formatCurrency(el.incidentalFee) + '</td>'
+                        + '<td>' + formatCurrency(el.increaseIncidents) + '</td>'
+                        + '<td>' + formatCurrency(el.decreaseIncidents) + '</td>'
+                        + '<td>' + formatCurrency(el.incidentalDebt) + '</td>'
+                        + '<td>' + (el.note ? el.note : '') + '</td>'
+                        + '<td>' + (el.transactionMethod ? el.transactionMethod : '') + '</td>'
+                        + '<td>' + (el.cod ? el.cod : '') + '</td>'
+                        + '<td>' + (el.creator ? el.creator : '') + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                var beginningBalance = data.data[0].beginningBalance ?? 0;
+                var incidentalDebt = data.data.reduce((total, el) => total + el.incidentalDebt, 0)
+                $("#beginningBalance").html("Nợ đầu kỳ: " + formatCurrency(beginningBalance) + " đ.");
+                $("#incidentalDebt").html("Phát sinh trong kỳ: " + formatCurrency(incidentalDebt) + " đ.");
+                $("#endingBalance").html("Công nợ cuối kỳ: " + formatCurrency(beginningBalance + incidentalDebt) + " đ. (Lưu ý: Số âm là nợ đại lý)");
+
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+    function exportReport() {
+        Onloading();
+        var agentId = $('#userIds').val();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (startDate === '') {
+            startDate = null;
+        }
+        if (endDate === '') {
+            endDate = null;
+        }
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 50, "agentId": agentId, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("ExportCustomerDebt", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao chi tiet cn khach hang.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+    function OnClickAddReceive() {
+        //window.location.href = '@Url.Action("CreateReceipt", "Debt")?agentId=' + @ViewBag.UserId;
+    }
+</script>

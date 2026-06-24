@@ -1,0 +1,197 @@
+﻿@{
+    ViewData["Title"] = "Báo cáo Kho số công ty";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Báo cáo Kho số công ty</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input id="keyword" type="text" class="form-control">
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Loại sản phẩm</label>
+                        <div class="col-12 p-0">
+                            <select id="productTypes" type="text" multiple="multiple" asp-items="@ViewBag.ProductTypes" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Nhà mạng</label>
+                        <div class="col-12 p-0">
+                            <select id="networks" type="text" multiple="multiple" asp-items="@ViewBag.Networks" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <select id="owners" type="text" multiple="multiple" asp-items="@ViewBag.Owners" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterReport(1)">Tìm kiếm</button>
+                    <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3" style="overflow: auto;">
+            <table id="myTable" class="table table-bordered table-striped" style="min-width:2000px;">
+                <thead>
+                    <tr>
+                        <th>Đã Đặt </th>
+                        <th>Số sim </th>
+                        <th>Số sim </th>
+                        <th>Đơn giá nhập </th>
+                        <th>Đơn giá bán lẻ </th>
+                        <th>Giá bán cho đại lý </th>
+                        <th>Giá bán cho CTV </th>
+                        <th>ID CTV độc quyền </th>
+                        <th>Vị trí </th>
+                        <th>Seri sim </th>
+                        <th>Gói cước </th>
+                        <th>Ghi chú \ Diễn giải </th>
+                        <th>Đã kích hoạt </th>
+                        <th>TK Chính </th>
+                        <th>Ngày PS gần nhất </th>
+                        <th>Ngày cảnh báo PS </th>
+                        <th>Ngày phải PS </th>
+                        <th>Diễn giải khi PS </th>
+                        <th>Sim CTV</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#ReportCollapse').removeClass("collapsed");
+        $('#report').addClass("show");
+        $('#SimInventoryCompany').addClass("active");
+    });
+</script>
+
+<script type="text/javascript">
+    window.onload = filterReport(1);
+    var lstOrder = [];
+    function filterReport(page) {
+        Onloading();
+        var keyword = $('#keyword').val();
+        var productTypes = $('#productTypes').val();
+        var networks = $('#networks').val();
+        var owners = $('#owners').val();
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 50, "keyword": keyword, "productTypes": productTypes, "networks": networks, "owners": owners, "IsSimData" : false };
+        $.ajax({
+            url: '@Url.Action("SearchSimInventoryCompany", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+
+                console.log(data.data);
+                data.data.forEach((el) => {
+                    newBody += '<tr>'
+                        + '<td>' + el.isBooked + '</td>'
+                        + '<td>' + el.simNumber + '</td>'
+                        + '<td>' + parseInt(el.simNumber.replace(/\D/g, '')) + '</td>'
+                        + '<td>' + formatCurrency(el.simPrice) + '</td>'
+                        + '<td>' + formatCurrency(el.simPriceOfCustomer) + '</td>'
+                        + '<td>' + formatCurrency(el.simPriceOfAgent) + '</td>'
+                        + '<td>' + formatCurrency(el.simPriceForPartner) + '</td>'
+                        + '<td>' + (el.partnerId ? el.partnerId : '') + '</td>'
+                        + '<td>' + (el.owner ? el.owner : '') + '</td>'
+                        + '<td>' + (el.simSeriaNumber ? el.simSeriaNumber : '') + '</td>'
+                        + '<td>' + (el.simPackage ? el.simPackage : '') + '</td>'
+                        + '<td>' + (el.description ? el.description : '') + '</td>'
+                        + '<td>' + (el.isActive ? el.isActive : '') + '</td>'
+                        + '<td>' + (el.primaryAccount ? el.primaryAccount : '') + '</td>'
+                        + '<td>' + formatDate(el.lastOccurrenceDate) + '</td>'
+                        + '<td>' + formatDate(el.warningOccurrenceDate) + '</td>'
+                        + '<td>' + formatDate(el.dueOccurrenceDate) + '</td>'
+                        + '<td>' + (el.occurrenceExplanation ? el.occurrenceExplanation : '') + '</td>'
+                        + '<td>' + (el.isPartnerSim ? el.isPartnerSim : '') + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+    function exportReport() {
+        Onloading();
+        var keyword = $('#keyword').val();
+        var productTypes = $('#productTypes').val();
+        var networks = $('#networks').val();
+        var owners = $('#owners').val();
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 50, "keyword": keyword, "productTypes": productTypes, "networks": networks, "owners": owners };
+        $.ajax({
+            url: '@Url.Action("ExportSimInventoryCompany", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao kho so cong ty.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+</script>

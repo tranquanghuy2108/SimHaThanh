@@ -1,0 +1,85 @@
+﻿@using Models.ViewModels
+@model MaterialTypeModel
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Quản lý loại mặt hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Quản lý loại mặt hàng</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post" onsubmit="Onloading();">
+                @Html.HiddenFor(x=>x.Id)
+                <div class="row  col-md-8">
+                    <div class="form-group col-md-4">
+                        <label class="form-label required">Mã mặt hàng</label>
+                        <input type="text" class="form-control" placeholder="" asp-for="Code">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label class="form-label required">Tên mặt hàng</label>
+                        <input type="text" class="form-control" placeholder="" asp-for="Name">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label class="form-label">Mô tả</label>
+                        <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                    </div>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-success m-3 btn-default" asp-action="EditMaterialType" asp-controller="Warehouse" width="100px">Cập nhật loại mặt hàng</button>
+                <a class="btn btn-warning m-3 btn-default" asp-action="CreateMaterialGroup" asp-controller="Warehouse" width="100px">Quản lý nhóm mặt hàng</a>
+                <a class="btn btn-primary m-3 btn-default" asp-action="CreateMaterial" asp-controller="Warehouse" width="100px">Quản lý mặt hàng</a>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width:5%;">#</th>
+                        <th style="width:20%">Mã mặt hàng</th>
+                        <th style="width:20%">Tên mặt hàng</th>
+                        <th style="width:45%">Mô tả</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int idx = 0;
+                        foreach (var item in @ViewBag.DataTable)
+                        {
+                            idx++;
+                            <tr>
+                                <td>@idx</td>
+                                <td>@item.Code</td>
+                                <td>@item.Name</td>
+                                <td>@item.Description</td>
+                                <td class="table-action">
+                                    <a asp-action="EditMaterialType" asp-route-id="@item.Id"><i class="align-middle" data-feather="edit-2"></i></a>
+                                    <a asp-action="DeleteMaterialType" asp-route-id="@item.Id"><i class="align-middle" data-feather="trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#WarehouseCollapse').removeClass("collapsed");
+        $('#warehouse').addClass("show");
+        $('#materialLst').addClass("active");
+    });
+</script>

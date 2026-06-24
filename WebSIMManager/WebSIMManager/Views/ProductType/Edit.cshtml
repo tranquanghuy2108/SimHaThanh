@@ -1,0 +1,85 @@
+﻿@using Models.ViewModels
+@model ProductTypeModel
+@{
+    ViewData["Title"] = "Cập nhật loại sim";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Cập nhật loại sim</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Tên loại sảm phẩm</label>
+                    <input type="text" class="form-control" placeholder="Tên loại sảm phẩm" asp-for="Name">
+                    @Html.HiddenFor(x=>x.Id)
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Quốc gia</label>
+                    <select type="text" class="form-control" placeholder="" asp-for="CountryId" asp-items="@ViewBag.Contries"></select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Giá mặc định</label>
+                    <input type="number" class="form-control" placeholder="Giá mặc định" asp-for="DefaulPrice">
+                </div>
+                <div class="form-group col-3">
+                    <div class="form-check align-items-center">
+                        <input asp-for="IsSimData" type="checkbox" class="form-check-input">
+                        <label class="form-check-label text-small" for="customControlInline">Là sim data</label>
+                    </div>
+                </div>
+                <div class="form-group col-3">
+                    <div class="form-check align-items-center">
+                        <input asp-for="IsTouristSim" type="checkbox" class="form-check-input">
+                        <label class="form-check-label text-small" for="customControlInline">Là sim du lịch</label>
+                    </div>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Tóm tắt</label>
+                    <textarea class="form-control" rows="2" placeholder="Tóm tắt loại sim" asp-for="Summary"></textarea>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Mô tả</label>
+                    <textarea class="form-control" rows="2" placeholder="Mô tả chi tiết" asp-for="Description"></textarea>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Edit" asp-controller="ProductType" width="100px">Cập nhật</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="ProductType" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $('#SIMCollapse').removeClass("collapsed");
+        $('#sim').addClass("show");
+        $('#ProductType').addClass("active");
+    });
+</script>
+<script src="~/js/ckeditor.js"></script>
+<script>
+    ClassicEditor
+        .create(document.querySelector('#Summary'), {
+            // toolbar: [ 'heading', '|', 'bold', 'italic', 'link' ]
+        })
+        .then(editor => {
+            window.editor = editor;
+        })
+        .catch(err => {
+            console.error(err.stack);
+        });
+    ClassicEditor
+        .create(document.querySelector('#Description'), {
+            // toolbar: [ 'heading', '|', 'bold', 'italic', 'link' ]
+        })
+        .then(editor => {
+            window.editor = editor;
+        })
+        .catch(err => {
+            console.error(err.stack);
+        });
+</script>

@@ -1,0 +1,296 @@
+﻿@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Danh sách công nợ tài khoản ngân hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<input id="uRoles" type="hidden" value="@string.Join(", ", role)" />
+<h1>Danh sách công nợ tài khoản ngân hàng</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <input type="hidden" id="userId" value="@ViewBag.userId">
+            <input type="hidden" id="debtType" value="@ViewBag.debtType">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">Từ ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="startDate" type="date" class="form-control" placeholder="Nhập ngày bắt đầu" />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Đến ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="endDate" type="date" class="form-control" placeholder="Nhập ngày kết thúc" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filter(1)">Tìm kiếm</button>
+                    <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
+                </div>
+            </div>
+
+            <div class="card p-3">
+                <div class="col-12 rows">
+                    <a class="btn btn-secondary btn-default" asp-action="BankBalance" asp-controller="Report" width="100px">Trở về</a>
+                    @if (role.Contains("Duyệt công nợ"))
+                    {
+                        <a class="btn btn-primary m-3" onclick="ConfirmDebtSettlementOfBank(0);">Đã nhận tiền</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3" style="overflow: auto;">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:2%">
+                            <input type="checkbox" value="" id="checkAll" onclick="OnClickCheckAll()">
+                            <input type="hidden" id="lstOrder">
+                        </th>
+                        <th style="width:7%">Ngày phát sinh</th>
+                        <th style="width:8%">Mã phiếu</th>
+                        <th style="width:10%">T/T ngân hàng</th>
+                        <th style="width:8%">PS Tăng</th>
+                        <th style="width:8%">PS Giảm</th>
+                        @* <th style="width:8%">Nợ cuối</th> *@
+                        <th style="width:15%">Diễn giải</th>
+                        <th style="width:15%">Ghi chú</th>
+                        <th style="width:7%">Trạng thái</th>
+                        <th style="width:10%">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#DebtCollapse').removeClass("collapsed");
+        $('#debt').addClass("show");
+        $('#bankFundBalanceLst').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    window.onload = filter(1);
+    var lstOrder = [];
+    function filter(page) {
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (startDate === null || startDate === '') {
+            startDate = '1900-01-01';
+        }
+        if (endDate === null || endDate === '') {
+            endDate = '2999-12-31';
+        }
+        var debtType = parseInt($('#debtType').val());
+        var userId = $('#userId').val();
+        var data = { "debtType": debtType, "userIds": [userId], "pageIndex": page, "pageSize": 50, "isPaged": true, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("SearchDebtBankDetail", "Debt")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                data.data.forEach((el) => {
+                    var action = '';
+                    var role = $('#uRoles').val();
+                    if (role.includes("Duyệt công nợ")) {
+                        if (!el.isDebtSettlement)
+                            action += '<a class="btn btn-primary m-1" onclick="ConfirmDebtSettlementOfBank(' + el.id + ');" title="Đã nhận tiền" style="color: aliceblue;">Đã nhận tiền</i></a>';
+                    }
+                    var status = "Chưa nhận tiền";
+                    if (el.isDebtSettlement)
+                        status = "Đã nhận tiền";
+                    var invoidCode = (el.debtCode ? el.debtCode : '');
+                    if (el.debtCode.includes("PXK"))
+                        invoidCode = '<a href="@Url.Action("GoodsDeliveryNoteDetail","Warehouse")?id=' + el.invoiceId + '" title="Chi tiết PXK ' + el.debtCode + '">' + el.debtCode + '</a>';
+                    if (el.debtCode.includes("PNK"))
+                        invoidCode = '<a href="@Url.Action("GoodsReceivedNoteDetail","Warehouse")?id=' + el.invoiceId + '" title="Chi tiết PNK ' + el.debtCode + '">' + el.debtCode + '</a>';
+                    if (el.debtCode.includes("PXSim"))
+                        invoidCode = '<a href="@Url.Action("XuatSimDetail","SIMOrder")?debtid=' + el.invoiceId + '" title="Chi tiết PNK ' + el.debtCode + '">' + el.debtCode + '</a>';
+
+                    newBody += '<tr>'
+                        + '<td><input type="checkbox" value="' + el.id + '" id="' + el.id + '" onclick="OnClickCheckBox(' + el.id + ')"></td>'
+                        + '<td>' + el.createTime.split("T")[0] + '</td>'
+                        + '<td>' + invoidCode + '</td>'
+                        + '<td>' + (el.pic ? el.pic : '') + '</td>'
+                        + '<td>' + el.receivables.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '</td>'
+                        + '<td>' + el.liabilities.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '</td>'
+                        // + '<td>' + el.finalDebt.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '</td>'
+                        + '<td>' + (el.description ? el.description : '') + '</td>'
+                        + '<td>' + (el.note ? el.note : '') + '</td>'
+                        + '<td>' + status + '</td>'
+                        + '<td class="table-action" >'
+                        + action
+                        + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                //write paging
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filter(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filter(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filter(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filter(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    };
+
+    function OnClickCheckAll() {
+        var chkVal = document.getElementById('checkAll');
+        if (chkVal.checked === true) {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            lstOrder = [];
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                lstOrder.push(orderId);
+                document.getElementById(orderId).checked = true;
+            })
+            console.log('result ' + lstOrder);
+        } else {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                document.getElementById(orderId).checked = false;
+            })
+            lstOrder = [];
+            console.log('result ' + lstOrder);
+        }
+    }
+    function OnClickCheckBox(orderId) {
+        var chkVal = document.getElementById(orderId);
+        if (chkVal.checked === true) {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            lstOrder.push(orderId);
+            console.log('result ' + lstOrder);
+        } else {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            const index = lstOrder.indexOf(orderId);
+            if (index > -1) {
+                lstOrder.splice(index, 1);
+            }
+            console.log('result ' + lstOrder);
+        }
+    }
+    function ConfirmDebtSettlementOfBank(debtId) {
+        if (debtId == 0) {
+            if (lstOrder.length > 0) {
+                var dataReq = {
+                    "debtIds": lstOrder.join(','),
+                    "status": 1
+                }
+                $.ajax({
+                    url: '@Url.Action("ConfirmDebtSettlementOfBank", "Debt")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(dataReq),
+                    success: function (data) {
+                        alert(data.message)
+                        if (data.code == "1") {
+                            filter(1);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                    }
+                });
+            } else {
+                alert('Bạn chưa chọn item');
+            }
+        }
+        else {
+            var dataReq = {
+                "debtIds": debtId.toString(),
+                "status": 1
+            }
+            $.ajax({
+                url: '@Url.Action("ConfirmDebtSettlementOfBank", "Debt")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(dataReq),
+                success: function (data) {
+                    alert(data.message)
+                    if (data.code == "1") {
+                        filter(1);
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+
+    function exportReport() {
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (startDate === null || startDate === '') {
+            startDate = '1900-01-01';
+        }
+        if (endDate === null || endDate === '') {
+            endDate = '2999-12-31';
+        }
+        var debtType = parseInt($('#debtType').val());
+        var userId = $('#userId').val();
+        var data = { "debtType": debtType, "userId": userId, "pageIndex": 1, "pageSize": 2147483647, "isPaged": false, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("ExportDebtBankDetail", "Debt")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao giao dich ngan hang.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+</script>

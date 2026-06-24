@@ -1,0 +1,189 @@
+﻿@model Models.Requests.GetPagingRequest
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Danh sách người dùng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<input id="uRoles" type="hidden" value="@string.Join(", ", role)" />
+<h1>Danh sách Đại lý/Khách lẻ</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-4">
+                        <label class="form-label">Tài khoản KH/Đại lý</label>
+                        <input id="agentAcc" type="text" class="form-control">
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label">Nhóm KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <select id="agentGroup" type="text" multiple="multiple" asp-items="@ViewBag.AgentGroups" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterAgent(1)">Tìm kiếm</button>
+                </div>
+            </div>
+
+            <div class="card p-3">
+                <div class="col-4">
+                    @if (role.Contains("Tạo mới KH/Đại lý"))
+                    {
+                        <a class="btn btn-success" asp-action="Create" asp-controller="Agent">Tạo mới KH/Đại lý</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:10%">Tài khoản</th>
+                        <th style="width:10%">Tên KH/Đại lý</th>
+                        <th style="width:10%">Số điện thoại</th>
+                        <th style="width:12%">Email</th>
+                        <th style="width:15%">Địa chỉ</th>
+                        <th class="width:12%">Nhóm chiết khấu</th>
+                        <th style="width:8%">Số lượng sim</th>
+                        <th style="width:15%">Ghi chú</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#AgentCollapse').removeClass("collapsed");
+        $('#agent').addClass("show");
+        $('#AgentLst').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    window.onload = filterAgent(1);
+    function filterAgent(page) {
+        Onloading();
+        var agentAcc = $('#agentAcc').val();
+        var agentGroup = $('#agentGroup').val();
+        var data = { "isAgent": true, "isConsignmentAgent": true, "agentAcc": agentAcc, "agentGroup": agentGroup, "pageIndex": page, "pageSize": 50 };
+        $.ajax({
+            url: '@Url.Action("Search","Agent")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                data.data.forEach((el) => {
+                    var action = '';
+                    var role = $('#uRoles').val();
+                    if (role.includes("Sửa KH/Đại lý")) {
+                        action += '<a href="@Url.Action("Edit","Agent")?id=' + el.id + '" title="Sửa KH/Đại lý"><i class="fa fa-edit"></i></a>';
+                    }
+                    if (role.includes("Xóa KH/Đại lý")) {
+                        action += '<a class="m-1" onclick="OnClickDeleteAgent(\'' + el.id + '\');" title="Xóa KH/Đại lý"><i class="fa fa-trash"></i></a>';
+                    }
+                    if (role.includes("Xóa sim của đại lý")) {
+                        action += '<a class="m-1" onclick="OnClickDeleteSIMOfAgent(\'' + el.id + '\');" title="Xóa Sim đại lý"><i class="fa fa-remove"></i></a>';
+                    }
+                    newBody += '<tr>'
+                        + '<td>' + el.username + '</td>'
+                        + '<td>' + el.fullName + '</td>'
+                        + '<td>' + el.phoneNumber + '</td>'
+                        + '<td>' + el.email + '</td>'
+                        + '<td>' + el.address + '</td>'
+                        + '<td>' + el.agentGroup + '</td>'
+                        + '<td>' + el.simNumber + '</td>'
+                        + '<td>' + el.remark + '</td>'
+                        + '<td class="table-action" >'
+                        + action
+                        + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                //write paging
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterAgent(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterAgent(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterAgent(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterAgent(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+    function OnClickDeleteAgent(id) {
+        if (confirm("Bạn có chắc chắn xóa!") == true) {
+            $.ajax({
+                url: '@Url.Action("Delete","Agent")?id=' + id + '',
+                type: "GET",
+                contentType: "application/json",
+                success: function (data) {
+                    alert(data.message)
+                    if (data.code == "1") {
+                        window.location.href = '@Url.Action("Index","Agent")';
+                    }
+                },
+                error: function (xhr) {
+                    alert('Có lỗi trong quá trình xóa dữ liệu')
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+    function OnClickDeleteSIMOfAgent(id) {
+        if (confirm("Bạn có chắc chắn xóa!") == true) {
+            $.ajax({
+                url: '@Url.Action("DeleteSIMOfAgent","Agent")?id=' + id + '',
+                type: "GET",
+                contentType: "application/json",
+                success: function (data) {
+                    alert(data.message)
+                    if (data.code == "1") {
+                        window.location.href = '@Url.Action("Index","Agent")';
+                    }
+                },
+                error: function (xhr) {
+                    alert('Có lỗi trong quá trình xóa dữ liệu')
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+</script>

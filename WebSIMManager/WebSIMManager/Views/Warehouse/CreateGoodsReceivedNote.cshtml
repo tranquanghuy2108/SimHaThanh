@@ -1,0 +1,408 @@
+﻿@using Models.ViewModels
+@model GoodsReceivedNoteModel
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Tạo phiếu nhập kho";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Tạo phiếu nhập kho</h1>
+
+<div class="col-12">
+    <div class="card">
+        <form method="post" onsubmit="Onloading();">
+            <div class="card-header">
+                <div class="card">
+                    <div class="col-md-12">
+                        <div class="card mt-3">
+                            <div class="card-body px-3">
+                                <h4>Thông tin đơn vị cung cấp</h4>
+                                <div class="row">
+                                    <div class="col-md-9 p-3">
+                                        <div class="row">
+                                            <div class="form-group col-8">
+                                                <label class="form-label">Đơn vị cung cấp</label>
+                                                <div class="p-0">
+                                                    <select class="form-control" asp-for="SupplierId" asp-items="ViewBag.Suppliers" type="text" data-live-search="true" style="border: 1px solid #ced4da;border-radius: .25rem;" onchange="OnChangeSupplier()">
+                                                    </select>
+                                                    <input type="hidden" class="form-control" asp-for="SupplierName" />
+                                                </div>
+                                            </div>
+                                            <div class="form-group col-4">
+                                                <label class="form-label required">Số điện thoại</label>
+                                                <div class="p-0">
+                                                    <input type="text" class="form-control" asp-for="SupplierPhone" />
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label col-12 required">Địa chỉ</label>
+                                                <div class="p-0">
+                                                    <input type="text" class="form-control" asp-for="SupplierAddress" />
+                                                </div>
+                                            </div>
+                                            <div class="form-group col-8">
+                                                <label class="form-label">Người nhận</label>
+                                                <div class="p-0">
+                                                    <div class="p-0">
+                                                        <select class="form-control" asp-for="StaffId" asp-items="ViewBag.Staffs" type="text" data-live-search="true" style="border: 1px solid #ced4da;border-radius: .25rem;">
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group col-4">
+                                                <label class="form-label required">Ngày nhập kho</label>
+                                                <div class="p-0">
+                                                    <input type="datetime-local" class="form-control" asp-for="ReceivedDate" value="@Model.ReceivedDate?.ToString("yyyy-MM-ddTHH:mm:ss")" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @*
+                                    <div class="col-md-3 p-3">
+                                    <div class="form-group">
+                                    <label class="form-label">Mã phiếu</label>
+                                    <div class="p-0">
+                                    <input type="text" class="form-control" asp-for="Code" readonly />
+                                    </div>
+                                    </div>
+                                    <div class="form-group">
+                                    <label class="form-label">Người lập</label>
+                                    <div class="p-0">
+                                    <input type="text" class="form-control" asp-for="CreateBy" readonly />
+                                    </div>
+                                    </div>
+                                    <div class="form-group">
+                                    <label class="form-label">Ngày lập</label>
+                                    <div class="p-0">
+                                    <input type="text" class="form-control" asp-for="CreateTime" readonly />
+                                    </div>
+                                    </div>
+                                    </div> *@
+                                </div>
+                            </div>
+                            <!--Sim info-->
+                            <div class="card-body px-3">
+                                <h4>Thông tin hàng nhập</h4>
+                                <input type="hidden" id="totalPriceMaterial" />
+                                <table id="myTable" class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:20%">Sản phẩm</th>
+                                            <th class="required" style="width:7%">Số lượng</th>
+                                            <th style="width:8%">% CK</th>
+                                            <th style="width:10%">Đơn giá nhập</th>
+                                            <th style="width:10%">Tổng cộng</th>
+                                            <th style="width:8%">Seria</th>
+                                            <th style="width:5%">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model?.Warehouses != null)
+                                        {
+                                            @for (int i = 0; i < Model?.Warehouses.Count(); i++)
+                                            {
+                                                <tr id="row_@i" onload="OnChangeMaterial(@i)">
+                                                    <td>
+                                                        <select class="form-control" asp-for="Warehouses[i].MaterialId" asp-items="ViewBag.Materials" type="text" data-live-search="true" onchange="OnChangeMaterial(@i)">
+                                                        </select>
+                                                        <input type="hidden" asp-for="Warehouses[i].MaterialCode" />
+                                                        <input type="hidden" asp-for="Warehouses[i].MaterialName" />
+                                                        <input type="hidden" asp-for="Warehouses[i].UsingSeria" />
+                                                    </td>
+                                                    <td><input asp-for="Warehouses[i].Amount" type="text" class="form-control currency" data-type="currency" onchange="OnChangeMaterialPrice(@i);" readonly="@(Model?.Warehouses[i].materialSerias?.Count()>0)" /></td>
+                                                    <td><input asp-for="Warehouses[i].Discount" type="text" class="form-control currency" data-type="currency" onchange="OnChangeMaterialPrice(@i);" /></td>
+                                                    <td><input asp-for="Warehouses[i].Price" type="text" class="form-control currency" data-type="currency" onchange="OnChangeMaterialPrice(@i);" /></td>
+                                                    <td><input asp-for="Warehouses[i].PriceAfterDiscount" type="text" class="form-control currency" data-type="currency" readonly /></td>
+                                                    <td>
+                                                        <div class="@(Model?.Warehouses[i].materialSerias?.Count()>0?"":"hidden")" id="materialSeriaAction_@(i)">
+                                                            <a class="btn btn-info btn-sm" title="Import material seria" onclick="AddMaterialSeria(@i)">Import Seria</a>
+                                                            <div id="materialSeriaData_@(i)">
+                                                                @for (int j = 0; j < Model?.Warehouses[i].materialSerias?.Count(); j++)
+                                                                {
+                                                                    <input asp-for="Warehouses[i].materialSerias[j].Number" type="hidden" />
+                                                                    <input asp-for="Warehouses[i].materialSerias[j].Seria" type="hidden" />
+                                                                    <input asp-for="Warehouses[i].materialSerias[j].Position" type="hidden" />
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="table-action text-center">
+                                                        <a class="m-1" title="Xóa sản phẩm" onclick="OnRemoveRow(@i)"><i class="fa fa-trash"></i></a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                                <a class="btn btn-default btn-warning" onclick="OnClickAddMaterial()">Thêm sản phẩm</a>
+                            </div>
+                            <div class="card-body px-3 row">
+                                <h4>Thông tin thanh toán</h4>
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label">Nợ cũ</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="OldDebt" readonly />
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label">Tổng đơn hàng</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="TotalPrice" readonly />
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label">Nợ phát sinh đơn hàng</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="TienPhaiTra" readonly />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label required">Số tiền đã thanh toán</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="TienDaTra" onchange="OnTienDaThuChange();" />
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label required">Phí PS với nhà cung cấp</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="OtherFee" onchange="OnTienDaThuChange();" />
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label">Nợ mới</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="NewDebt" readonly />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label required">Hình thức thanh toán</label>
+                                            <select class="form-control" asp-for="PayOrderType" asp-items="ViewBag.PayOrderType" onchange="OnChangePayOrderType()"></select>
+                                        </div>
+                                        <div id="bankDelivery" class="col-md-8">
+                                            <div class="row">
+                                                <div class="form-group col-md-6">
+                                                    <label class="form-label">Tài khoản ngân hàng</label>
+                                                    <div class="p-0">
+                                                        <select asp-for="BankId" asp-items="@ViewBag.Banks" type="text" data-live-search="true">
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Ghi chú</label>
+                                        <textarea class="form-control" rows="4" asp-for="Note"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="CreateGoodsReceivedNote" asp-controller="Warehouse" width="100px">Tạo phiếu nhập kho</button>
+            <a class="btn btn-secondary m-3 btn-default" asp-action="GoodsReceivedNoteList" asp-controller="Warehouse" width="100px">Trở về</a>
+        </form>
+    </div>
+</div>
+
+<input type="hidden" id="isDelivery" value="false" />
+@{
+    Html.RenderPartial("_MaterialSeriaModal");
+}
+<script>
+    var rowIdx = 0;
+    $(function () {
+        $('#WarehouseCollapse').removeClass("collapsed");
+        $('#warehouse').addClass("show");
+        $('#goodsReceivedNoteList').addClass("active");
+        rowIdx = document.getElementById('myTable').tBodies[0].rows.length;
+        OnChangeSupplier();
+        if (@Model?.Warehouses.Count() > 0) OnChangeMaterialPrice(0);
+        OnChangePayOrderType();
+        fomatCurrencyInput();
+        if ($('#isDelivery').val() == "false") {
+            var saveAllBtn = document.getElementById("saveAllBtn");
+            saveAllBtn.removeAttribute("hidden");
+        }
+    });
+    function OnChangePayOrderType() {
+        var payOrderType = $('#PayOrderType').val();
+        var bankDelivery = document.getElementById('bankDelivery');
+        bankDelivery.classList.add("hidden");
+        if (payOrderType == "Online")
+            bankDelivery.classList.remove("hidden");
+    }
+    function OnPriceChange() {
+        var totalPrice = document.getElementById('TotalPrice');
+        var totalPriceMaterial = document.getElementById('totalPriceMaterial');
+        //
+        TotalPrice.value = parseFloat(totalPriceMaterial.value.replaceAll(",", ""));
+        OnTienDaThuChange();
+    }
+    function OnTienDaThuChange() {
+        var TotalPrice = document.getElementById('TotalPrice');
+        var OldDebt = document.getElementById('OldDebt');
+        var NewDebt = document.getElementById('NewDebt');
+        var TienDaTra = document.getElementById('TienDaTra');
+        var TienPhaiTra = document.getElementById('TienPhaiTra');
+        var OtherFee = document.getElementById('OtherFee');
+
+        TienPhaiTra.value = parseFloat(TotalPrice.value.replaceAll(",", "")) + parseFloat(OtherFee.value.replaceAll(",", "")) - parseFloat(TienDaTra.value.replaceAll(",", ""));
+        NewDebt.value = parseFloat(OldDebt.value.replaceAll(",", "")) + parseFloat(TotalPrice.value.replaceAll(",", "")) + parseFloat(OtherFee.value.replaceAll(",", "")) - parseFloat(TienDaTra.value.replaceAll(",", ""));
+        fomatCurrencyInput();
+    }
+    function OnChangeMaterialPrice(i) {
+        var amount = document.getElementById('Warehouses_' + i + '__Amount');
+        var discount = document.getElementById('Warehouses_' + i + '__Discount');
+        var price = document.getElementById('Warehouses_' + i + '__Price');
+        var priceAfterDiscount = document.getElementById('Warehouses_' + i + '__PriceAfterDiscount');
+        priceAfterDiscount.value = parseFloat(amount.value.replaceAll(",", "")) * (parseFloat(price.value.replaceAll(",", "")) * (100 - parseFloat(discount.value.replaceAll(",", ""))) / 100);
+        // Tính tổng tiền
+        var table = document.getElementById('myTable');
+        var rows = table.getElementsByTagName('tr');
+        var totalPrice = 0;
+        for (var j = 1; j < rows.length; j++) {
+            var idxRow = document.getElementsByTagName("tr")[j].id.replace("row_", "");
+            var priceAfterDiscountEl = document.getElementById('Warehouses_' + idxRow + '__PriceAfterDiscount');
+            totalPrice += parseFloat(priceAfterDiscountEl.value.replaceAll(",", ""));
+        }
+        document.getElementById('totalPriceMaterial').value = totalPrice;
+        totalPrice = document.getElementById('TotalPrice').value = totalPrice;
+        OnPriceChange();
+    }
+    function OnChangeSupplier() {
+        var supplierId = document.getElementById('SupplierId');
+        var data = { "userId": supplierId.value };
+        $.ajax({
+            url: '@Url.Action("GetUserInfo", "SIMOrder")',
+            type: "POST",
+            contentType: 'application/x-www-form-urlencoded',
+            data: data,
+            success: function (response) {
+                document.getElementById('SupplierName').value = response.fullName;
+                document.getElementById('SupplierPhone').value = response.phoneNumber;
+                document.getElementById('SupplierAddress').value = response.address;
+                document.getElementById('OldDebt').value = response.oldDebt;
+                OnPriceChange();
+                fomatCurrencyInput();
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    }
+    function OnChangeMaterial(i) {
+        var materialId = document.getElementById('Warehouses_' + i + '__MaterialId');
+        var data = { "materialId": materialId.value };
+        $.ajax({
+            url: '@Url.Action("GetMaterialInfo", "Warehouse")',
+            type: "POST",
+            contentType: 'application/x-www-form-urlencoded',
+            data: data,
+            success: function (response) {
+                document.getElementById('Warehouses_' + i + '__Price').value = response.price;
+                document.getElementById('Warehouses_' + i + '__MaterialCode').value = response.code;
+                document.getElementById('Warehouses_' + i + '__MaterialName').value = response.name;
+                document.getElementById('Warehouses_' + i + '__UsingSeria').value = response.usingSeria;
+                var amount = $('#Warehouses_' + i + '__Amount');
+                amount.val(0);
+
+                var materialSeriaData = $('#materialSeriaData_' + i);
+                materialSeriaData.children().remove();
+
+                var action = document.getElementById('materialSeriaAction_' + i);
+                if (response.usingSeria) {
+                    action.classList.remove("hidden");
+                    amount.attr('readonly', true);
+                }
+                else {
+                    action.classList.add("hidden");
+                    amount.attr('readonly', false);
+                }
+                OnChangeMaterialPrice(i);
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    }
+    function OnClickAddMaterial() {
+        //Write table tbody
+        var tbody = $("#myTable tbody");
+        var option = "";
+        var listItemSelect = @Html.Raw(Json.Serialize(@ViewBag.Materials));
+        listItemSelect.forEach((el) => {
+            option += '<option value="' + el.value + '">' + el.text + '</option>'
+        });
+        var newBody = '<tr id="row_' + rowIdx + '">'
+            + '<td>'
+            + '<select class="form-control" id="Warehouses_' + rowIdx + '__MaterialId" name="Warehouses[' + rowIdx + '].MaterialId" asp-items="ViewBag.Materials" type="text" data-live-search="true" onchange="OnChangeMaterial(' + rowIdx + ')">'
+            + option
+            + '</select>'
+            + '<input type="hidden" id="Warehouses_' + rowIdx + '__MaterialCode" name="Warehouses[' + rowIdx + '].MaterialCode"/>'
+            + '<input type="hidden" id="Warehouses_' + rowIdx + '__MaterialName" name="Warehouses[' + rowIdx + '].MaterialName"/>'
+            + '<input type="hidden" id="Warehouses_' + rowIdx + '__UsingSeria" name="Warehouses[' + rowIdx + '].UsingSeria"/>'
+            + '</td>'
+            + '<td><input id="Warehouses_' + rowIdx + '__Amount" name="Warehouses[' + rowIdx + '].Amount" type="text" class="form-control currency" data-type="currency" onchange="OnChangeMaterialPrice(' + rowIdx + ');" value="0"/></td>'
+            + '<td><input id="Warehouses_' + rowIdx + '__Discount" name="Warehouses[' + rowIdx + '].Discount" type="text" class="form-control currency" data-type="currency" onchange="OnChangeMaterialPrice(' + rowIdx + ');" value="0" /></td>'
+            + '<td><input id="Warehouses_' + rowIdx + '__Price" name="Warehouses[' + rowIdx + '].Price" type="text" class="form-control currency" data-type="currency" onchange="OnChangeMaterialPrice(' + rowIdx + ');" value="0" /></td>'
+            + '<td><input id="Warehouses_' + rowIdx + '__PriceAfterDiscount" name="Warehouses[' + rowIdx + '].PriceAfterDiscount" type="text" class="form-control currency" data-type="currency" value="0" readonly /></td>'
+            + '<td>'
+            + '<div id="materialSeriaAction_' + rowIdx + '">'
+            + '<a class="btn btn-info btn-sm" title="Import material seria" onclick="AddMaterialSeria(' + rowIdx + ')">Import Seria</a>'
+            + '<div id="materialSeriaData_' + rowIdx + '">'
+            + '</div>'
+            + '</td>'
+            + '<td class="table-action text-center">'
+            + '<a class="m-1" title="Xóa sản phẩm" onclick="OnRemoveRow(' + rowIdx + ')"><i class="fa fa-trash"></i></a>'
+            + '</td>'
+            + '</tr>'
+        tbody.append(newBody);
+        OnChangeMaterial(rowIdx);
+        rowIdx++;
+    }
+    function OnRemoveRow(i) {
+        document.getElementById('row_' + i).remove();
+        // Tính tổng tiền
+        var table = document.getElementById('myTable');
+        var rows = table.getElementsByTagName('tr');
+        var totalPrice = 0;
+        for (var j = 1; j < rows.length; j++) {
+            var idxRow = document.getElementsByTagName("tr")[j].id.replace("row_", "");
+            var priceAfterDiscountEl = document.getElementById('Warehouses_' + idxRow + '__PriceAfterDiscount');
+            totalPrice += parseFloat(priceAfterDiscountEl.value.replaceAll(",", ""));
+        }
+        document.getElementById('totalPriceMaterial').value = totalPrice;
+        totalPrice = document.getElementById('TotalPrice').value = totalPrice;
+        OnTienDaThuChange();
+    }
+
+    function AddMaterialSeria(i) {
+        var materiaId = document.getElementById("Warehouses_" + i + "__MaterialId").value;
+        $('#materiaId').val(materiaId);
+        $('#materialSeriaModal').modal('show');
+        document.getElementById('warehouseIdx').value = i;
+        console.log('dataimport ' + dataImport);
+        // $('#materialSeriaData_' + i + ' > input').each(function () {
+        //     console.log($(this).attr("name"));
+        // });
+        var materialSeriaItemAmount = $('#materialSeriaData_' + i + ' > input').length / 3;
+        var tbody = $("#materialSeriaTbl tbody");
+        tbody.children().remove();
+        var newBody = "";
+        for (var j = 0; j < materialSeriaItemAmount; j++) {
+            var number = document.getElementsByName('Warehouses[' + i + '].materialSerias[' + j + '].Number')[0].value;
+            var seria = document.getElementsByName('Warehouses[' + i + '].materialSerias[' + j + '].Seria')[0].value;
+            var positon = document.getElementsByName('Warehouses[' + i + '].materialSerias[' + j + '].Position')[0].value;
+            dataImport.push({ phoneNumber: number, seria: seria,positon: positon, price: 0 })
+            newBody += '<tr>'
+                + '<td>' + (j + 1) + '</td>'
+                + '<td>' + number + '</td>'
+                + '<td>' + seria + '</td>'
+                + '<td>' + positon + '</td>'
+                + '<tr>';
+        }
+        tbody.append(newBody);
+    }
+</script>

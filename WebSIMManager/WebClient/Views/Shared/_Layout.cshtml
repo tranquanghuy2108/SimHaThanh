@@ -1,0 +1,887 @@
+﻿@using Commons.Enums;
+@model Models.Requests.SearchSIMRequest
+@{
+    bool IsMobile = ViewBag.IsMobile;
+    bool UseNavMenu = ViewBag.UseNavMenu;
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>@ViewData["Title"] - Sim Hà Thành</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+    <!-- Favicons -->
+    <link href="@Url.Content("/assets/img/logo_simht.png")" rel="icon">
+    <link href="@Url.Content("/assets/img/logo_simht.png")" rel="apple-touch-icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+    <!-- Font awesome -->
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.css" rel="stylesheet" type='text/css'>
+    <!-- Vendor CSS Files -->
+    <link href="@Url.Content("/assets/vendor/bootstrap/css/bootstrap.min.css")" rel="stylesheet" />
+    <link href="@Url.Content("/assets/css/custom.css")" rel="stylesheet" />
+    <!-- Template Main CSS File -->
+    <link href="@Url.Content("/assets/css/style.css")" rel="stylesheet" />
+    <link href="@Url.Content("/datatable/jquery.datatables.min.css")" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <!-- =======================================================
+    * Template Name: Sailor
+    * Updated: Sep 18 2023 with Bootstrap v5.3.2
+    * Template URL: https://bootstrapmade.com/sailor-free-bootstrap-theme/
+    * Author: BootstrapMade.com
+    * License: https://bootstrapmade.com/license/
+    ======================================================== -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+</head>
+
+<body>
+    <header>
+        @if (!IsMobile)
+        {
+            <div class="container py-2">
+                <div class="row py-4 pb-0 pb-sm-4 align-items-center ">
+
+                    <div class="col-sm-3 col-lg-3 text-center text-sm-start">
+                        <div class="main-logo row">
+                            <a asp-action="Index" asp-controller="Home">
+                                <img src="@Url.Content("/assets/img/logo_top2.png")" alt="logo" class="img-fluid">
+                            </a>
+                        </div>
+                        @* <h3 style="color: #ec8223;"><strong>SIMHATHANH.VN</strong></h3> *@
+                    </div>
+
+                    <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
+                        <div class="input-group mb-3">
+                            <input id="searchSimNumber" type="text" class="form-control" placeholder="Nhập số sim" aria-label="Recipient's username" aria-describedby="basic-addon2" onfocus="ShowPopover();" onblur="HidePopover();" onchange="OnChangeSearchSim();">
+                            <div class="input-group-append">
+                                <button class="btn btn-warning" type="button" onclick="TimSimTheoSo();">Tìm sim</button>
+                            </div>
+                            <div id="popover" class="popover hidden" style="margin-top: 45px;">
+                                <div class="arrow" style="position: absolute;display: block;left: 50%;margin-left: -11px;top: -11px;width: 0px;height: 0px;border-left: 11px solid transparent;border-right: 11px solid transparent;border-bottom: 11px solid white;"></div>
+                                <h3 class="popover-title" style="font-size: 14px;background-color: #f7f7f7;padding: 8px 14px;margin: 0px;border-bottom: 1px solid #ebebeb;border-radius: 5px 5px 0px 0px;">Hướng dẫn tìm sim</h3>
+                                <div class="popover-content" style="padding: 9px 14px;font-size: 13px;">Tìm sim có số <b>6789</b> bạn hãy gõ <b>6789</b><br>Tìm sim có đầu <b>090</b> đuôi <b>8888</b> hãy gõ <b>090*8888</b><br>Tìm sim bắt đầu bằng <b>0914</b> đuôi bất kỳ, hãy gõ: <b>0914*</b></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-3 col-lg-4 text-center text-sm-end">
+                        <a asp-action="Cart" asp-controller="Home">
+                            <div class="cart-wrapper">
+                                <i class="bi bi-cart3 cart-icon"></i>
+                                <span class="cart-badge">0</span>
+                            </div>
+                         </a>
+                    </div>
+
+                </div>
+            </div>
+            <!-- navbar -->
+            <div class="menu menu-top">
+
+                <nav id="navbar" class="container navbar">
+                    <ul class="px-0">
+                        <li><a class="px-3" id="trang-chu" asp-action="Index" asp-controller="Home">TRANG CHỦ</a></li>
+                        <li><a class="px-3" id="sim-so-dep" asp-action="SimCard" asp-controller="Home">SIM SỐ ĐẸP</a></li>
+                        <li><a class="px-3" id="sim-data" asp-action="DataSim" asp-controller="Home">SIM DATA</a></li>
+                        <li><a class="px-3" id="sim-tourist" asp-action="TouristSim" asp-controller="Home">SIM DU LỊCH</a></li>
+                        <li><a class="px-3" id="phong-thuy" asp-action="FengShui" asp-controller="Home">XEM ĐIỂM SIM PHONG THỦY</a></li>
+                        <li><a class="px-3" id="tra-gop" asp-action="SearchFengShui" asp-controller="Home">TÌM SIM PHONG THỦY</a></li>
+                        <li><a class="px-3" id="dinh-gia" asp-action="SIMpricing" asp-controller="Home">ĐỊNH GIÁ SIM</a></li>
+                        <li><a class="px-3" id="thanh-toan" asp-action="Payment" asp-controller="Home">THANH TOÁN</a></li>
+                        <li><a class="px-3" id="lien-he" asp-action="Contact" asp-controller="Home">LIÊN HỆ</a></li>
+                        @* <li><a class="px-4" id="tin-tuc" asp-action="News" asp-controller="Home">TIN TỨC</a></li> *@
+                    </ul>
+                    <i class="bi bi-list mobile-nav-toggle"></i>
+                </nav><!-- .navbar -->
+            </div>
+        }
+        else
+        {
+            <div class="blog p-1" style="background-color:#fff;">
+                <div class="row d-flex justify-content-between">
+                    <div class="col-9" style="max-width: 200px;">
+                        <a asp-action="Index" asp-controller="Home">
+                            <img class="p-2" src="~/assets/img/logo_top2.png" style="max-width: 210px;margin-top: 5px;" />
+                        </a>
+                    </div>
+                    <div class="col-1 mt-2">
+                        <a asp-action="Cart" asp-controller="Home">
+                            <div class="cart-wrapper">
+                                <i class="bi bi-cart3 cart-icon"></i>
+                                <span class="cart-badge">0</span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-2 mt-2" style="max-width: fit-content;margin-top: 1px;">
+                        <button onclick="OnClickSimMenu()" class="btn p-0" type="button" style="background: space !important; max-width:60px;max-height: 35px;">
+                            <img class="p-0" src="~/assets/img/sim-menu.png" />
+                            <p style="color:white; font-size:10px;">Menu</p>
+                        </button>
+                    </div>
+                </div>
+                <div class="sidebar pt-2 p-1 m-0">
+                    <div class="input-group mb-3">
+                        <input id="searchSimNumber" type="text" class="form-control" placeholder="Nhập số sim" aria-label="Recipient's username" aria-describedby="basic-addon2" onfocus="ShowPopover();" onblur="HidePopover();" onchange="OnChangeSearchSim();">
+                        <div class="input-group-append">
+                            <button class="btn btn-warning" type="button" onclick="TimSimTheoSo();">Tìm sim</button>
+                        </div>
+                        <div id="popover" class="popover hidden" style="margin-top: 45px;">
+                            <div class="arrow" style="position: absolute;display: block;left: 50%;margin-left: -11px;top: -11px;width: 0px;height: 0px;border-left: 11px solid transparent;border-right: 11px solid transparent;border-bottom: 11px solid white;"></div>
+                            <h3 class="popover-title" style="font-size: 14px;background-color: #f7f7f7;padding: 8px 14px;margin: 0px;border-bottom: 1px solid #ebebeb;border-radius: 5px 5px 0px 0px;">Hướng dẫn tìm sim</h3>
+                            <div class="popover-content" style="padding: 9px 14px;font-size: 13px;">Tìm sim có số <b>6789</b> bạn hãy gõ <b>6789</b><br>Tìm sim có đầu <b>090</b> đuôi <b>8888</b> hãy gõ <b>090*8888</b><br>Tìm sim bắt đầu bằng <b>0914</b> đuôi bất kỳ, hãy gõ: <b>0914*</b></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Menu -->
+            <div id="mobile-top-menu-bg" class="mobile-top-menu-bg hide-menu">
+                <div class="blog p-1">
+                    <div class="row d-flex justify-content-between">
+                        <div class="col-md-6" style="max-width: 200px;">
+                            <img class="p-2" src="~/assets/img/logo_top2.png" style="max-width: 210px;margin-top: 5px;" />
+                        </div>
+                        <div class="col-md-6" style="max-width: 65px;margin-top: 1px;">
+                            <button onclick="OnClickCloseSimMenu()" class="btn p-0 mobile-nav-toggle" type="button" style="background: space !important; max-width:65px;max-height: 35px;">
+                                <i class="bi mobile-nav-toggle bi-x"></i>
+                                <p style="color:white; font-size:10px;padding-top: 7px;">Close</p>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mobile-top-menu">
+                    <div class="p-1">
+                        <div class="row p-1">
+                            <div class="col-4 d-grid gap-2 px-2">
+                                <a asp-action="Index" asp-controller="Home" class="btn btn-danger checkbox px-1">
+                                    <span>Sim Số Đẹp</span>
+                                </a>
+                            </div>
+                            <div class="col-4 d-grid gap-2 px-2">
+                                <a asp-action="DataSim" asp-controller="Home" class="btn btn-danger checkbox px-1">
+                                    <span>Sim DATA</span>
+                                </a>
+                            </div>
+                            <div class="col-4 d-grid gap-2 px-2">
+                                <a asp-action="TouristSim" asp-controller="Home" class="btn btn-danger checkbox px-1">
+                                    <span>Sim Du lịch</span>
+                                </a>
+                            </div>
+                            <div class="col-4 d-grid gap-2 px-2">
+                                <a asp-action="FengShui" asp-controller="Home" class="btn btn-danger checkbox px-1">
+                                    <span>Xem Điểm Sim Phong Thủy</span>
+                                </a>
+                            </div>
+                            <div class="col-4 d-grid gap-2 px-2">
+                                <a asp-action="SearchFengShui" asp-controller="Home" class="btn btn-danger checkbox px-1">
+                                    <span>Tìm sim phong thủy</span>
+                                </a>
+                            </div>
+                            <div class="col-4 d-grid gap-2 px-2">
+                                <a asp-action="SIMpricing" asp-controller="Home" class="btn btn-danger checkbox px-1">
+                                    <span>Định Giá Sim</span>
+                                </a>
+                            </div>
+                            <div class="col-4 d-grid gap-2 px-2">
+                                <a asp-action="Payment" asp-controller="Home" class="btn btn-danger checkbox px-1">
+                                    <span>Thanh toán</span>
+                                </a>
+                            </div>
+                            <div class="col-4 d-grid gap-2 px-2">
+                                <a asp-action="Contact" asp-controller="Home" class="btn btn-danger checkbox px-1">
+                                    <span>Liên hệ</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        @if (UseNavMenu)
+                        {
+                            <h4 class="menu_title">
+                                <i class="ic ic-sim"></i> Mạng di động
+                            </h4>
+                            <!--Network-->
+                            <div class="row">
+                                @{
+                                    foreach (var item in ViewBag.SIMNetworks)
+                                    {
+                                        <div class="col-4 d-grid gap-2 mb-1">
+                                            <a asp-action="Search" asp-controller="Home" asp-route-slug="@item.NetworkName" asp-route-searchType="@SearchType.mang" id="@item.HtmlId" class="list-group-item"><strong>@item.NetworkName</strong></a>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                            <h4 class="menu_title">
+                                <i class="ic ic-sim"></i> Đầu số
+                            </h4>
+                            <!--Đầu số-->
+                            <div class="row">
+                                <div class="col-2 d-grid gap-2 px-2">
+                                    <a id="09*" class="btn btn-outline-danger checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.dauso" asp-route-slug="09">
+                                        <strong>09x</strong>
+                                    </a>
+                                </div>
+                                <div class="col-2 d-grid gap-2 px-2">
+                                    <a id="08*" class="btn btn-outline-danger checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.dauso" asp-route-slug="08">
+                                        <strong>08x</strong>
+                                    </a>
+                                </div>
+                                <div class="col-2 d-grid gap-2 px-2">
+                                    <a id="07*" class="btn btn-outline-danger checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.dauso" asp-route-slug="07">
+                                        <strong>07x</strong>
+                                    </a>
+                                </div>
+                                <div class="col-2 d-grid gap-2 px-2">
+                                    <a id="05*" class="btn btn-outline-danger checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.dauso" asp-route-slug="05">
+                                        <strong>05x</strong>
+                                    </a>
+                                </div>
+                                <div class="col-2 d-grid gap-2 px-2">
+                                    <a id="03*" class="btn btn-outline-danger checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.dauso" asp-route-slug="03">
+                                        <strong>03x</strong>
+                                    </a>
+                                </div>
+                            </div>
+                            <h4 class="menu_title">
+                                <i class="ic ic-sim"></i> Khoảng giá
+                            </h4>
+                            <div class="row">
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia5l" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-0-den-500000">
+                                        <span>Sim dưới 500k</span>
+                                    </a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia5l-1m" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-500000-den-1000000">
+                                        <span>500k - 1triệu</span>
+                                    </a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia1m-3m" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-1000000-den-3000000">
+                                        <span>1-3 triệu</span>
+                                    </a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia3m-5m" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-3000000-den-5000000">
+                                        <span>3-5 triệu</span>
+                                    </a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia5m-10m" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-5000000-den-10000000">
+                                        <span>5-10 triệu</span>
+                                    </a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia10m-50m" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-10000000-den-20000000">
+                                        <span>10-20 triệu</span>
+                                    </a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia50m-100m" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-20000000-den-50000000">
+                                        <span>20-50 triệu</span>
+                                    </a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia50m-100m" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-50000000-den-100000000">
+                                        <span>50-100 triệu</span>
+                                    </a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia100m-200m" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-100000000-den-200000000">
+                                        <span>100-200 triệu</span>
+                                    </a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia200m-500m" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-200000000-den-500000000">
+                                        <span>200-500 triệu</span>
+                                    </a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2">
+                                    <a id="gia500m" class="btn btn-outline-secondary checkbox px-1" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-500000000-den-999999999999">
+                                        <span>Trên 500 triệu</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <h4 class="menu_title">
+                                <i class="ic ic-sim"></i> Kiểu số đẹp
+                            </h4>
+                            <div class="row">
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-ngu-quy(1)" class="list-group-item">Sim ngũ quý</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tu-quy(2)" class="list-group-item">Sim tứ quý</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-lap(21)" class="list-group-item">Sim lặp</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-taxi-hai(3)" class="list-group-item">Sim Taxi</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tien-don(12)" class="list-group-item">Sim tiến đơn</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tien-doi(9)" class="list-group-item">Sim tiến đôi</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-ganh-kep(25)" class="list-group-item">Sim gánh kép</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-truong-phat(29)" class="list-group-item">Sim trường phát</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tam-hoa(6)" class="list-group-item">Sim tam hoa</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tam-hoa-kep(4)" class="list-group-item">Sim tam hoa kép</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-loc-phat(15)" class="list-group-item">Sim Lộc Phát</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-than-tai(13)" class="list-group-item">Sim Thần Tài</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-ong-dia(20)" class="list-group-item">Sim Ông Địa</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-kep(32)" class="list-group-item">Sim kép</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tu-quy-giua(24)" class="list-group-item">Sim tứ quý giũa</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-dao(33)" class="list-group-item">Sim đảo</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-ganh(25)" class="list-group-item">Sim gánh</a>
+                                </div>
+                                <div class="col-4 d-grid gap-2 px-2 mb-1">
+                                    <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.dauso" asp-route-slug="09" class="list-group-item">Sim đầu số cổ</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </header>
+
+    <main id="main">
+        <!-- ======= Blog Section ======= -->
+        <div id="blog" class="blog">
+            <div class="container" data-aos="fade-up">
+                <div class="row">
+                    @if (UseNavMenu)
+                    {
+                        @if (!IsMobile)
+                        {
+                            <div class="main-left col-lg-3">
+                                <div class="block mt-15">
+                                    <div class="block-head">SIM THEO MẠNG</div>
+                                    <div class="block-body sidebar pt-0 px-0 pb-0">
+                                        <div class="list-group nt-list-group">
+                                            @{
+                                                foreach (var item in ViewBag.SIMNetworks)
+                                                {
+                                                    <a asp-action="Search" asp-controller="Home" asp-route-slug="@item.NetworkName" asp-route-searchType="@SearchType.mang" id="@item.HtmlId" class="list-group-item"><strong>@item.NetworkName</strong></a>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="block mt-15">
+                                    <div class="block-head">SIM THEO GIÁ</div>
+                                    <div class="block-body sidebar pt-0 px-0 pb-0">
+                                        <div class="list-group nt-list-group">
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-0-den-500000" id="gia5l" class="list-group-item"><strong>Sim dưới 500k</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-500000-den-1000000" id="gia5l-1m" class="list-group-item"><strong>Sim từ 500k - 1triệu</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-1000000-den-2000000" id="gia1m-3m" class="list-group-item"><strong>Sim từ 1-2 triệu</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-2000000-den-5000000" id="gia3m-5m" class="list-group-item"><strong>Sim từ 2-5 triệu</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-5000000-den-10000000" id="gia5m-10m" class="list-group-item"><strong>Sim từ 5-10 triệu</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-10000000-den-20000000" id="gia10m-20m" class="list-group-item"><strong>Sim từ 10-20 triệu</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-20000000-den-50000000" id="gia10m-20m" class="list-group-item"><strong>Sim từ 20-50 triệu</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-50000000-den-100000000" id="gia50m-100m" class="list-group-item"><strong>Sim từ 50-100 triệu</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-100000000-den-200000000" id="gia100m-200m" class="list-group-item"><strong>Sim 100-200 triệu</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-200000000-den-500000000" id="gia200m-500m" class="list-group-item"><strong>Sim 200-500 triệu</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.gia" asp-route-slug="tu-500000000-den-99999999999" id="gia500m" class="list-group-item"><strong>Sim trên 500 triệu</strong></a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="block mt-15">
+                                    <div class="block-head">SIM THEO LOẠI</div>
+                                    <div class="block-body sidebar pt-0 px-0 pb-0">
+                                        <div class="list-group nt-list-group">
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-ngu-quy(1)" class="list-group-item"><strong>Sim ngũ quý</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tu-quy(2)" class="list-group-item"><strong>Sim tứ quý</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-lap(21)" class="list-group-item"><strong>Sim lặp</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-taxi-hai(3)" class="list-group-item"><strong>Sim Taxi</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tien-don(12)" class="list-group-item"><strong>Sim tiến đơn</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tien-doi(9)" class="list-group-item"><strong>Sim tiến đôi</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-ganh-kep(25)" class="list-group-item"><strong>Sim gánh kép</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-truong-phat(29)" class="list-group-item"><strong>Sim trường phát</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tam-hoa(6)" class="list-group-item"><strong>Sim tam hoa</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tam-hoa-kep(4)" class="list-group-item"><strong>Sim tam hoa kép</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-loc-phat(15)" class="list-group-item"><strong>Sim Lộc Phát</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-than-tai(13)" class="list-group-item"><strong>Sim Thần Tài</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-ong-dia(20)" class="list-group-item"><strong>Sim Ông Địa</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-kep(32)" class="list-group-item"><strong>Sim kép</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-tu-quy-giua(24)" class="list-group-item"><strong>Sim tứ quý giũa</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-dao(33)" class="list-group-item"><strong>Sim đảo</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.loai" asp-route-slug="sim-ganh(25)" class="list-group-item"><strong>Sim gánh</strong></a>
+                                            <a asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.dauso" asp-route-slug="09" class="list-group-item"><strong>Sim đầu số cổ</strong></a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="block mt-15">
+                                    <div class="block-head">TÌM SIM NĂM SINH</div>
+                                    <div class="block-body">
+                                        <form class="p-3" id="timsimnamsinh" name="timsimnamsinh" method="post">
+                                            <div class="col-12">
+                                                <div class="row">
+                                                    <div class="col-6 col-md-6 p-1 px-3">
+                                                        <select id="ngaySinh" class="form-control">
+                                                            <option value="00">Ngày</option>
+                                                            @for (int i = 1; i <= 31; i++)
+                                                            {
+                                                                <option value="@(i.ToString("0#"))">@i</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-6 col-md-6 p-1 px-3">
+                                                        <select id="thangSinh" class="form-control">
+                                                            <option value="00">Tháng</option>
+                                                            @for (int i = 1; i <= 12; i++)
+                                                            {
+                                                                <option value="@(i.ToString("0#"))">@i</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-12 col-md-12 p-1 px-3">
+                                                        <select id="namSinh" class="form-control">
+                                                            <option value="1900">Năm</option>
+                                                            @for (int i = 1890; i <= DateTime.Now.Year; i++)
+                                                            {
+                                                                <option value="@i">@i</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 mx-3">
+                                                <div class="row">
+                                                    <div class="custom-control custom-radio custom-control-inline"><input type="radio" name="type" value="1" class="custom-control-input" id="type1" checked="checked"><label class="custom-control-label" for="type1">dd/mm/yy</label></div>
+                                                    <div class="custom-control custom-radio custom-control-inline"><input type="radio" name="type" value="2" class="custom-control-input" id="namSinhChkBox"><label class="custom-control-label" for="type2">19xx</label></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 text-center">
+                                                <a class="btn btn-warning" onclick="TimSinTheoNgayThangNam();">Tìm kiếm</a>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- End blog sidebar -->
+                        }
+                        <div class="main-mid col-lg-6 px-1 pb-3">
+                            @RenderBody()
+                        </div>
+
+                        <!-- End blog entries list -->
+                        <div class="main-right col-lg-3">
+                            <div class="block d-none d-lg-block mt-3 mt-lg-0">
+                                <div class="block-head">HỖ TRỢ KHÁCH HÀNG</div>
+                                <div class="block-body sidebar pt-0 px-0 pb-0">
+                                    <div class="p-3">
+                                        @{
+                                            foreach (var item in @ViewBag.SPContacts)
+                                            {
+                                                if (!String.IsNullOrEmpty(item.PhoneNumber))
+                                                    if (item.Name.ToLower() == "zalo")
+                                                    {
+                                                        <div class="support-btn support-btn--zalo" style="background: #1a7fff;">
+                                                            <a target="_blank" href="//zalo.me/@item.PhoneNumber">
+                                                                <img class="support-icon--img nt-rotate" src="~/assets/img/zalo-icon.png" />
+                                                                <span>Chat Zalo</span>
+                                                            </a>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="support-btn">
+                                                            <a target="_blank" href="tel:@item.PhoneNumber">
+                                                                <img class="support-icon--img nt-rotate" src="~/assets/img/tel-icon.png" />
+                                                                <span>@item.PhoneNumber</span>
+                                                            </a>
+                                                        </div>
+                                                    }
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Đơn hàng mới -->
+                            <div class="block mt-3">
+                                <div class="block-head">ĐƠN HÀNG MỚI</div>
+                                <div class="block-body">
+                                    <div class="list-group nt-list-group">
+                                        @{
+                                            if (@ViewBag.SIMOrders.Count > 0)
+                                            {
+                                                foreach (var item in ViewBag.SIMOrders)
+                                                {
+                                                    var status = "status-order";
+                                                    var statusTxt = "Đã đặt mua";
+                                                    @switch (item.Status)
+                                                    {
+                                                        case "Success":
+                                                            status = "status-success";
+                                                            statusTxt = "Đã giao hàng";
+                                                            break;
+                                                        case "WaitingApproved":
+                                                            status = "status-confirm";
+                                                            statusTxt = "Đã xác nhận";
+                                                            break;
+                                                        case "Cancel":
+                                                            continue;
+                                                        // status = "status-fail";
+                                                        // statusTxt = "Đã hủy";
+                                                        // break;
+                                                        default:
+                                                            break;
+                                                    }
+
+                                                    <a class="list-group-item pb-0" href="#">
+                                                        <div class="order-item pb-0">
+                                                            <span class="order-item-name">@item.Name</span><br>
+                                                            <span class="order-item-phone">
+                                                                <strong>@item.SIMNumber.Substring(0, item.SIMNumber.Length - 3)***</strong>
+                                                            </span><br>
+                                                            <span class="@status" style="">
+                                                                <label class=""> @statusTxt </label>
+                                                            </span>
+                                                            <span class="px-3">
+                                                                <label>(@item.CreateTime.Substring(11))</label>
+                                                            </span>
+                                                        </div>
+                                                    </a>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h5 class="p-3">Chưa có đơn hàng.</h5>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tin mới -->
+                            <div class="block mt-3">
+                                <div class="block-head">TIN MỚI CẬP NHẬT</div>
+                                <div class="block-body">
+                                    <div class="list-group nt-list-group">
+                                        @{
+                                            if (@ViewBag.News.Count > 0)
+                                            {
+                                                foreach (var item in ViewBag.News)
+                                                {
+                                                    <a class="list-group-item pb-0" asp-action="NewsDetail" asp-controller="Home" asp-route-slug="@item.Slug">
+                                                        <p class="order-item pb-0">
+                                                            <span class="order-item-phone"><strong>@item.Title</strong></span>
+                                                        </p>
+                                                    </a>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h5 class="p-3">Chưa có tin tức.</h5>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- End blog sidebar -->
+                    }
+                    else
+                    {
+                        <div class="col-lg-12 px-1 pb-3">
+                            @RenderBody()
+                        </div>
+
+                        <!-- End blog entries list -->
+                    }
+                </div>
+
+            </div>
+        </div><!-- End Blog Section -->
+    </main><!-- End #main -->
+    @if (UseNavMenu)
+    {
+        <!-- ======= Footer ======= -->
+        <footer id="footer">
+            <div class="footer-top pt-2">
+
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <h3 class="footer-title">Hướng dẫn mua sim</h3>
+                            <ul class="footer-list">
+                                <li><a href="/p/menu-chon-sim-so-dep">Menu Chọn Sim Số Đẹp</a></li>
+                                <li><a href="/p/chon-theo-dau-so">Chọn Theo Đấu Số</a></li>
+                                <li><a href="/p/chon-theo-the-loai">Chọn Theo Thể Loại</a></li>
+                                <li><a href="/p/chon-theo-muc-gia">Chọn Theo Mức Giá</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-3">
+                            <h3 class="footer-title">Hỗ trợ chung</h3>
+                            <ul class="footer-list">
+                                <li><a href="/p/sim-tinh-nhan-sim-doi">Sim Tình Nhân Sim Đôi</a></li>
+                                <li><a href="/p/huong-dan-dang-ky-thong-tin"> Đăng ký chính chủ</a></li>
+                                <li><a href="/p/thong-tin-va-tu-van">Thông tin và tư vấn</a></li>
+                                <li><a href="/p/huong-dan-mua-hang">Hướng dẫn mua hàng</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-3">
+                            <h3 class="footer-title">Thông tin</h3>
+                            <ul class="footer-list">
+                                <li><a href="/p/thu-mua-sim-so-dep-dang-su-dung-cua-khach">Thu mua sim số đẹp đang sử dụng của khách</a></li>
+                                <li><a href="/p/tu-van-chon-sim-phong-thuy">Tư Vấn Chọn Sim Phong Thủy</a></li>
+                                <li><a href="/p/y-nghia-cac-con-so-trong-sim">Ý nghĩa các con số </a></li>
+                                <li><a href="/p/so-tong-dai-nha-mang">Số Tổng Đài Nhà Mạng</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-3">
+                            <h3 class="footer-title text-center">HOTLINE BÁN HÀNG</h3>
+                            <div class="p-3">
+                                <div class="support-btn">
+                                    <a target="_blank" href="tel:08.12345.789">
+                                        <img class="support-icon--img nt-rotate" src="/assets/img/tel-icon.png" alt="">
+                                        <span>0911.92.9999</span>
+                                    </a>
+                                </div>
+                                <div class="support-btn support-btn--zalo">
+                                    <a target="_blank" href="//zalo.me/0911.92.9999">
+                                        <img class="support-icon--img nt-rotate" src="/assets/img/zalo-icon.png" alt="">
+                                        <span>Chat Zalo</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @*                 <div class="row">
+                <hr>
+                <div class="col-4 mt-3">
+                <h3 class="footer-title" style="color:">SIMHATHANH.VN</h3>
+                Chuyên cung cấp các loại sim Viettel - Vinaphone - Mobifone - Gmobile - Vitenamobile - Itelecom Giao dịch toàn quốc đăng ký chính chủ 100%
+                </div>
+                <div class="col-4 mt-3">
+                <h3 class="footer-title" style="color: ">HOTLINE BÁN HÀNG</h3>
+                <p class=""></p>
+                <p><strong>0911.92.9999</strong></p>
+                <p><strong>0912.553.553</strong></p>
+                <p></p>
+                </div>
+                <div class="col-4 mt-3">
+                <h3 class="footer-title" style="color: ">HOTLINE HỖ TRỢ CHUNG</h3>
+                <p class=""></p>
+                <p><strong>0911.92.9999</strong></p>
+                <p><strong>Góp Ý Khiếu Nại</strong></p>
+                <p></p>
+                </div>
+                </div> *@
+                    <div class="row">
+                        <hr>
+                        <div class="col-4 mt-3">
+                            <h3 class="footer-title" style="color:">Chính sách bán hàng</h3>
+                            <ul class="footer-list">
+                                <li><a href="/p/chinh-sach-bao-mat">Chính sách bảo mật</a></li>
+                                <li><a href="/p/chinh-sach-doi-tra-va-hoan-tien">Chính sách đổi trả, hoàn tiền</a></li>
+                                <li><a href="/p/chinh-sach-van-chuyen">Chính sách vận chuyển</a></li>
+                                <li><a href="/p/chinh-sach-thanh-toan">Chính sách thanh toán</a></li>
+                                <li><a href="/p/quy-trinh-tiep-nhan-va-xu-ly-khieu-nai">Quy trình tiếp nhận và xử lý khiếu nại</a></li>
+                                <li><a href="/p/chinh-sach-kiem-hang">Chính sách kiểm hàng</a></li>
+                                <li><a href="/p/chinh-sach-bao-hanh">Chính sách bảo hành</a></li>
+                                <li><a href="/p/huong-dan-dat-hang">Hướng dẫn đặt hàng</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-8 mt-3">
+                            <h3 class="footer-title" style="color:">Công Ty TNHH Viễn Thông Công Nghệ Hà Thành</h3>
+                            <ul class="footer-list">
+                                <li>- Mã số doanh nghiệp 0108128559 do Sở Kế hoạch và Đầu tư thành phố Hà Nội</li>
+                                <li>- Địa chỉ trụ sở: Số 8, ngõ 56/46 đường Lê Văn Hiến, Phường Đức Thắng, Quận Bắc Từ Liêm, Hà Nội</li>
+                                <li>- Email: hinhnv.com@gmail.com</li>
+                                <li>- Người chịu trách nhiệm về website: Nguyễn Văn Hinh – Giám đốc</li>
+                            </ul>
+                            @* <img src="~/assets/img/logosalenoti-300x114.png" /> *@
+                            <div class="row">
+                                <a href='http://online.gov.vn/Home/WebDetails/124661'><img src="~/img/photos/logo-da-thong-bao-bo-cong-thuong-mau-xanh.png" width="300px" /></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="copyright">
+                    &copy; Copyright <strong><span>simhathanh.vn</span></strong>. All Rights Reserved
+                </div>
+                <div class="credits">
+                    Designed by <a href="#">HuongNX</a>
+                </div>
+            </div>
+        </footer>
+
+        <!-- End Footer -->
+    }
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <!-- Template Main JS File -->
+    <!-- Bootstrap-select JS -->
+    <script src="~/assets/js/main.js"></script>
+    <script src="~/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/bootstrap-select.min.js"></script>
+    <script src="~/js/cart.js"></script>
+    <style>
+        .required:after {
+            content: " *";
+            color: red;
+        }
+        .cart-wrapper {
+        position: relative;
+        display: inline-block;
+        }
+
+        .cart-icon {
+        font-size: 40px; /* kích thước giỏ */
+        color: #c68700; /* màu xanh như hình bạn gửi */
+        }
+
+        .cart-badge {
+        position: absolute;
+        top: -8px;
+        right: -10px;
+        background-color: #d63200; /* đỏ cam */
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: 50%;
+        padding: 4px 8px;
+        line-height: 1;
+        min-width: 24px;
+        text-align: center;
+        }
+    </style>
+    <script>        
+        $(document).ready(function () {
+            console.log("ready!");
+            UpdateCartIconAmount();
+        });
+        
+        function HidePopover() {
+            var popover = document.getElementById('popover');
+            popover.classList.add("hidden");
+        }
+
+        function ShowPopover() {
+            var popover = document.getElementById('popover');
+            popover.classList.remove("hidden");
+        }
+
+        function OnChangeSearchSim() {
+            HidePopover();
+        }
+
+        function OnClickSimMenu() {
+            var el = document.getElementById("mobile-top-menu-bg");
+            el.classList.remove("hide-menu")
+        }
+
+        function OnClickCloseSimMenu() {
+            var el = document.getElementById("mobile-top-menu-bg");
+            el.classList.add("hide-menu")
+        }
+
+        function formatNumber(n) {
+            // format number 1000000 to 1,234,567
+            return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        }
+
+        function TimSinTheoNgayThangNam() {
+            var ngaySinh = $('#ngaySinh').val();
+            var thangSinh = $('#thangSinh').val();
+            var namSinh = $('#namSinh').val();
+            var keywordS = "*" + ngaySinh + thangSinh + namSinh.substring(2);
+            if (document.getElementById('namSinhChkBox').checked) {
+                keywordS = "*" + namSinh;
+            }
+            window.location.href = "/sosim_" + keywordS;
+        }
+
+        function TimSimTheoSo() {
+            var searchSimNumber = $('#searchSimNumber').val();
+            if (searchSimNumber.lengt == 0) {
+                alert('Bạn chưa nhập số cần tìm.');
+            }
+            window.location.href = "/sosim_" + searchSimNumber;
+        }
+        $('#searchSimNumber').keyup(function (e) {
+            if (e.keyCode == 13) {
+                $(this).trigger("enterKey");
+                TimSimTheoSo();
+            }
+        });
+
+        // Thêm sim số đẹp vào giỏ hàng
+        function AddSimToCart(id, simNumber, price) {
+          debugger;
+          $('#sim'+id).addClass("hidden");
+          addToCart(id, simNumber, 0, price, 1, false);
+          UpdateCartIconAmount();
+        }
+        
+        // Thêm sim data vào giỏ hàng
+        function AddSimDataToCart(id, simType, price, qty){
+          $('#sim'+id).addClass("hidden");
+          addToCart(id, simType, 1, price, qty, false);
+          UpdateCartIconAmount();
+        }
+        
+        // Thêm sim du lịch vào giỏ hàng
+        function AddSimTouristToCart(id, simType, price, qty){
+          $('#sim'+id).addClass("hidden");
+          addToCart(id, simType, 2, price, qty, false);
+          UpdateCartIconAmount();
+        }
+
+        // Cập nhật số lượng trên icon giỏ hàng
+        function UpdateCartIconAmount() {
+            let cart = getCart();
+            document.querySelector('.cart-badge').textContent = cart.length;
+        };
+        function Onloading() {
+            document.getElementById('loading-page').style.display = 'flex';
+        }
+        function OnloadingSuccess() {
+            document.getElementById('loading-page').style.display = 'none';
+        }
+
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

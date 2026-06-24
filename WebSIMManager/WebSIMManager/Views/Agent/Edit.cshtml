@@ -1,0 +1,89 @@
+﻿@using Models.ViewModels
+@model UserEditRequest
+@{
+	ViewData["Title"] = "Chỉnh sửa KH/Đại lý";
+	Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Chỉnh sửa KH/Đại lý</h1>
+
+<div class="col-12">
+	<div class="card">
+		<div class="card-body">
+			<form method="post">
+				<div class="form-group col-md-6">
+					<label class="form-label required">Tên đầy đủ</label>
+					<input type="text" class="form-control" placeholder="Tên đầy đủ" asp-for="FullName">
+					@Html.HiddenFor(model =>model.Id)
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label required">Tên đăng nhập</label>
+					<input type="text" class="form-control" placeholder="Tên đăng nhập" asp-for="Username" disabled>
+					@Html.HiddenFor(model =>model.Username)
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label">Email address</label>
+					<input type="email" class="form-control" placeholder="Email" asp-for="Email">
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label required">Số điện thoại</label>
+					<input type="text" class="form-control" placeholder="Số điện thoại" asp-for="PhoneNumber">
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label">Website</label>
+					<input type="text" class="form-control" placeholder="Website" asp-for="Website">
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label">Địa chỉ</label>
+					<input type="text" class="form-control" placeholder="Địa chỉ" asp-for="Address">
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label">Nhóm KH/Đại lý khi mua sim</label>
+					<select class="form-control mb-3" asp-for="AgentGroupId" asp-items="@ViewBag.AgentGroups">
+					</select>
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label">Nhóm triết khấu cho nhà bán hàng</label>
+					<select class="form-control mb-3" asp-for="DiscountForSimSellersId" asp-items="@ViewBag.DiscountForSimSellers">
+					</select>
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label">Nhóm quyền</label>
+					<select class="form-control mb-3" asp-for="GroupId" asp-items="@ViewBag.RoleGroups">
+					</select>
+				</div>
+				<div class="form-group col-md-6">
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" asp-for="IsAgent">
+						<label class="form-check-label" for="flexCheckChecked">
+							Là đại lý
+						</label>
+					</div>
+				</div>
+				<div class="form-group col-md-6">
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" asp-for="IsConsignmentAgent">
+						<label class="form-check-label" for="flexCheckChecked">
+							Là đại lý kí gửi
+						</label>
+					</div>
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label">Ghi chú</label>
+					<textarea class="form-control" rows="2" placeholder="" asp-for="Remark"></textarea>
+				</div>
+				<div asp-validation-summary="All" class="text-danger"></div>
+				<button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Edit" asp-controller="Agent" width="100px">Cập nhật</button>
+				<button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="Agent" width="100px">Trở về</button>
+			</form>
+		</div>
+	</div>
+</div>
+
+<script>
+	$(function () {
+		$('#AgentCollapse').removeClass("collapsed");
+		$('#agent').addClass("show");
+		$('#AgentLst').addClass("active");
+	});
+</script>

@@ -1,0 +1,56 @@
+﻿@using Models.ViewModels
+@model AppSysConfigModel
+@{
+    ViewData["Title"] = "Config cho App";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Config cho App</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                @Html.HiddenFor(x=>x.Id)
+                <h4>Trả góp</h4>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Lãi trả góp theo ngày</label>
+                    <input type="number" class="form-control" placeholder="" asp-for="Installment_DailyInterestRate">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Phần trăm trả trước tối thiểu</label>
+                    <input type="number" class="form-control" placeholder="" asp-for="Installment_MinimumPaymentRate">
+                </div>
+                <h4>Đấu giá</h4>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Thời gian đợi cho mỗi lần đấu giá (giây)</label>
+                    <input type="number" class="form-control" placeholder="" asp-for="Auction_WaitingTime">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Tiền cọc đấu giá</label>
+                    <input type="number" class="form-control" placeholder="" asp-for="Auction_Deposit">
+                </div>
+                <h4>Hỏi sim</h4>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Block thời gian hỏi sim (phút)</label>
+                    <input type="number" class="form-control" placeholder="" asp-for="AskSim_AskingTime">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Số sim hỏi trên 1 block</label>
+                    <input type="number" class="form-control" placeholder="" asp-for="AskSim_SimNumber">
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Index" asp-controller="AppSysConfig" width="100px">Cập nhật</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $('#AppManagerCollapse').removeClass("collapsed");
+        $('#appManager').addClass("show");
+        $('#appConfig').addClass("active");
+    });
+</script>

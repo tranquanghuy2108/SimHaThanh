@@ -1,0 +1,46 @@
+﻿@using Models.ViewModels
+@model TypeOfSimEditModel
+@{
+    ViewData["Title"] = "Thêm loại SIM";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Cập nhật loại SIM</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Tên loại SIM</label>
+                    <input type="text" class="form-control" asp-for="Name">
+                    @Html.HiddenFor(model =>model.Id)
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Format</label>
+                    <input type="text" class="form-control" asp-for="Format">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Giá tham khảo</label>
+                    <input type="number" class="form-control" asp-for="EstimatedPrice">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Mô tả</label>
+                    <textarea class="form-control" rows="2" asp-for="Description"></textarea>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Edit" asp-controller="SIMType" width="100px">Cập nhật</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="SIMType" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $('#SIMCollapse').removeClass("collapsed");
+        $('#sim').addClass("show");
+        $('#SIMType').addClass("active");
+    });
+</script>

@@ -1,0 +1,63 @@
+﻿@using Models.ViewModels
+@model UserCreateRequest
+@{
+    ViewData["Title"] = "Thêm người dùng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Thêm mới người dùng</h1>
+
+<div class="col-12">
+	<div class="card">
+		<div class="card-body">
+			<form method="post">
+				<div class="form-group col-md-6">
+					<label class="form-label required">Tên đầy đủ</label>
+					<input type="text" class="form-control" placeholder="Tên đầy đủ" asp-for="FullName">
+					<input type="hidden" asp-for="IsAgent" value="false">
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label required">Tên đăng nhập</label>
+					<input type="text" class="form-control" placeholder="Tên đăng nhập" asp-for="Username">
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label required">Email address</label>
+					<input type="email" class="form-control" placeholder="Email" asp-for="Email">
+				</div>
+				<div class="form-group col-md-6 ">
+					<label class="form-label required">Mật khẩu</label>
+					<input type="password" class="form-control" placeholder="Mật khẩu" asp-for="Password">
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label required">Nhập lại mật khẩu</label>
+					<input type="password" class="form-control" placeholder="Nhập lại mật khẩu" asp-for="RePassword">
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label required">Số điện thoại</label>
+					<input type="text" class="form-control" placeholder="Số điện thoại" asp-for="PhoneNumber">
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label required">Địa chỉ</label>
+					<input type="text" class="form-control" placeholder="Địa chỉ" asp-for="Address">
+				</div>
+				<div class="form-group col-md-6">
+					<label class="form-label required">Quyền</label>
+					<select class="form-control mb-3" asp-for="GroupId" asp-items="@ViewBag.GroupLst" data-live-search="true">
+					</select>
+				</div>
+				<div asp-validation-summary="All" class="text-danger"></div>
+				<button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Create" asp-controller="User" width="100px">Thêm người dùng</button>
+				<button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="User" width="100px">Trở về</button>
+			</form>
+		</div>
+	</div>
+</div>
+
+
+<script>
+	$(function () {
+		$('#SettingsCollapse').removeClass("collapsed");
+		$('#settings').addClass("show");
+		$('#UserLst').addClass("active");
+	});
+</script>

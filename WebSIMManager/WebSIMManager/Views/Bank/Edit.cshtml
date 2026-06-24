@@ -1,0 +1,50 @@
+﻿@using Models.ViewModels
+@model BankModels
+@{
+    ViewData["Title"] = "Chỉnh sửa tài khoản ngân hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Chỉnh sửa tài khoản ngân hàng</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                @Html.HiddenFor(x=>x.Id)
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Tên ngân hàng</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Name">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Chi nhánh</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Branch">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Chủ tài khoản</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Owner">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Số tài khoản</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Number">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Edit" asp-controller="Bank" width="100px">Cập nhật</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="Bank" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $('#SettingsCollapse').removeClass("collapsed");
+        $('#settings').addClass("show");
+        $('#bankLst').addClass("active");
+    });
+</script>

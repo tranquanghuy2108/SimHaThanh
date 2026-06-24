@@ -1,0 +1,998 @@
+﻿@using Models.ViewModels
+@model SIMOrderModel
+@using System.Security.Claims;
+@Html.AntiForgeryToken()
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Hỏi sim";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<input id="uRoles" type="hidden" value="@string.Join(", ", role)" />
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="">
+                <div class="row">
+                    <div class="col-sm-3">
+                        <div class="card p-2">
+                            <div class="form-group row">
+                                <h4>Hỏi sim theo số</h4>
+                                <div class="form-group">
+                                    <div class="row">
+                                        <label for="simNum" class="col-sm-5 col-form-label required">Số điện thoại</label>
+                                        <div class="col-sm-7">
+                                            <input class="form-control" placeholder="Số điện thoại" id="simNum" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-warning" onclick="OnClickCheckNumber();">Kiểm tra SIM</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-5">
+                        <div class="card p-2">
+                            <div class="form-group row">
+                                <h4>Hỏi sim theo số lượng</h4>
+                                <div class="form-group row">
+                                    <div class="col-6">
+                                        <div class="row">
+                                            <label for="simNum" class="col-sm-4 col-form-label">Loại sim</label>
+                                            <div class="col-sm-8">
+                                                <select id="productType" type="text" asp-items="@ViewBag.ProductTypes" data-live-search="true">
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="row">
+                                            <label for="simNum" class="col-sm-4 col-form-label required">Số lượng</label>
+                                            <div class="col-sm-8">
+                                                <input class="form-control" placeholder="Số lượng" id="simAmount" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-warning" onclick="OnClickCreateOrderRandom();">Kiểm tra SIM</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="card p-2">
+                            <div class="form-group row">
+                                <h4>Hỏi sim theo file</h4>
+                                <form method="post" enctype="multipart/form-data">
+                                    <div class="form-group row">
+                                        <div class="col-8">
+                                            <input class="form-control" type="file" name="file" id="file">
+                                        </div>
+                                        <div class="col-4">
+                                            <a class="btn btn-info" asp-action="DownloadOrderTemplate" asp-controller="SIMOrder">File mẫu</a>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div class="row">
+                                    <div class="col-8 row">
+                                        <label for="agentId" class="col-sm-4 col-form-label required">Đại lý</label>
+                                        <div class="col-sm-8">
+                                            <select id="agentId" asp-items="@ViewBag.Agents" type="text" data-live-search="true">
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <button class="btn btn-warning" onclick="OnClickCreateOrderWithFile();">Kiểm tra SIM</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <div class="card px-3">
+                    <form method="post" onsubmit="Onloading();">
+                        <input type="hidden" id="simIds" value="@ViewBag.SimIDs" />
+                        <div id="simsInOrder">
+                            @if (@ViewBag.SimInOrders != null && @ViewBag.SimInOrders.Count > 0)
+                            {
+                                @for (int i = 0; i < @ViewBag.SimInOrders.Count; i++)
+                                {
+                                    var item = @ViewBag.SimInOrders[i];
+                                    var simId = item.simId;
+                                    <div class="sim-in-order-item mb-2">
+                                        <!-- Hidden inputs for model binding -->
+                                        <input type="hidden" id="simId_@simId" name="simInOrders[@i].simId" value="@item.simId" />
+                                        <input type="hidden" id="simPrice_@simId" name="simInOrders[@i].simPrice" value="@item.simPrice" />
+                                        <input type="hidden" id="usingEsim_@simId" name="simInOrders[@i].usingEsim" value="@(item.usingEsim == true ? "true" : "false")" />
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <div class="mt-3 row">
+                            <div class="col-md-4 row">
+                                <label for="UserBuyId" class="col-sm-4 col-form-label required">KH/Đại lý</label>
+                                <div class="col-sm-8">
+                                    <select asp-for="UserBuyId" asp-items="@ViewBag.Agents" type="text" data-live-search="true" onchange="OnChangeAgent();">
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4 row">
+                                <label for="UserBuyId" class="col-sm-4 col-form-label required">Kênh mua</label>
+                                <div class="col-sm-8">
+                                    <select asp-for="ContactId" asp-items="@ViewBag.SPContacts" type="text" data-live-search="true">
+                                    </select>
+                                </div>
+                            </div>
+                            @if (role.Contains("Sửa KH/Đại lý"))
+                            {
+                                <a class="btn btn-outline-info mx-2" onclick="UpdateAgent()" style="width: 170px;">Cập nhật KH/Đại lý</a>
+                            }
+                            @if (role.Contains("Tạo mới KH/Đại lý"))
+                            {
+                                <a class="btn btn-outline-success mx-2" asp-action="Create" asp-controller="Agent" style="width: 170px;">Tạo mới KH/Đại lý</a>
+                            }
+                        </div>
+                        <div class="mt-3 row">
+                            <div class="col-md-4 row">
+                                <label for="PhoneNum" class="col-sm-4 col-form-label required">Số ĐT</label>
+                                <div class="col-sm-8">
+                                    <input class="form-control" placeholder="Số điện thoại" asp-for="PhoneNum" />
+                                </div>
+                            </div>
+                            <div class="col-md-8 row">
+                                <label for="Address" class="col-sm-2 col-form-label required">Địa chỉ</label>
+                                <div class="col-md-10">
+                                    <input class="form-control" rows="2" placeholder="Địa chỉ" asp-for="Address" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 mb-3 row">
+                            <div class="col-md-8 row">
+                                <label for="Note" class="col-sm-2 col-form-label">Ghi chú</label>
+                                <div class="col-sm-8 p-2">
+                                    <textarea class="form-control" placeholder="Ghi chú" asp-for="Note" row="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card p-3 mt-3">
+                            <div class="form-group col-md-3">
+                                <label class="form-label">Loại giá sim</label>
+                                <div class="col-12 p-0">
+                                    <select asp-for="TypePriceSimOrder" asp-items="@ViewBag.TypePriceSimOrder" type="text" data-live-search="true" onchange="OnChangeTypePrice()">
+                                    </select>
+                                    <input type="hidden" id="retailPrice" />
+                                    <input type="hidden" id="agentPrice" />
+                                    <input type="hidden" id="collaboratorsPrice" />
+                                </div>
+                            </div>
+                            <div class="col-md-12 row">
+                                <div class="form-group col-md-3">
+                                    <label class="form-label">Tổng giá trị đơn</label>
+                                    <input type="text" class="form-control currency" data-type="currency" asp-for="PriceOrder" />
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label class="form-label">Chiết khấu</label>
+                                    <input type="text" class="form-control currency" data-type="currency" asp-for="Discount" onchange="OnChangeDiscount()" />
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label class="form-label">Tổng tiền sim</label>
+                                    <input type="text" class="form-control currency" data-type="currency" asp-for="PriceOfSim" readonly />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="form-group col-md-3">
+                                    <label class="form-label">Hình thức thanh toán</label>
+                                    <div class="col-12 p-0">
+                                        <select asp-for="PaymentType" asp-items="@ViewBag.PayOrderType" type="text" data-live-search="true" onchange="OnChangePaymentType()">
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-9" id="traGopArea">
+                                    <div class="row">
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Số tiền trả ban đầu</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="DownPayment" onchange="OnChangeDownPayment();" />
+                                            <input type="hidden" id="MinimumPaymentRate" value="@ViewBag.MinimumPaymentRate" />
+                                            <input type="hidden" asp-for="InterestRate" value="@ViewBag.DailyInterestRate" />
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Số tiền trả góp</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="InstallmentPayment" />
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Thời gian trả góp</label>
+                                            <select asp-for="InstallmentPeriod" type="text" data-live-search="true" onchange="OnChangeInstallmentPeriod()">
+                                                <option value="1">1 tháng</option>
+                                                <option value="2">2 tháng</option>
+                                                <option value="3">3 tháng</option>
+                                                <option value="4">4 tháng</option>
+                                                <option value="5">5 tháng</option>
+                                                <option value="6">6 tháng</option>
+                                                <option value="7">7 tháng</option>
+                                                <option value="8">8 tháng</option>
+                                                <option value="9">9 tháng</option>
+                                                <option value="10">10 tháng</option>
+                                                <option value="11">11 tháng</option>
+                                                <option value="12">12 tháng</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Số tiền trả hàng tháng</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="MonthlyInstallmentPayment" onchange="OnChangeMonthlyInstallmentPayment()" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                        <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="AskSim" asp-controller="SIMOrder" width="100px">Tạo order</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!--Sim info-->
+        <div id="simInfos">
+            <div class="card-body px-3">
+                <h4>Thông tin đặt sim</h4>
+                <table id="simInfoTbl" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Số điện thoại</th>
+                            <th>Seria</th>
+                            <th>Giá bán lẻ</th>
+                            <th>Giá cho đại lý</th>
+                            <th>Giá cho CTV</th>
+                            <!--<th>Phí sim trắng</th>
+                            <th>Phí dịch vụ</th>-->
+                            <th>Loại sim</th>
+                            <th>Nhà mạng</th>
+                            <th>Vị trí</th>
+                            <th>Ghi chú</th>
+                            <th>Đại lý có sim</th>
+                            <th>Số ĐT Đại lý</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!--Sim Order-->
+        <div id="orderInfos">
+            <div class="card-body px-3" style="overflow-x: scroll;">
+                <div id="orderInfosAction">
+                    <div class="card p-3">
+                        <div class="col-12 rows">
+                            @if (role.Contains("Xuất sim"))
+                            {
+                                <a class="btn btn-primary" onclick="OnClickXuatSim(0);">Xuất sim</a>
+                            }
+                            @if (role.Contains("Hủy đơn hỏi mua"))
+                            {
+                                <a class="btn btn-danger mx-4" onclick="OnClickCancel(0);">Hủy order</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <h4>Thông tin đơn hàng</h4>
+                <table id="simOrderTbl" class="table table-bordered table-striped" style="width: 150%;">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" value="" id="checkAll" onclick="OnClickCheckAll()">
+                                <input type="hidden" id="lstOrder">
+                            </th>
+                            <th>Thao tác</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày phát sinh</th>
+                            <th>Số hỏi</th>
+                            <th>Loại sim</th>
+                            <th>Tổng đơn</th>
+                            <th>Tên khách hàng</th>
+                            <th>Điện thoại</th>
+                            <th>Địa chỉ</th>
+                            <th>Người xử lý</th>
+                            <th>Ghi chú</th>
+                            <th>Kênh bán</th>
+                            <th>Vị trí</th>
+                            <th>Seria</th>
+                            <th>Hình thức thanh toán</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div id="paging" class="px-3">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination pagination-md">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#createOrder').addClass("active");
+        //var simIds = document.getElementById('simIds').value;
+
+        document.getElementById('PriceOfSim').value = 0;
+        document.getElementById('Discount').value = 0;
+        document.getElementById('PriceOrder').value = 0;
+
+        GetOrderForAskSim(1);
+        OnChangePaymentType();
+        //OnChangeAgent();
+    });
+    var lstOrder = [];
+    function GetOrderForAskSim(page) {
+        Onloading();
+        var simInfos = document.getElementById('simInfos');
+        var orderInfos = document.getElementById('orderInfos');
+        var pagingOrder = document.getElementById('paging');
+
+        simInfos.classList.add("hidden");
+        orderInfos.classList.add("hidden");
+        pagingOrder.classList.add("hidden");
+
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 20, "keyword": "" };
+        $.ajax({
+            url: '@Url.Action("GetOrderForAskSim", "SIMOrder")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                orderInfos.classList.remove("hidden");
+                pagingOrder.classList.remove("hidden");
+                //Write table tbody
+                var tbodyOrder = $("#simOrderTbl tbody")
+                tbodyOrder.children().remove();
+                var newBody = "";
+                data.data.forEach((el) => {
+                    var action = '';
+                    var role = $('#uRoles').val();
+                    if (role.includes("Sửa đơn hỏi mua"))
+                        action += '<a class="m-1" href="@Url.Action("Edit", "SIMOrder")?id=' + el.id + '" title="Chỉnh sửa"><i class="fa fa-edit"></i></a>';
+                    if (role.includes("Xuất sim"))
+                        action += '<a class="m-1" onclick="OnClickXuatSim(' + el.id + ');" title="Xuất sim"><i class="fa fa-dollar"></i></a>';
+                    if (role.includes("Hủy đơn hỏi mua"))
+                        action += '<a class="m-1" onclick="OnClickCancel(' + el.id + ');" title="Hủy order"><i class="fa fa-times"></i></a>';
+                    newBody += '<tr>'
+                        + '<td><input type="checkbox" value="' + el.id + '" id="' + el.id + '" onclick="OnClickCheckBox(' + el.id + ')"></td>'
+                        + '<td class="table-action" >'
+                        + action
+                        + '</td>'
+                        + '<td>' + el.status + '</td>'
+                        + '<td>' + el.createTime + '</td>'
+                        + '<td>' + el.simNumber + '</td>'
+                        + '<td>' + el.productType + '</td>'
+                        + '<td>' + el.priceOrder + '</td>'
+                        + '<td>' + el.name + '</td>'
+                        + '<td>' + el.phoneNum + '</td>'
+                        + '<td>' + el.address + '</td>'
+                        + '<td>' + el.pic + '</td>'
+                        + '<td>' + el.note + '</td>'
+                        + '<td>' + el.contact + '</td>'
+                        + '<td>' + (el.simPosition ? el.simPosition : '') + '</td>'
+                        + '<td>' + (el.seria ? el.seria : '') + '</td>'
+                        + '<td>' + el.payOrderType + '</td>'
+                        + '</tr>';
+                });
+                tbodyOrder.append(newBody);
+                //write paging
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="GetOrderForAskSim(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="GetOrderForAskSim(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="GetOrderForAskSim(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="GetOrderForAskSim(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+                fomatCurrencyInput();
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    }
+    function OnChangePaymentType() {
+        var traGopArea = document.getElementById('traGopArea');
+        var priceOrder = document.getElementById('PriceOrder');
+        var downPayment = document.getElementById('DownPayment');
+        var installmentPayment = document.getElementById('InstallmentPayment');
+        var installmentPeriod = document.getElementById('InstallmentPeriod');
+        var monthlyInstallmentPayment = document.getElementById('MonthlyInstallmentPayment');
+        var paymentType = $('#PaymentType').val();
+        traGopArea.classList.add("hidden");
+        if (paymentType == "Installment") {
+            traGopArea.classList.remove("hidden");
+            if (parseFloat(downPayment.value.replaceAll(",", "")) == 0)
+                OnChangeInstallmentPeriod();
+        } else {
+            OnChangeDiscount();
+            downPayment.value = 0;
+            installmentPayment.value = 0;
+            monthlyInstallmentPayment.value = 0;
+            installmentPeriod.value = 1;
+        }
+        fomatCurrencyInput();
+    }
+    function OnChangeInstallmentPeriod() {
+        var priceOrder = document.getElementById('PriceOrder');
+        var downPayment = document.getElementById('DownPayment');
+        var installmentPayment = document.getElementById('InstallmentPayment');
+        var installmentPeriod = document.getElementById('InstallmentPeriod');
+        var monthlyInstallmentPayment = document.getElementById('MonthlyInstallmentPayment');
+        var PriceOfSim = document.getElementById('PriceOfSim');
+        var Discount = document.getElementById('Discount');
+        var dailyInterestRate = document.getElementById('InterestRate');
+        var minimumPaymentRate = document.getElementById('MinimumPaymentRate');
+        //Tính toán số tiền lãi
+        var PriceAfterDiscount = parseFloat(PriceOfSim.value.replaceAll(",", "")) - parseFloat(PriceOfSim.value.replaceAll(",", "")) * parseFloat(Discount.value.replaceAll(",", "")) / 100;
+        var curDate = new Date();
+        var startDate = new Date();
+        var endDate = new Date(curDate.setMonth(curDate.getMonth() + parseFloat(installmentPeriod.value.replaceAll(",", ""))));
+        var totalDays = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+        var tienTraTruoc = PriceAfterDiscount * parseFloat(minimumPaymentRate.value.replaceAll(",", "")) / 100;
+        if (parseFloat(downPayment.value.replaceAll(",", "")) == 0)
+            downPayment.value = tienTraTruoc;
+        else
+            tienTraTruoc = parseFloat(downPayment.value.replaceAll(",", ""));
+        var tienDaTra = parseFloat(downPayment.value.replaceAll(",", ""));
+        var tongTraGop = PriceAfterDiscount - tienDaTra;
+        var tienGopHangThang = (tongTraGop + tongTraGop / parseFloat(dailyInterestRate.value.replaceAll(",", "")) * totalDays) / parseFloat(installmentPeriod.value.replaceAll(",", ""));
+        installmentPayment.value = tongTraGop;
+        monthlyInstallmentPayment.value = tienGopHangThang;
+        priceOrder.value = tienDaTra + tienGopHangThang * parseFloat(installmentPeriod.value.replaceAll(",", ""));
+        fomatCurrencyInput();
+    }
+    function OnChangeMonthlyInstallmentPayment() {
+        var priceOrder = document.getElementById('PriceOrder');
+        var monthlyInstallmentPayment = document.getElementById('MonthlyInstallmentPayment');
+        var downPayment = document.getElementById('DownPayment');
+        var installmentPeriod = document.getElementById('InstallmentPeriod');
+        priceOrder.value = parseFloat(monthlyInstallmentPayment.value.replaceAll(",", "")) * parseFloat(installmentPeriod.value.replaceAll(",", "")) + parseFloat(downPayment.value.replaceAll(",", ""));
+        fomatCurrencyInput();
+    }
+    function OnChangeDownPayment() {
+        var priceOfSim = document.getElementById('PriceOfSim');
+        var minimumPaymentRate = document.getElementById('MinimumPaymentRate');
+        var downPayment = document.getElementById('DownPayment');
+        var tienTraTruoc = parseFloat(priceOfSim.value.replaceAll(",", "")) * parseFloat(minimumPaymentRate.value.replaceAll(",", "")) / 100;
+        if (parseFloat(downPayment.value.replaceAll(",", "")) < tienTraTruoc) {
+            downPayment.value = tienTraTruoc;
+            alert('Số tiền trả trước không thấp quá ' + tienTraTruoc);
+        }
+        OnChangeInstallmentPeriod();
+        fomatCurrencyInput();
+    }
+
+    function OnChangeAgent() {
+        Onloading();
+        var customer = $('#UserBuyId').val();
+        var simids = $('#simIds').val();
+        var request = { "agentId": customer, "price": 0 };
+        $.ajax({
+            url: '@Url.Action("OnAgentChange", "SIMOrder")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(request),
+            success: function (data) {
+                OnloadingSuccess();
+                document.getElementById('PhoneNum').value = data.phoneNumber;
+                document.getElementById('Address').value = data.address;
+                OnChangePaymentType();
+                GetDiscountOfUser();
+                fomatCurrencyInput();
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+    function UpdateAgent() {
+        var userById = $("#UserBuyId").val();
+        window.location.href = '@Url.Action("Edit", "Agent")?id=' + userById;
+    }
+    function OnClickCreateOrderRandom() {
+        var simAmount = $('#simAmount').val();
+        var productTypeId = $('#productType').val();
+        if (parseInt(simAmount) > 0) {
+            var dataReq = {
+                "simAmount": simAmount,
+                "productTypeId": productTypeId
+            }
+            $.ajax({
+                url: '@Url.Action("GetSimIdsRandom", "SIMOrder")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(dataReq),
+                success: function (resp) {
+                    if (resp.length > 0) {
+                        window.location.href = '@Url.Action("Create", "SIMOrder")?simIds=' + resp;
+                    } else {
+                        alert('Sim bạn đặt không còn trong hệ thống.')
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+        else {
+            alert('Bạn phải nhập số sim cần đặt.')
+        }
+    }
+    function OnClickCreateOrderWithFile() {
+        var agentId = document.getElementById('agentId').value;
+        var input = document.getElementById('file');
+        var files = input.files;
+
+        var formData = new FormData();
+        formData.append("file", files[0]);
+        formData.append("agentId", agentId);
+        if (files.length > 0) {
+            $.ajax({
+                url: '@Url.Action("ReadOrderFile", "SIMOrder")',
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (resp) {
+                    if (resp.length > 0) {
+                        window.location.href = '@Url.Action("Create", "SIMOrder")?simIds=' + resp;
+                    } else {
+                        alert('Sim bạn chọn đã được đặt hoặc không có trong hệ thống.')
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+        else {
+            alert('Bạn chưa chọn file dữ liệu.')
+        }
+    }
+    function OnClickCheckNumber() {
+        //Reset bảng data
+        var simInfos = document.getElementById('simInfos');
+        var orderInfos = document.getElementById('orderInfos');
+        var pagingOrder = document.getElementById('paging');
+
+        simInfos.classList.add("hidden");
+        orderInfos.classList.add("hidden");
+        pagingOrder.classList.add("hidden");
+
+        var tbodySim = $("#simInfoTbl tbody")
+        tbodySim.children().remove();
+
+        var tbodyOrder = $("#simOrderTbl tbody")
+        tbodyOrder.children().remove();
+        //
+        var simNum = $('#simNum').val();
+
+        if (simNum.length == 0) alert("Bạn chưa nhập số sim.");
+        if (simNum.replace(".", "").length < 9)
+            alert("Số sim bạn nhập chưa đúng.");
+        else {
+            $.ajax({
+                url: '@Url.Action("GetSimInfoForAskSim", "SIMOrder")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ "simNumber": simNum }),
+                xhrFields: {
+                    withCredentials: true // Gửi kèm cookie (nếu bạn đang dùng cookie auth)
+                },
+                success: function (resp) {
+                    if (resp.simInfos.length > 0 || resp.orderInfos.length > 0) {
+                        if (resp.simInfos.length > 0) {
+                            //document.getElementById('PriceOrder').value = resp.priceOrder;
+                            //document.getElementById('PriceOfSim').value = resp.priceOrder;
+                            //document.getElementById('simIds').value = resp.simIds;
+                            simInfos.classList.remove("hidden");
+                            //Write table tbody
+                            var newBody = "";
+                            var isFirst = true;
+                            var firstId = 0;
+                            resp.simInfos.forEach((el) => {
+                                if (isFirst) {
+                                    firstId = el.id;
+                                    isFirst = false;
+                                }
+                                newBody += '<tr>'
+                                    + '<td><input type="checkbox" value="' + el.id + '" id="sim_' + el.id + '" onclick="OnChosseSim(' + el.id + ')"></td>'
+                                    + '<td>' + el.number + '</td>'
+                                    + '<td>' + (el.seria ? el.seria : '') + '</td>'
+                                    + '<td>' + el.price + '</td>'
+                                    + '<td>' + el.agentSIMPrice + '</td>'
+                                    + '<td>' + el.collaboratorsSIMPrice + '</td>'
+                                    // + '<td>' + el.simEmbryoFee + '</td>'
+                                    // + '<td>' + el.simServiceFee + '</td>'
+                                    + '<td>' + el.productType + '</td>'
+                                    + '<td>' + el.network + '</td>'
+                                    + '<td>' + (el.position ? el.position : '') + '</td>'
+                                    + '<td>' + (el.description ? el.description : '') + '</td>'
+                                    + '<td>' + el.owner + '</td>'
+                                    + '<td>' + el.ownerPhoneNumber + '</td>'
+                                    + '</tr>';
+                            });
+                            tbodySim.append(newBody);
+                            document.getElementById('sim_' + firstId).checked = true;
+                            OnChosseSim(firstId);
+                            //orderCancelInfos
+                            if (resp.orderCancelInfos.length > 0) {
+                                orderInfos.classList.remove("hidden");
+                                orderInfosAction.classList.add("hidden");
+                                //Write table tbody
+                                var newBody = "";
+                                resp.orderCancelInfos.forEach((el) => {
+                                    var action = '';
+                                    //var role = $('#uRoles').val();
+                                    //if (role.includes("Sửa đơn hỏi mua"))
+                                    //    action += '<a class="m-1" href="@Url.Action("Edit", "SIMOrder")?id=' + el.id + '" title="Chỉnh sửa"><i class="fa fa-edit"></i></a>';
+                                    //if (role.includes("Xuất sim"))
+                                    //    action += '<a class="m-1" onclick="OnClickXuatSim(' + el.id + ');" title="Xuất sim"><i class="fa fa-dollar"></i></a>';
+                                    //if (role.includes("Hủy đơn hỏi mua"))
+                                    //    action += '<a class="m-1" onclick="OnClickCancel(' + el.id + ');" title="Hủy order"><i class="fa fa-times"></i></a>';
+                                    newBody += '<tr>'
+                                        + '<td><input type="checkbox" value="' + el.id + '" id="' + el.id + '" onclick="OnClickCheckBox(' + el.id + ')"></td>'
+                                        + '<td class="table-action" >'
+                                        + action
+                                        + '</td>'
+                                        + '<td>' + el.status + '</td>'
+                                        + '<td>' + el.createTime + '</td>'
+                                        + '<td>' + el.simNumber + '</td>'
+                                        + '<td>' + el.productType + '</td>'
+                                        + '<td>' + el.priceOrder + '</td>'
+                                        + '<td>' + el.name + '</td>'
+                                        + '<td>' + el.phoneNum + '</td>'
+                                        + '<td>' + el.address + '</td>'
+                                        + '<td>' + el.pic + '</td>'
+                                        + '<td>' + el.note + '</td>'
+                                        + '<td>' + el.contact + '</td>'
+                                        + '<td>' + (el.simPosition ? el.simPosition : '') + '</td>'
+                                        + '<td>' + (el.seria ? el.seria : '') + '</td>'
+                                        + '<td>' + el.payOrderType + '</td>'
+                                        + '</tr>';
+                                });
+                                tbodyOrder.append(newBody);
+                            }
+                        }
+                        if (resp.orderInfos.length > 0) {
+                            if (simNum.length > 0) alert('Số bạn chọn đã có người đặt.');
+                            orderInfos.classList.remove("hidden");
+                            //Write table tbody
+                            var newBody = "";
+                            resp.orderInfos.forEach((el) => {
+                                var action = '';
+                                var role = $('#uRoles').val();
+                                if (role.includes("Sửa đơn hỏi mua"))
+                                    action += '<a class="m-1" href="@Url.Action("Edit", "SIMOrder")?id=' + el.id + '" title="Chỉnh sửa"><i class="fa fa-edit"></i></a>';
+                                if (role.includes("Xuất sim"))
+                                    action += '<a class="m-1" onclick="OnClickXuatSim(' + el.id + ');" title="Xuất sim"><i class="fa fa-dollar"></i></a>';
+                                if (role.includes("Hủy đơn hỏi mua"))
+                                    action += '<a class="m-1" onclick="OnClickCancel(' + el.id + ');" title="Hủy order"><i class="fa fa-times"></i></a>';
+                                newBody += '<tr>'
+                                    + '<td><input type="checkbox" value="' + el.id + '" id="' + el.id + '" onclick="OnClickCheckBox(' + el.id + ')"></td>'
+                                    + '<td class="table-action" >'
+                                    + action
+                                    + '</td>'
+                                    + '<td>' + el.status + '</td>'
+                                    + '<td>' + el.createTime + '</td>'
+                                    + '<td>' + el.simNumber + '</td>'
+                                    + '<td>' + el.productType + '</td>'
+                                    + '<td>' + el.priceOrder + '</td>'
+                                    + '<td>' + el.name + '</td>'
+                                    + '<td>' + el.phoneNum + '</td>'
+                                    + '<td>' + el.address + '</td>'
+                                    + '<td>' + el.pic + '</td>'
+                                    + '<td>' + el.note + '</td>'
+                                    + '<td>' + el.contact + '</td>'
+                                    + '<td>' + (el.simPosition ? el.simPosition : '') + '</td>'
+                                    + '<td>' + (el.seria ? el.seria : '') + '</td>'
+                                    + '<td>' + el.payOrderType + '</td>'
+                                    + '</tr>';
+                            });
+                            tbodyOrder.append(newBody);
+                        }
+                        fomatCurrencyInput();
+                    }
+                    else {
+                        document.getElementById('PriceOrder').value = 0;
+                        document.getElementById('PriceOfSim').value = 0;
+                        document.getElementById('simIds').value = "";
+                        alert('Sim bạn đặt không có trong hệ thống.')
+                    }
+                    fomatCurrencyInput();
+                },
+                error: function (jqXHR) {
+                    console.error("Lỗi:", jqXHR.status, jqXHR.responseText);
+                    if (jqXHR.status === 401) {
+                        alert("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
+                    } else if (jqXHR.status === 403) {
+                        alert("Bạn không có quyền truy cập chức năng này.");
+                    } else {
+                        alert("Có lỗi xảy ra khi gọi API.");
+                    }
+                }
+            });
+        }
+    }
+    function OnClickCheckAll() {
+        var chkVal = document.getElementById('checkAll');
+        if (chkVal.checked === true) {
+            lstOrder = [];
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                lstOrder.push(orderId);
+                document.getElementById(orderId).checked = true;
+            })
+        } else {
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                document.getElementById(orderId).checked = false;
+            })
+            lstOrder = [];
+        }
+    }
+    function OnClickCheckBox(orderId) {
+        var chkVal = document.getElementById(orderId);
+        if (chkVal.checked === true) {
+            lstOrder.push(orderId);
+        } else {
+            const index = lstOrder.indexOf(orderId);
+            if (index > -1) {
+                lstOrder.splice(index, 1);
+            }
+        }
+    }
+    function OnClickXuatSim(orderId) {
+        if (orderId == 0) {
+            if (lstOrder.length > 0) {
+                var dataReq = {
+                    "ids": lstOrder
+                }
+                $.ajax({
+                    url: '@Url.Action("CheckListOrderIsOneAgent", "SIMOrder")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(dataReq),
+                    success: function (resp) {
+                        if (resp.data) {
+                            $.ajax({
+                                url: '@Url.Action("CheckListOrderIsAvalible", "SIMOrder")',
+                                type: "POST",
+                                contentType: "application/json",
+                                data: JSON.stringify(dataReq),
+                                success: function (resp2) {
+                                    if (resp2.code == '1') {
+                                        window.location.href = '@Url.Action("XuatSim", "SIMOrder")' + '?orderIds=' + resp2.data;
+                                    } else {
+                                        alert(resp2.message)
+                                    }
+                                },
+                                error: function (xhr) {
+                                    console.log(xhr);
+                                }
+                            });
+                        } else {
+                            alert('Bạn cần chọn cùng 1 KH/Đại lý mua sim.')
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                    }
+                });
+            } else {
+                alert('Bạn chưa chọn item');
+            }
+        }
+        else {
+            var orderIdsArr = [];
+            orderIdsArr.push(orderId);
+            var req = { "ids": orderIdsArr };
+            $.ajax({
+                url: '@Url.Action("CheckListOrderIsAvalible", "SIMOrder")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(req),
+                success: function (resp2) {
+                    if (resp2.code == '1') {
+                        window.location.href = '@Url.Action("XuatSim", "SIMOrder")' + '?orderIds=' + resp2.data;
+                    } else {
+                        alert(resp2.message)
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+    function OnClickCancel(orderId) {
+        if (orderId == 0) {
+            if (lstOrder.length > 0) {
+                var dataReq = {
+                    "ids": lstOrder
+                }
+                $.ajax({
+                    url: '@Url.Action("CheckListOrderIsOneAgent", "SIMOrder")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(dataReq),
+                    success: function (resp) {
+                        if (resp.data) {
+                            var req = {
+                                "orderIds": lstOrder.join(","),
+                                "status": 2
+                            }
+                            $.ajax({
+                                url: '@Url.Action("OnApprovedOrder", "SIMOrder")',
+                                type: "POST",
+                                contentType: "application/json",
+                                data: JSON.stringify(req),
+                                success: function (resp2) {
+                                    alert(resp2.message)
+                                    if (resp2.code == '1') {
+                                        window.location.href = '@Url.Action("AskSim", "SIMOrder")';
+                                    }
+                                },
+                                error: function (xhr) {
+                                    console.log(xhr);
+                                }
+                            });
+                        } else {
+                            alert('Bạn cần chọn cùng 1 KH/Đại lý mua sim')
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                    }
+                });
+            } else {
+                alert('Bạn chưa chọn item');
+            }
+        }
+        else {
+            var req = {
+                "orderIds": orderId.toString(),
+                "status": 2
+            }
+            $.ajax({
+                url: '@Url.Action("OnApprovedOrder", "SIMOrder")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(req),
+                success: function (resp2) {
+                    alert(resp2.message)
+                    if (resp2.code == '1') {
+                        window.location.href = '@Url.Action("AskSim", "SIMOrder")';
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+    function OnChangeDiscount() {
+        var PriceOfSim = document.getElementById('PriceOfSim');
+        var Discount = document.getElementById('Discount');
+        var PriceOrder = document.getElementById('PriceOrder');
+        var priceorder = parseFloat(PriceOfSim.value.replaceAll(",", "")) - parseFloat(PriceOfSim.value.replaceAll(",", "")) * parseFloat(Discount.value.replaceAll(",", "")) / 100;
+        PriceOrder.value = priceorder;
+        fomatCurrencyInput();
+    }
+    function OnChosseSim(id) {
+        var chkVal = document.getElementById('sim_' + id);
+        if (chkVal.checked === true) {
+            document.getElementById('simIds').value = id;
+
+            $('tr td input').each(function (el) {
+                $(this).prop('checked', false);
+            })
+            document.getElementById('sim_' + id).checked = true;
+            //Lấy thông tin sim được chọn
+            Onloading();
+            var simids = $('#simIds').val();
+            var request = { "customerId": "", "simids": simids };
+            $.ajax({
+                url: '@Url.Action("GetSimInfoByIds", "SIMOrder")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(request),
+                success: function (resp) {
+                    OnloadingSuccess();
+                    if (resp.simInfos.length > 0 || resp.orderInfos.length > 0) {
+                        if (resp.simInfos.length > 0) {
+                            var simsInOrderHtml = '<div class="sim-in-order-item mb-2">'
+                            + '<input type="hidden" id="simId_' + id + '" name="simInOrders[0].simId" value="' + id + '" />'
+                            + '<input type="hidden" id="simPrice_' + id + '" name="simInOrders[0].simPrice" value="' + resp.simInfos[0].price + '" />'
+                            + '<input type="hidden" id="usingEsim_' + id + '" name="simInOrders[0].usingEsim" value="false" />'
+                            + '</div>';
+                            var simsInOrder = $('#simsInOrder');
+                            simsInOrder.children().remove();
+                            simsInOrder.append(simsInOrderHtml);
+
+                            document.getElementById('retailPrice').value = resp.simInfos[0].price;
+                            document.getElementById('agentPrice').value = resp.simInfos[0].agentSIMPrice;
+                            document.getElementById('collaboratorsPrice').value = resp.simInfos[0].collaboratorsSIMPrice;
+                            OnChangeTypePrice();
+                            OnChangeAgent();
+                            fomatCurrencyInput();
+                        }
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        } else {
+            document.getElementById('simIds').value = '';
+        }
+    }
+    function OnChangeTypePrice() {
+        var priceType = document.getElementById("TypePriceSimOrder").value;
+        switch (priceType) {
+            case "Defaul":
+                document.getElementById('PriceOfSim').value = parseFloat(document.getElementById('retailPrice').value.replaceAll(",", ""));
+                break;
+            case "ForAgent":
+                document.getElementById('PriceOfSim').value = parseFloat(document.getElementById('agentPrice').value.replaceAll(",", ""));
+                break;
+            case "ForCollaborators":
+                document.getElementById('PriceOfSim').value = parseFloat(document.getElementById('collaboratorsPrice').value.replaceAll(",", ""));
+                break;
+        }
+        OnChangeDiscount();
+        fomatCurrencyInput();
+    }
+    function GetDiscountOfUser() {
+        Onloading();
+        var customer = $('#UserBuyId').val();
+        var price = parseFloat(document.getElementById('PriceOfSim').value.replaceAll(",", ""));
+        var request = { "agentId": customer, "price": price };
+        $.ajax({
+            url: '@Url.Action("GetDiscountOfUser", "SIMOrder")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(request),
+            success: function (data) {
+                OnloadingSuccess();
+                document.getElementById('Discount').value = data.discount;
+                OnChangeDiscount();
+                fomatCurrencyInput();
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+</script>

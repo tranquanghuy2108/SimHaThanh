@@ -1,0 +1,590 @@
+﻿@using Models.ViewModels
+@model GoodsDeliveryNoteOfSimModel
+@{
+    ViewData["Title"] = "Tạo phiếu xuất sim";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Tạo phiếu xuất sim</h1>
+
+<div class="col-12">
+    <div class="card">
+        <form method="post" onsubmit="Onloading();">
+            @Html.HiddenFor(x=>x.OrderIds)
+            @Html.HiddenFor(x=>x.CustomerId)
+            <div class="card-header">
+                <div class="card">
+                    <div class="col-md-12">
+                        <div class="card mt-3">
+                            <div class="p-3 row">
+                                <div class="col-md-9">
+                                    <h4>Thông tin đặt sim</h4>
+                                    <div class="row">
+                                        <div class="col-md-4 row">
+                                            <label for="UserBuyId" class="col-sm-4 col-form-label required">KH/Đại lý</label>
+                                            <div class="col-sm-8">
+                                                <select asp-for="CustomerId" asp-items="@ViewBag.Agents" type="text" data-live-search="true" onchange="OnChangeAgent();" disabled>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 row">
+                                            <label for="UserBuyId" class="col-sm-4 col-form-label required">Kênh mua</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" value="@ViewBag.OrderInfos.contact" disabled />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 row">
+                                            <label for="PhoneNum" class="col-sm-4 col-form-label required">Số ĐT</label>
+                                            <div class="col-sm-8">
+                                                <input class="form-control" asp-for="CustomerPhone" value="@ViewBag.OrderInfos.orderInDebts[0].PhoneNum" readonly />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-8 row">
+                                            <label for="Address" class="col-sm-2 col-form-label required">Địa chỉ</label>
+                                            <div class="col-md-10">
+                                                <input class="form-control" asp-for="CustomerAddress" value="@ViewBag.OrderInfos.orderInDebts[0].Address" readonly />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <div class="col-md-8 row">
+                                            <label for="Note" class="col-sm-2 col-form-label">Ghi chú</label>
+                                            <div class="col-sm-8 p-2">
+                                                <textarea class="form-control" row="2" readonly>@ViewBag.OrderInfos.orderInDebts[0].Note</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Tổng giá trị đơn</label>
+                                            <input type="text" class="form-control currency" data-type="currency" value="@ViewBag.OrderInfos.priceOrder" disabled />
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Chiết khấu</label>
+                                            <input type="text" class="form-control currency" data-type="currency" value="@ViewBag.OrderInfos.discount" disabled />
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Tổng tiền sim</label>
+                                            <input type="text" class="form-control currency" data-type="currency" value="@ViewBag.OrderInfos.priceOfSim" disabled />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <h4>Thông tin phiếu xuất</h4>
+                                    <div class="row">
+                                        <label for="PhoneNum" class="col-sm-4 col-form-label">Mã phiếu</label>
+                                        <div class="col-sm-8">
+                                            <input class="form-control" asp-for="Code" readonly />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label for="PhoneNum" class="col-sm-4 col-form-label">Ngày tạo</label>
+                                        <div class="col-sm-8">
+                                            <input type="datetime-local" class="form-control" asp-for="CreateTime" value="@Model.CreateTime.ToString("yyyy-MM-ddTHH:mm:ss")" readonly />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label for="PhoneNum" class="col-sm-4 col-form-label">Người tạo</label>
+                                        <div class="col-sm-8">
+                                            <select asp-for="CreateBy" asp-items="@ViewBag.Staffs" type="text" data-live-search="true" disabled>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label for="PhoneNum" class="col-sm-4 col-form-label">Ngày lập</label>
+                                        <div class="col-sm-8">
+                                            <input type="datetime-local" class="form-control" asp-for="DeliveryDate" value="@Model.DeliveryDate?.ToString("yyyy-MM-ddTHH:mm:ss")" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--Sim info-->
+                            <div class="card-body px-3" style="overflow-x: scroll;">
+                                <input type="hidden" id="totalPriceOfSim" value="@ViewBag.TotalPriceOfSim" />
+                                <table id="myTable" class="table table-bordered table-striped" style="width: 130%;">
+                                    <thead>
+                                        <tr>
+                                            <th colspan="9">Thông tin PS với KH/Đại lý mua sim</th>
+                                            <th colspan="6">Thông tin sim kí gửi và PS với đại lý có sim</th>
+                                        </tr>
+                                        <tr>
+                                            <th style="width:2%">Stt</th>
+                                            <th style="width:8%">Số điện thoại</th>
+                                            <th style="width:7%">Giá</th>
+                                            <th style="width:5%">% CK</th>
+                                            <th style="width:7%">Tiền CK</th>
+                                            <th style="width:7%">Giá thực bán</th>
+                                            <th style="width:8%">Seria</th>
+                                            <th style="width:7%">Phí sim trắng</th>
+                                            <th style="width:7%">Phí dịch vụ</th>
+                                            <th style="width:8%">Đại lý có sim</th>
+                                            <th style="width:7%">Giá đại lý</th>
+                                            <th style="width:5%">% CK</th>
+                                            <th style="width:7%">Tiền CK</th>
+                                            <th style="width:7%">Giá phát sinh công nợ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (int i = 0; i < Model.SimInfosInOrders.Count(); i++)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @(i + 1)
+                                                    <input type="hidden" asp-for="SimInfosInOrders[i].Id" />
+                                                    <input type="hidden" asp-for="SimInfosInOrders[i].SimId" />
+                                                    <input type="hidden" asp-for="SimInfosInOrders[i].OrderId" />
+                                                    <input type="hidden" asp-for="SimInfosInOrders[i].GDNId" />
+                                                    <input type="hidden" asp-for="SimInfosInOrders[i].AgentId" />
+                                                </td>
+                                                <td><input type="text" asp-for="SimInfosInOrders[i].SimNumber" readonly /></td>
+                                                <td><input type="text" class="form-control currency" data-type="currency" asp-for="SimInfosInOrders[i].PriceOfSim" readonly /></td>
+                                                <td><input type="text" class="form-control currency" data-type="currency" asp-for="SimInfosInOrders[i].DiscountOfSim" onchange="OnChangeDiscountOfSim(@i);" /></td>
+                                                <td><input type="text" class="form-control currency" data-type="currency" asp-for="SimInfosInOrders[i].PriceOfDiscount" readonly /></td>
+                                                <td><input type="text" class="form-control currency" data-type="currency" asp-for="SimInfosInOrders[i].PriceAfterDiscount" onchange="OnChangePriceAfterDiscount(@i);" /></td>
+                                                <td><input type="text" asp-for="SimInfosInOrders[i].SimSeria" /></td>
+                                                <td><input type="text" class="form-control currency" data-type="currency" asp-for="SimInfosInOrders[i].SimEmbryoFee" onchange="OnChangeDiscountOfSim(@i);" /></td>
+                                                <td><input type="text" class="form-control currency" data-type="currency" asp-for="SimInfosInOrders[i].SimServiceFee" onchange="OnChangeDiscountOfSim(@i);" /></td>
+                                                <td><input type="text" asp-for="SimInfosInOrders[i].AgentName" readonly /></td>
+                                                <td><input type="text" class="form-control currency" data-type="currency" asp-for="SimInfosInOrders[i].PriceOfAgent" readonly /></td>
+                                                <td><input type="text" class="form-control currency" data-type="currency" asp-for="SimInfosInOrders[i].DiscountOfAgent" onchange="OnChangeDiscountOfAgent(@i);" /></td>
+                                                <td><input type="text" class="form-control currency" data-type="currency" asp-for="SimInfosInOrders[i].PriceOfDiscountAgent" readonly /></td>
+                                                <td><input type="text" class="form-control currency" data-type="currency" asp-for="SimInfosInOrders[i].PriceAfterDiscountAgent" onchange="OnChangePriceAfterDiscountAgentOfAgent(@i);" /></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h4>Phát sinh công nợ</h4>
+                            @* <div class="form-group col-md-12">
+                            <div class="form-group col-md-2">
+                            <label class="form-label">Tiền đặt trước</label>
+                            <input type="text" class="form-control currency" data-type="currency" asp-for="Deposit" />
+                            </div>
+                            </div> *@
+                            <div class="col-md-12 row">
+                                <div class="form-group col-md-2">
+                                    <label class="form-label">Nợ cũ</label>
+                                    <input type="text" class="form-control currency" data-type="currency" asp-for="OldDebt" readonly />
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label class="form-label">Tổng đơn hàng</label>
+                                    <input type="text" class="form-control currency" data-type="currency" asp-for="OrderPrice" onchange="OnTienDaThuChange();" readonly />
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label class="form-label required">Thẻ cào</label>
+                                    <input type="text" class="form-control currency" data-type="currency" asp-for="PhoneCard" onchange="OnPriceChange();" />
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label class="form-label required">Số tiền đã thanh toán</label>
+                                    <input type="text" class="form-control currency" data-type="currency" asp-for="TienDaThu" onchange="OnTienDaThuChange();" />
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label class="form-label">Nợ phát sinh đơn hàng</label>
+                                    <input type="text" class="form-control currency" data-type="currency" asp-for="PhaiThuConLai" readonly />
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label class="form-label">Nợ mới</label>
+                                    <input type="text" class="form-control currency" data-type="currency" asp-for="NewDebt" readonly />
+                                </div>
+                                <label class="form-label">(Tổng đơn hàng = Tổng tiền sim (Tiền sim + phí sim trắng + phí dịch vụ): <span class="fw-bold" id="tongGiaSim"></span> + Phí PS với bên mua : <span class="fw-bold" id="phiPSBenMua"></span>  + Thẻ cào : <span class="fw-bold" id="theCao"></span> ))</label>
+                                <div class="form-group col-md-6">
+                                    <label class="form-label">Ghi chú</label>
+                                    <textarea class="form-control" rows="2" asp-for="Note"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h4>Thông tin thanh toán</h4>
+                            <div class="col-md-12 row">
+                                <div class="form-group col-md-4">
+                                    <label class="form-label required">Hình thức thanh toán</label>
+                                    <select class="form-control" asp-for="PayOrderType" asp-items="@ViewBag.PayOrderType" onchange="OnChangePayOrderType()"></select>
+                                </div>
+                                <div id="bankDelivery" class="col-md-8">
+                                    <div class="row">
+                                        <div class="form-group col-md-6">
+                                            <label class="form-label">Tài khoản ngân hàng</label>
+                                            <div class="p-0">
+                                                <select asp-for="BankId" asp-items="@ViewBag.Banks" type="text" data-live-search="true">
+                                                </select>
+                                            </div>
+                                        </div>
+                                        @* <div class="form-group col-md-6">
+                                        <label class="form-label">Số tiền chuyển khoản</label>
+                                        <input type="text" class="form-control" asp-for="TransferAmount" />
+                                        </div> *@
+                                    </div>
+                                </div>
+                                <div class="col-md-12" id="traGopArea">
+                                    <div class="row">
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Số tiền thanh toán ban đầu</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="DownPayment" onchange="OnChangeDownPayment();" />
+                                            <input type="hidden" id="MinimumPaymentRate" value="@ViewBag.MinimumPaymentRate" />
+                                            <input type="hidden" asp-for="InterestRate" value="@ViewBag.DailyInterestRate" />
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Số tiền trả góp</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="InstallmentPayment" />
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Thời gian trả góp</label>
+                                            <select asp-for="InstallmentPeriod" type="text" data-live-search="true" onchange="OnChangeInstallmentPeriod()">
+                                                <option value="1">1 tháng</option>
+                                                <option value="2">2 tháng</option>
+                                                <option value="3">3 tháng</option>
+                                                <option value="4">4 tháng</option>
+                                                <option value="5">5 tháng</option>
+                                                <option value="6">6 tháng</option>
+                                                <option value="7">7 tháng</option>
+                                                <option value="8">8 tháng</option>
+                                                <option value="9">9 tháng</option>
+                                                <option value="10">10 tháng</option>
+                                                <option value="11">11 tháng</option>
+                                                <option value="12">12 tháng</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label class="form-label">Số tiền trả góp hàng tháng</label>
+                                            <input type="text" class="form-control currency" data-type="currency" asp-for="MonthlyInstallmentPayment" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 row">
+                                <h4>
+                                    Thông tin vận chuyển
+                                </h4>
+                                <div class="row">
+                                    <div class="form-group col-md-4">
+                                        <label class="form-label">Hình thức giao hàng</label>
+                                        <div class="p-0">
+                                            <select asp-for="FormOfDeliveryId" asp-items="@ViewBag.FormOfDelivery" type="text" data-live-search="true" onchange="OnChangeFormOfDelivery();">
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="delivery_agent" class="form-group col-md-4">
+                                        <label class="form-label">Đại lý giao hộ</label>
+                                        <div class="p-0">
+                                            <select class="form-control" asp-for="DeliveryAgent" asp-items="@ViewBag.DeliveryAgents" type="text" data-live-search="true" style="border: 1px solid #ced4da;border-radius: .25rem;">
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group col-md-3">
+                                        <label class="form-label required">Phí PS với bên mua</label>
+                                        <input type="text" class="form-control currency" data-type="currency" asp-for="OtherFee" onchange="OnPriceChange();" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div id="shippingDelivery" class="form-group col-md-3">
+                                        <label class="form-label">Chọn đơn vị vận chuyển</label>
+                                        <div class="p-0">
+                                            <select asp-for="ShippingUnitId" asp-items="@ViewBag.ShippingUnits" type="text" data-live-search="true">
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="shippingCode" class="form-group col-md-3">
+                                        <label class="form-label">Mã vận chuyển</label>
+                                        <div class="input-group input-group-navbar">
+                                            <input type="text" asp-for="ShippingCode" class="form-control" aria-label="Search">
+                                            <div class="input-group-append">
+                                                <button class="btn" type="button" onclick="SearcShippingInfo();">
+                                                    <i class="align-middle" data-feather="search"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="shippingFee" class="form-group col-md-3">
+                                        <label class="form-label required">Phí vận chuyển</label>
+                                        <input type="text" class="form-control currency" data-type="currency" asp-for="ShippingFee" />
+                                    </div>
+                                    <div id="money_collected" class="form-group col-md-3">
+                                        <label class="form-label required">Tiền thu hộ</label>
+                                        <input type="text" class="form-control currency" data-type="currency" asp-for="COD" onchange="OnPriceChange();" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="XuatSim" asp-controller="SIMOrder" width="100px">Tạo phiếu xuất sim</button>
+            <a class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="SIMOrder" width="100px">Trở về</a>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#OrderCollapse').removeClass("collapsed");
+        $('#order').addClass("show");
+        $('#SIMOrder').addClass("active");
+
+        OnChangePayOrderType();
+        OnChangeFormOfDelivery();
+        OnChangeDiscountOfSim(0);
+        OnTienDaThuChange();
+    });
+    function OnChangeFormOfDelivery() {
+        var deliveryId = $('#FormOfDeliveryId').val();
+        var otherFee = document.getElementById('otherFee');
+        var delivery_agent = document.getElementById('delivery_agent');
+        var shippingCode = document.getElementById('shippingCode');
+        var shippingDelivery = document.getElementById('shippingDelivery');
+        var shippingFee = document.getElementById('shippingFee');
+        var money_collected = document.getElementById('COD');
+        //otherFee.classList.add("hidden");
+        //Set defaul value
+        document.getElementById('ShippingCode').value = '';
+        document.getElementById('ShippingFee').value = 0;
+        //document.getElementById('TransferAmount').value = 0;
+        document.getElementById('COD').value = 0;
+        //Hide all item
+        shippingCode.classList.add("hidden");
+        shippingDelivery.classList.add("hidden");
+        //shippingFee.classList.add("hidden");
+        //money_collected.classList.add("hidden");
+        delivery_agent.classList.add("hidden");
+        //Show item
+        // if (deliveryId == 3 || deliveryId == 4 || deliveryId == 5 || deliveryId == 8) {
+        //     shippingFee.classList.remove("hidden");
+        // }
+        if (deliveryId == 4 || deliveryId == 5 || deliveryId == 3) {
+            shippingDelivery.classList.remove("hidden");
+            shippingCode.classList.remove("hidden");
+        }
+        // if (deliveryId == 4) {
+        //     money_collected.classList.remove("hidden");
+        // }
+        if (deliveryId == 2 || deliveryId == 9 || deliveryId == 10 || deliveryId == 11) {
+            delivery_agent.classList.remove("hidden");
+        }
+        //if (deliveryId == 7) {
+        //    otherFee.classList.remove("hidden");
+        //}
+        OnPriceChange();
+    }
+    function OnPriceChange() {
+        var OrderPrice = document.getElementById('OrderPrice');
+        var OtherFee = document.getElementById('OtherFee');
+        document.getElementById('phiPSBenMua').textContent = OtherFee.value;
+        var PhoneCard = document.getElementById('PhoneCard');
+        document.getElementById('theCao').textContent = PhoneCard.value;
+        var totalPriceOfSim = document.getElementById('totalPriceOfSim');
+        //
+        payOrderType = $('#PayOrderType').val();
+        if (payOrderType != "Installment")
+            OrderPrice.value = parseFloat(totalPriceOfSim.value.replaceAll(",", "")) + parseFloat(OtherFee.value.replaceAll(",", "")) + parseFloat(PhoneCard.value.replaceAll(",", ""));
+        OnTienDaThuChange();
+        fomatCurrencyInput();
+    }
+    function OnTienDaThuChange() {
+        var OrderPrice = document.getElementById('OrderPrice');
+        var OldDebt = document.getElementById('OldDebt');
+        var NewDebt = document.getElementById('NewDebt');
+        var TienDaThu = document.getElementById('TienDaThu');
+        var PhaiThuConLai = document.getElementById('PhaiThuConLai');
+        var money_collected = document.getElementById('COD');
+
+        NewDebt.value = parseFloat(OldDebt.value.replaceAll(",", "")) + parseFloat(OrderPrice.value.replaceAll(",", "")) - parseFloat(TienDaThu.value.replaceAll(",", "")) - parseFloat(money_collected.value.replaceAll(",", ""));
+        PhaiThuConLai.value = parseFloat(OrderPrice.value.replaceAll(",", "")) - parseFloat(TienDaThu.value.replaceAll(",", "")) - parseFloat(money_collected.value.replaceAll(",", ""));
+        fomatCurrencyInput();
+    }
+    function OnChangeDiscountOfSim(i) {
+        priceOfSim = document.getElementById('SimInfosInOrders_' + i + '__PriceOfSim');
+        discountOfSim = document.getElementById('SimInfosInOrders_' + i + '__DiscountOfSim');
+        priceOfDiscount = document.getElementById('SimInfosInOrders_' + i + '__PriceOfDiscount');
+        priceAfterDiscount = document.getElementById('SimInfosInOrders_' + i + '__PriceAfterDiscount');
+
+        priceOfDiscount.value = parseFloat(priceOfSim.value.replaceAll(",", "")) * parseFloat(discountOfSim.value.replaceAll(",", "")) / 100;
+        priceAfterDiscount.value = parseFloat(priceOfSim.value.replaceAll(",", "")) - parseFloat(priceOfDiscount.value.replaceAll(",", ""))
+        // Tính tổng tiền sim
+        var table = document.getElementById('myTable');
+        var rows = table.getElementsByTagName('tr');
+        var totalPrice = 0;
+        for (var j = 2; j < rows.length; j++) {
+            priceAfterDiscountEl = document.getElementById('SimInfosInOrders_' + (j - 2) + '__PriceAfterDiscount');
+            totalPrice += parseFloat(priceAfterDiscountEl.value.replaceAll(",", ""));
+            //Phí sim trắng
+            simEmbryoFeeEl = document.getElementById('SimInfosInOrders_' + (j - 2) + '__SimEmbryoFee');
+            totalPrice += parseFloat(simEmbryoFeeEl.value.replaceAll(",", ""));
+            //Phí dịch vụ sim
+            simServiceFeeEl = document.getElementById('SimInfosInOrders_' + (j - 2) + '__SimServiceFee');
+            totalPrice += parseFloat(simServiceFeeEl.value.replaceAll(",", ""));
+        }
+        document.getElementById('tongGiaSim').textContent = formatCurrency(totalPrice);
+        document.getElementById('totalPriceOfSim').value = totalPrice;
+        OnPriceChange();
+        fomatCurrencyInput();
+    }
+    function OnChangePriceAfterDiscount(i) {
+        priceOfSim = document.getElementById('SimInfosInOrders_' + i + '__PriceOfSim');
+        discountOfSim = document.getElementById('SimInfosInOrders_' + i + '__DiscountOfSim');
+        priceOfDiscount = document.getElementById('SimInfosInOrders_' + i + '__PriceOfDiscount');
+        priceAfterDiscount = document.getElementById('SimInfosInOrders_' + i + '__PriceAfterDiscount');
+
+        priceOfDiscount.value = parseFloat(priceOfSim.value.replaceAll(",", "")) - parseFloat(priceAfterDiscount.value.replaceAll(",", ""));
+        discountOfSim.value = parseInt(parseFloat(priceOfDiscount.value.replaceAll(",", "")) / parseFloat(priceOfSim.value.replaceAll(",", "")) * 100);
+        // Tính tổng tiền sim
+        var table = document.getElementById('myTable');
+        var rows = table.getElementsByTagName('tr');
+        var totalPrice = 0;
+        for (var j = 2; j < rows.length; j++) {
+            priceAfterDiscountEl = document.getElementById('SimInfosInOrders_' + (j - 2) + '__PriceAfterDiscount');
+            totalPrice += parseFloat(priceAfterDiscountEl.value.replaceAll(",", ""));
+            //Phí sim trắng
+            simEmbryoFeeEl = document.getElementById('SimInfosInOrders_' + (j - 2) + '__SimEmbryoFee');
+            totalPrice += parseFloat(simEmbryoFeeEl.value.replaceAll(",", ""));
+            //Phí dịch vụ sim
+            simServiceFeeEl = document.getElementById('SimInfosInOrders_' + (j - 2) + '__SimServiceFee');
+            totalPrice += parseFloat(simServiceFeeEl.value.replaceAll(",", ""));
+        }
+        document.getElementById('tongGiaSim').textContent = formatCurrency(totalPrice);
+        document.getElementById('totalPriceOfSim').value = totalPrice;
+        OnPriceChange();
+        fomatCurrencyInput();
+    }
+    function OnChangeDiscountOfAgent(i) {
+        priceOfAgent = document.getElementById('SimInfosInOrders_' + i + '__PriceOfAgent');
+        discountOfAgent = document.getElementById('SimInfosInOrders_' + i + '__DiscountOfAgent');
+        priceOfDiscountAgent = document.getElementById('SimInfosInOrders_' + i + '__PriceOfDiscountAgent');
+        priceAfterDiscountAgent = document.getElementById('SimInfosInOrders_' + i + '__PriceAfterDiscountAgent');
+
+        priceOfDiscountAgent.value = parseFloat(priceOfAgent.value.replaceAll(",", "")) * parseFloat(discountOfAgent.value.replaceAll(",", "")) / 100;
+        priceAfterDiscountAgent.value = parseFloat(priceOfAgent.value.replaceAll(",", "")) - parseFloat(priceOfDiscountAgent.value.replaceAll(",", ""))
+        fomatCurrencyInput();
+    }
+    function OnChangePriceAfterDiscountAgentOfAgent(i) {
+        priceOfAgent = document.getElementById('SimInfosInOrders_' + i + '__PriceOfAgent');
+        discountOfAgent = document.getElementById('SimInfosInOrders_' + i + '__DiscountOfAgent');
+        priceOfDiscountAgent = document.getElementById('SimInfosInOrders_' + i + '__PriceOfDiscountAgent');
+        priceAfterDiscountAgent = document.getElementById('SimInfosInOrders_' + i + '__PriceAfterDiscountAgent');
+
+        priceOfDiscountAgent.value = parseFloat(priceOfAgent.value.replaceAll(",", "")) - parseFloat(priceAfterDiscountAgent.value.replaceAll(",", ""));
+        discountOfAgent.value = parseFloat(priceOfDiscountAgent.value.replaceAll(",", "")) / parseFloat(priceOfAgent.value.replaceAll(",", "")) * 100;
+        fomatCurrencyInput();
+    }
+    function SearcShippingInfo() {
+        var shippingCode = document.getElementById('ShippingCode');
+
+    }
+    function OnChangePayOrderType() {
+        var payOrderType = $('#PayOrderType').val();
+        var bankDelivery = document.getElementById('bankDelivery');
+        var traGopArea = document.getElementById('traGopArea');
+        var downPayment = document.getElementById('DownPayment');
+        var installmentPayment = document.getElementById('InstallmentPayment');
+        var installmentPeriod = document.getElementById('InstallmentPeriod');
+        var monthlyInstallmentPayment = document.getElementById('MonthlyInstallmentPayment');
+        var paymentType = $('#PaymentType').val();
+        traGopArea.classList.add("hidden");
+        bankDelivery.classList.add("hidden");
+        var priceOrder = $('#OrderPrice');
+        if (payOrderType == "Installment") {
+            traGopArea.classList.remove("hidden");
+            if (parseFloat(downPayment.value.replaceAll(",", "")) == 0)
+                OnChangeInstallmentPeriod();
+            priceOrder.attr('readonly', false)
+        } else {
+            priceOrder.val(document.getElementById('totalPriceOfSim').value);
+            OnPriceChange();
+            downPayment.value = 0;
+            installmentPayment.value = 0;
+            monthlyInstallmentPayment.value = 0;
+            installmentPeriod.value = 1;
+
+            if (payOrderType == "Online")
+                bankDelivery.classList.remove("hidden");
+            else {
+                priceOrder.attr('readonly', true)
+            }
+        }
+        document.getElementById('tongGiaSim').textContent = formatCurrency(parseFloat(priceOrder.val().replaceAll(",", "")));
+        fomatCurrencyInput();
+    }
+    // function OnChangePaymentType() {
+    //     var traGopArea = document.getElementById('traGopArea');
+    //     var downPayment = document.getElementById('DownPayment');
+    //     var installmentPayment = document.getElementById('InstallmentPayment');
+    //     var installmentPeriod = document.getElementById('InstallmentPeriod');
+    //     var monthlyInstallmentPayment = document.getElementById('MonthlyInstallmentPayment');
+    //     var paymentType = $('#PaymentType').val();
+    //     var priceOrder = document.getElementById('OrderPrice');
+    //     traGopArea.classList.add("hidden");
+    //     if (paymentType == "Installment") {
+    //         traGopArea.classList.remove("hidden");
+    //         if (parseFloat(downPayment.value.replaceAll(",", "")) == 0)
+    //             OnChangeInstallmentPeriod();
+    //     } else {
+    //         priceOrder.value = document.getElementById('totalPriceOfSim').value;
+    //         OnChangeDiscount();
+    //         downPayment.value = 0;
+    //         installmentPayment.value = 0;
+    //         monthlyInstallmentPayment.value = 0;
+    //         installmentPeriod.value = 1;
+    //     }
+    //     document.getElementById('tongGiaSim').textContent = formatCurrency(parseFloat(priceOrder.value.replaceAll(",", "")));
+    //     fomatCurrencyInput();
+    // }
+    function OnChangeInstallmentPeriod() {
+        var priceOrder = document.getElementById('OrderPrice');
+        var downPayment = document.getElementById('DownPayment');
+        var installmentPayment = document.getElementById('InstallmentPayment');
+        var installmentPeriod = document.getElementById('InstallmentPeriod');
+        var monthlyInstallmentPayment = document.getElementById('MonthlyInstallmentPayment');
+        var totalPriceOfSim = document.getElementById('totalPriceOfSim');
+        //var Discount = document.getElementById('Discount');
+        var dailyInterestRate = document.getElementById('InterestRate');
+        var minimumPaymentRate = document.getElementById('MinimumPaymentRate');
+
+        //Tính toán số tiền lãi
+        var PriceAfterDiscount = totalPriceOfSim.value.replaceAll(",", "");//parseFloat(totalPriceOfSim.value.replaceAll(",", "")) - parseFloat(totalPriceOfSim.value.replaceAll(",", "")) * parseFloat(Discount.value.replaceAll(",", "")) / 100;
+        var curDate = new Date();
+        var startDate = new Date();
+        var endDate = new Date(curDate.setMonth(curDate.getMonth() + parseFloat(installmentPeriod.value.replaceAll(",", ""))));
+        var totalDays = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+        var tienTraTruoc = PriceAfterDiscount * parseFloat(minimumPaymentRate.value.replaceAll(",", "")) / 100;
+        if (parseFloat(downPayment.value.replaceAll(",", "")) == 0)
+            downPayment.value = tienTraTruoc;
+        else
+            tienTraTruoc = parseFloat(downPayment.value.replaceAll(",", ""));
+        var tienDaTra = parseFloat(downPayment.value.replaceAll(",", ""));
+        var tongTraGop = PriceAfterDiscount - tienDaTra;
+        var tienGopHangThang = (tongTraGop + tongTraGop / parseFloat(dailyInterestRate.value.replaceAll(",", "")) * totalDays) / parseFloat(installmentPeriod.value.replaceAll(",", ""));
+        installmentPayment.value = tongTraGop;
+        monthlyInstallmentPayment.value = tienGopHangThang;
+        priceOrder.value = tienDaTra + tienGopHangThang * parseFloat(installmentPeriod.value.replaceAll(",", ""));
+        document.getElementById('tongGiaSim').textContent = formatCurrency(parseFloat(priceOrder.value.replaceAll(",", "")));
+        OnPriceChange();
+        fomatCurrencyInput();
+    }
+    function OnChangeMonthlyInstallmentPayment() {
+        var priceOrder = document.getElementById('OrderPrice');
+        var monthlyInstallmentPayment = document.getElementById('MonthlyInstallmentPayment');
+        var downPayment = document.getElementById('DownPayment');
+        var installmentPeriod = document.getElementById('InstallmentPeriod');
+        priceOrder.value = parseFloat(monthlyInstallmentPayment.value.replaceAll(",", "")) * parseFloat(installmentPeriod.value.replaceAll(",", "")) + parseFloat(downPayment.value.replaceAll(",", ""));
+        fomatCurrencyInput();
+    }
+    function OnChangeDownPayment() {
+        var totalPriceOfSim = document.getElementById('totalPriceOfSim');
+        var minimumPaymentRate = document.getElementById('MinimumPaymentRate');
+        var downPayment = document.getElementById('DownPayment');
+        var tienTraTruoc = parseFloat(totalPriceOfSim.value.replaceAll(",", "")) * parseFloat(minimumPaymentRate.value.replaceAll(",", "")) / 100;
+        if (parseFloat(downPayment.value.replaceAll(",", "")) < tienTraTruoc) {
+            downPayment.value = tienTraTruoc;
+            alert('Số tiền trả trước không thấp quá ' + tienTraTruoc);
+        }
+        OnChangeInstallmentPeriod();
+    }
+</script>

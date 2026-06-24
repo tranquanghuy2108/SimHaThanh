@@ -1,0 +1,81 @@
+﻿@using Models.ViewModels
+@model DiscountModel
+@{
+    ViewData["Title"] = "Tạo mới role";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Thêm mới mức chiết khấu</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Khoảng giá từ</label>
+                    <input type="number" class="form-control" placeholder="" asp-for="PriceFrom">
+                    @Html.HiddenFor(x=>x.Id)
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Khoảng giá đến</label>
+                    <input type="number" class="form-control" placeholder="" asp-for="PriceTo">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Triết khấu (%)</label>
+                    <input type="number" class="form-control" placeholder="" asp-for="DiscountPer">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Mô tả</label>
+                    <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="EditDiscount" asp-controller="Agent" width="100px">Cập nhật</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="AgentGroup" asp-controller="Agent" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width:20%">Khoảng giá từ</th>
+                        <th style="width:20%">Khoảng giá đến</th>
+                        <th style="width:15%">Chiết khấu (%)</th>
+                        <th style="width:30%">Ghi chú</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        foreach (var item in @ViewBag.DataDiscount)
+                        {
+                            <tr>
+                                <td>@item.PriceFrom</td>
+                                <td>@item.PriceTo</td>
+                                <td>@item.DiscountPer</td>
+                                <td>@item.Description</td>
+                                <td class="table-action">
+                                    <a asp-action="EditDiscount" asp-route-id="@item.Id"><i class="align-middle" data-feather="edit-2"></i></a>
+                                    <a asp-action="DeleteDiscount" asp-route-id="@item.Id"><i class="align-middle" data-feather="trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#AgentCollapse').removeClass("collapsed");
+        $('#agent').addClass("show");
+        $('#AgentGroupLst').addClass("active");
+    });
+</script>

@@ -1,0 +1,183 @@
+﻿@{
+    ViewData["Title"] = "Danh sách công nợ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Danh sách công nợ</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">Người tạo</label>
+                        <div class="col-12 p-0">
+                            <select id="pics" type="text" multiple="multiple" asp-items="@ViewBag.Pics" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <select id="agents" type="text" multiple="multiple" asp-items="@ViewBag.Agents" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterDebt(1)">Tìm kiếm</button>
+                </div>
+            </div>
+
+            <div class="card p-3">
+                <div class="col-12 rows">
+                    <a class="btn btn-primary" asp-action="Create" asp-controller="Debt">Tạo công nợ phát sinh</a>
+                    @* <a class="btn btn-success mx-4" asp-action="ImportCSV" asp-controller="SIM">Import SIM</a> *@
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        @*                         <th style="width:3%">
+                        <input type="checkbox" value="" id="checkAll" onclick="OnClickCheckAll()">
+                        <input type="hidden" id="lstOrder">
+                        </th> *@
+                        <th style="width:8%">Ngày lập</th> 
+                        <th style="width:10%">Người lập</th>
+                        <th style="width:8%">Ngày duyệt</th>
+                        <th style="width:10%">Người duyệt</th>
+                        <th style="width:8%">Mã phiếu</th>
+                        <th style="width:10%">Đại lý</th>
+                        <th style="width:8%">Nợ phải thu</th>
+                        <th style="width:8%">Nợ phải trả</th>
+                        <th style="width:15%">Ghi chú</th>
+                        <th style="width:8%">Trạng thái</th>
+                        <th style="width:6%">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#DebtCollapse').removeClass("collapsed");
+        $('#debt').addClass("show");
+        $('#debtLstWaitingAppr').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    window.onload = filterDebt(1);
+    var lstOrder = [];
+    function filterDebt(page) {
+        var agents = $('#agents').val();
+        var pics = $('#pics').val();
+        var data = { "userId": "", "pics": pics, "agents": agents, "pageIndex": page, "pageSize": 50 };
+        $.ajax({
+            url: '@Url.Action("SearchWaitingApprDebt","Debt")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                data.data.forEach((el) => {
+                    //
+                    var action = "";
+                    if (el.approvedStatus == "Waiting") {
+                        action += '<a class="m-1" href="@Url.Action("Edit","Debt")?id=' + el.id + '"><i class="fa fa-edit"></i></a>'
+                            + '<a class="m-1" href="@Url.Action("Delete","Debt")/' + el.id + '"><i class="fa fa-trash"></i></a>'
+                    }
+                    //
+                    newBody += '<tr>'
+                        //+ '<td><input type="checkbox" value="' + el.id + '" id="' + el.id + '" onclick="OnClickCheckBox()"></td>'
+                        + '<td>' + el.createTime + '</td>'
+                        + '<td>' + el.createBy + '</td>'
+                        + '<td>' + el.approvedTime + '</td>'
+                        + '<td>' + el.approvedBy + '</td>'
+                        + '<td>' + el.debtCode + '</td>'
+                        + '<td>' + el.agentId + '</td>'
+                        + '<td>' + el.receivables + '</td>'
+                        + '<td>' + el.liabilities + '</td>'
+                        + '<td>' + el.description + '</td>'
+                        + '<td>' + el.approvedStatus + '</td>'
+                        + '<td class="table-action" >'
+                        + action
+                        + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                //write paging
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterDebt(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterDebt(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterDebt(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterDebt(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    };
+
+    function OnClickCheckAll() {
+        var chkVal = document.getElementById('checkAll');
+        chkVal.addEventListener('change', e => {
+            if (e.target.checked === true) {
+                console.log("Checkbox is checked - boolean value: ", e.target.checked);
+                var result = '';
+                $('tr input').each(function () {
+                    result += $(this).attr('id') + '=' + $(this).val() + '&'
+                })
+                console.log('result ' + result);
+            }
+            if (e.target.checked === false) {
+                console.log("Checkbox is not checked - boolean value: ", e.target.checked)
+            }
+        });
+    }
+    function OnClickCheckBox() {
+        var chkVal = this;
+        chkVal.addEventListener('change', e => {
+            if (e.target.checked === true) {
+                console.log("Checkbox is checked - boolean value: ", e.target.checked);
+                var result = '';
+                $('tr input').each(function () {
+                    result += $(this).attr('id') + '=' + $(this).val() + '&'
+                })
+                console.log('result ' + result);
+            }
+            if (e.target.checked === false) {
+                console.log("Checkbox is not checked - boolean value: ", e.target.checked)
+            }
+        });
+    }
+</script>

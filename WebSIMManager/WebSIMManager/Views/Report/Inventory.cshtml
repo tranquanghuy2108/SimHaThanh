@@ -1,0 +1,92 @@
+﻿@{
+    ViewData["Title"] = "Báo cáo tồn kho";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Báo cáo tồn kho</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <select id="agentId" type="text" asp-items="@ViewBag.Agents" data-live-search="true" placeholder="Chọn đại lý">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filter()">Tìm kiếm</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:5%">Stt</th>
+                        <th style="width:15%">Đại lý</th>
+                        <th style="width:15%">Tên sản phẩm</th>
+                        <th style="width:25%">Mô tả sản phẩm</th>
+                        <th style="width:10%">Số lượng tồn kho</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+       @*  <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div> *@
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#ReportCollapse').removeClass("collapsed");
+        $('#report').addClass("show");
+        $('#Inventory').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    window.onload = filter();
+    var lstOrder = [];
+    function filter() {
+        Onloading();
+        var agent = $('#agentId').val();
+        var data = { "agentId": agent };
+        $.ajax({
+            url: '@Url.Action("SearchInventory","Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                data.forEach((el) => {
+                    newBody += '<tr>'
+                        + '<td>' + el.stt + '</td>'
+                        + '<td>' + el.owner + '</td>'
+                        + '<td>' + el.productName + '</td>'
+                        + '<td>' + el.productDesc + '</td>'
+                        + '<td>' + el.inventoryAmount + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+</script>

@@ -1,0 +1,76 @@
+﻿@using Models.ViewModels
+@model SIMEditModel
+@{
+    ViewData["Title"] = "Chỉnh sửa sim";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Cập nhật sim</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Số SIM</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="SIMNumber">
+                    @Html.HiddenFor(model =>model.Id)
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Số Seria SIM</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Seria">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Giá nhập</label>
+                    <input type="text" class="form-control currency" data-type="currency" placeholder="" asp-for="OriginalSIMPrice">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Giá bán lẻ</label>
+                    <input type="text" class="form-control currency" data-type="currency" placeholder="" asp-for="SIMPrice">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Giá bán cho đại lý</label>
+                    <input type="text" class="form-control currency" data-type="currency" placeholder="" asp-for="AgentSIMPrice">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Giá bán cho cộng tác viên</label>
+                    <input type="text" class="form-control currency" data-type="currency" placeholder="" asp-for="CollaboratorsSIMPrice">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Nhà mạng</label>
+                    <select type="text" class="form-control" placeholder="" asp-for="SIMNetworkId" asp-items="@ViewBag.Networks"></select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Thuê bao</label>
+                    <select type="text" class="form-control" placeholder="" asp-for="ProductTypeId" asp-items="@ViewBag.ProductTypes"></select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Chủ sở hữu</label>
+                    <select type="text" class="form-control" placeholder="" asp-for="Owner" asp-items="@ViewBag.Owners" data-live-search="true" data-actions-box="true"></select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Vị trí</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Position">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Mô tả</label>
+                    <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Edit" asp-controller="SIM" width="100px">Cập nhật</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="SIM" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $('#SIMCollapse').removeClass("collapsed");
+        $('#sim').addClass("show");
+        $('#SIMLst').addClass("active");
+        $('#SIMType').multiselect();
+        formatCurrencyInput();
+    });
+</script>

@@ -1,0 +1,506 @@
+﻿@{
+    ViewData["Title"] = "Xem sim phong thủy";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div>
+    <div class="block-head">SIM phong thủy</div>
+</div>
+
+<div class="sidebar " style="background:white;">
+    <div class="sidebar-item px-3">
+        <div class="col-8 mb-3">
+            <label for="exampleInputEmail1" class="form-label">Sim muốn xem</label>
+            <input id="simNumber" type="text" class="form-control">
+        </div>
+        <div class="">
+            <div class="row">
+                <div class="col-7">
+                    <div class="row">
+                        <div class="col-4">
+                            <label class="form-label">Ngày sinh</label>
+                            <select class="form-select pr-3" id="dateOfBirth">
+                                @for (int i = 1; i <= 31; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Tháng sinh</label>
+                            <select class="form-select pr-3" id="monthOfBirth">
+                                @for (int i = 1; i <= 12; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Năm sinh</label>
+                            <select class="form-select pr-3" id="yearOfBirth">
+                                @for (int i = 1925; i <= 2018; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <label class="form-label">Giờ sinh</label>
+                    <select class="form-select pr-3" id="giosinh">
+                        <option selected="selected" value="1">Tý (23-12h)</option>
+                        <option value="2">Sửu (1h-3h)</option>
+                        <option value="3">Dần (3h-5h)</option>
+                        <option value="4">Mão (5h-7h)</option>
+                        <option value="5">Thìn (7h-9h)</option>
+                        <option value="6">Tỵ (9h-11h)</option>
+                        <option value="7">Ngọ (11h-13h)</option>
+                        <option value="8">Mùi (13h-15h)</option>
+                        <option value="9">Thân (15h-17h)</option>
+                        <option value="10">Dậu (17h-19h)</option>
+                        <option value="11">Tuất (19h-21h)</option>
+                        <option value="12">Hợi (21h-23h)</option>
+                    </select>
+                </div>
+                <div class="col-2">
+                    <label class="form-label">Giới tính</label>
+                    <select class="form-select pr-3" id="giosinh">
+                        <option selected="selected" value="1">Nam</option>
+                        <option value="0">Nữ</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-5 position-relative text-center">
+                <button type="button" class="btn btn-danger" width="300px" onclick="CheckSimPT();">Xem điểm phong thủy</button>
+            </div>
+        </div>
+    </div><!-- End sidebar search formn-->
+</div>
+
+<div id="fengshui-result" class="hidden" style="padding: 30px; background-color:#fff;">
+    <div class="w3-row">
+        <div class="">
+            <div class="xbs w3-row">
+
+                <div class="row">
+                    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                        <img id="congiap" width="100%" class="thumbnail" src="/congiap/dau.png">
+                    </div>
+                    <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                        <ul>
+                            <li>
+                                <strong>Thân chủ: </strong>
+                                <span id="thanchu">
+                                </span>
+                            </li>
+                            <li>
+                                <strong>Năm can chi:</strong>
+                                <span id="canchi">
+                                </span>
+                            </li>
+                            <li>
+                                <strong>Mệnh cung sinh:</strong>
+                                <span id="menhsinh">
+                                </span>
+                            </li>
+                            <li>
+                                <strong>Ngũ hành:</strong>
+                                <span id="nguhanh">
+                                </span>
+                            </li>
+                            <li>
+                                <strong>Mệnh cung phi:</strong>
+                                <span id="cungphi">
+                                </span>
+                            </li>
+                            <li>
+                                <strong>Con giáp:</strong>
+                                <span id="congiap">
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="pt-20 pb-20">
+                <div class="w3-row">
+                    <h2>Kết quả phong thủy sim: <span id="sosim"></span></h2>
+                    Con người là tổng hoà các mối quan hệ, trong đó
+                    chịu sự ảnh hưởng chi phối của thiên nhiên và xã hội. Người xưa coi con người là một vũ trụ
+                    thu nhỏ, là 1 trong 3 yếu tố tam Tài là Thiên - Địa - Nhân. Con người đóng vai trò trung tâm
+                    của vũ trụ, trời và đất. Do vậy xét những con số tốt xấu phải theo các khía cạnh Âm Dương,
+                    Ngũ Hành, Thiên Thời, Quẻ dịch và cả Quan niệm dân gian nữa.
+                </div>
+
+                <div class="w3-row">
+                    <h2>1. Âm dương tương phối</h2> Âm dương (chữ Hán 陰陽) là hai khái niệm để chỉ hai thực thể
+                    đối lập ban đầu tạo nên toàn bộ vũ trụ. Trong mỗi vật thể, sự việc đều luôn tồn tại hai
+                    trạng thái Âm và Dương, mà nếu thiên lệch về trạng thái nào quá cũng đều không tốt. Âm dương
+                    là hai khái niệm để chỉ hai thực thể đối lập ban đầu tạo nên toàn bộ vũ trụ. Ý niệm âm dương
+                    đã ăn sâu trong tâm thức người Việt từ ngàn xưa và được phản chiếu rất rõ nét trong ngôn ngữ
+                    nói chung và các con số nói riêng. Người xưa quan niệm rằng các số chẵn mang vận âm, các số
+                    lẻ mang vận dương.
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="tablept">
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    Dãy số có <strong><span id="soam"></span></strong> số mang vận âm, <strong><span id="soduong"></span></strong> số mang vận dương.<br>
+                    Dãy số mang vận <strong><span id="vanSo"></span></strong><br>
+                    Thí chủ sinh năm:<strong><span id="namsinh"></span></strong>
+                </div>
+
+                <div class="w3-row">
+                    <h2>2. Ngũ hành tương phối</h2> Theo triết học cổ Trung Hoa, tất cả vạn vật đều phát sinh từ
+                    năm nguyên tố cơ bản và luôn luôn trải qua năm trạng thái được gọi là: Mộc, Hỏa, Thổ, Kim và
+                    Thủy. Năm trạng thái này, gọi là Ngũ hành (五行), không phải là vật chất như cách hiểu đơn
+                    giản mà đúng hơn là cách quy ước của người Trung Hoa cổ đại để xem xét mối tương tác và quan
+                    hệ của vạn vật. Ngũ hành quan hệ với nhau qua hai quan hệ tương sinh và tương khắc. Số sử
+                    dụng cho người cần tạo lập mối quan hệ tương sinh, tránh tương khắc.<br>
+                    <div class="text-center">
+                        <img src="/que/nguhanhtuongsinh.jpg" class="img-fluid">
+                    </div>
+                    <br>
+                    <strong>2.1 Thân chủ</strong>
+                    <ul>
+                        <li>Hành của bản mệnh: <span id="nguhanhmenh"></span></li>
+                        <li>Hành của số sim: <span id="nguhanhsim"></span></li>
+                        <li><span id="nguhanhsimtuongsinh"></span></li>
+                    </ul>
+                    <strong>2.2 chuỗi số</strong>
+
+                    <table class="table table-bordered" style="background: white;" id="nguhanhsimtbl">
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="w3-row">
+                    <h2>3. Thiên thời</h2> Tính từ năm Giáp Tý đầu tiên, đến nay, thế giới đang ở giai đoạn Vận 9 bắt đầu từ năm 2024 và kết thúc vào cuối năm 2043. Theo thuyết Tam Nguyên Cửu Vận, vận 9 sẽ được cai quản bởi sao Cửu Tử, một ngôi sao thuộc hành Hỏa. Cửu Tử là đại diện cho tri thức, học vấn và tình duyên. Với tính chất đầy nhiệt huyết của hành Hỏa, ngôi sao này dự báo thời gian tới sẽ có sự phát triển bùng nổ và đột phá, đem lại những thay đổi đáng kể đối với nhiều mặt trong cuộc sống của con người trên toàn thế giới.
+                    <div class="text-center">
+                        <img src="/que/sonban.gif">
+                    </div>
+                </div>
+
+                <div class="w3-row">
+                    <h3 class="kl-content-title">4. Hành quẻ bát quái</h3> <div class="kl-content-text">
+                        <p>
+                            Theo lý thuyết Kinh Dịch, mỗi sự vật hiện tượng đều bị chi phối bởi các quẻ trùng
+                            quái, trong đó quẻ Chủ là quẻ đóng vai trò chủ đạo, chi phối quan trọng nhất đến sự
+                            vật, hiện tượng đó. Bên cạnh đó là quẻ Hỗ, mang tính chất bổ trợ thêm.
+                        </p>
+                    </div> <div class="row">
+                        <div class="col-md-8">
+                            <p>
+                                Quẻ số <b class="cl03c" id="queSo">
+                                </b>
+                            </p> 
+                            <div>
+                                <p dir="ltr" style="text-align: justify;"><strong><span style="font-size: 16px;">Loại quẻ: </span></strong><span style="font-size: 16px;"><em id="loaiQue"></em></span></p>
+                                <p dir="ltr" style="text-align: justify;"><span style="font-size: 16px;"><strong>Chiêm quẻ tốt cho việ</strong>c: <span id="totChoViec"></span></span></p> 
+                                <p style="text-align: justify;">&nbsp;</p> <p dir="ltr" style="text-align: justify;"><span style="font-size: 16px;"><strong>Lời Kinh</strong>: <span id="loiKinh"></span></span></p>
+                                <p dir="ltr" style="text-align: justify;"><span style="font-size: 16px;"><strong>Dịch âm</strong>: <span id="dichAm"></span></span></p> <p dir="ltr" style="text-align: justify;"><span style="font-size: 16px;"><strong>Dịch nghĩa</strong>: <span id="dichNghia"></span></span></p> 
+                            </div>
+                        </div> 
+                    </div> 
+                </div>
+
+                <div class="w3-row">
+                    <h2>5. Quan niệm dân gian</h2> Quan niệm dân gian là những kinh nghiệm được truyền miệng và
+                    lưu truyền nhiều đời trong dân gian trong việc đánh giá tốt xấu của một dãy số. Ví như các
+                    số có đuôi 68,86 phát âm trong tiếng Hán hơi giống với Lộc Phát - Phát Lộc, nên quan niệm
+                    dân gian cho là tốt. Hay các số có sự lặp lại nhiều thì dễ nhớ hơn, và quan niệm dân gian
+                    cũng cho là đẹp hơn.<br>
+                    <strong></strong><br>
+                    <strong></strong><br>
+                    Tổng nút: <strong><span id="soNut"></span></strong>
+                    <div class="text-center">
+                        <em style="color: red;">
+                            (Quý khách chú ý: Thang điểm chỉ mang tính chất kham
+                            khảo)
+                        </em><br>
+                        <em> Quý khách cần đọc kỹ các chi tiết để xem số có hợp với mình không</em>
+                        <div style="height: 30px;"></div>
+                        <strong style="font-size: 24px;color: #fff;background: #ff1100;padding: 4px 13px;border-radius: 30px;border: 5px solid #FFEB3B;box-shadow: 1px 1px 2px 2px #ccc;">
+                            <span id="tongdiem"></span>/10
+                        </strong><br>
+                    </div>
+
+                    <div class="clearfix" style="height: 30px;"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="fengshui-about" class="hidden" style="padding: 30px; background-color:#fff;">
+    <div class="result_pt">
+        <div class="list_suggest">
+            <table id="customers"></table>
+            <table class="tblsim-res2" width="100%" border="0" cellpadding="2" cellspacing="1" bgcolor="#CCCCCC"></table>
+        </div>
+        <p>
+            <strong>Chọn sim phong thủy</strong> hợp với bản mệnh là mối quan tâm của rất nhiều người hiện nay. Trong bài viết này, <strong>Sim Hà Thành</strong> xin giới thiệu tới các bạn công cụ <strong>tìm sim hợp tuổi</strong> và đánh giá của chúng tôi về các phương pháp tra cứu sim phong thủy hiện nay.
+        </p>
+        <h2 style="font-weight: 600; font-size:20px">
+            <strong>1, Giới thiệu về sim phong thủy</strong>
+        </h2>
+        <p>Sim phong thủy được hiểu là sim số điện thoại mang trong mình trường năng lượng mạnh mẽ có ảnh hưởng, tác động đến với chủ nhân của số sim đó. Cơ sở lý luận của phong thủy sim dựa trên giờ, ngày, tháng, năm sinh (Tứ Trụ), ngũ hành kết hợp với dịch học cổ Phương Đông.</p>
+        <p>Do dựa vào tứ trụ của mỗi người nên bản mệnh chỉ hợp với một nhóm số điện thoại nhất định. Sim phong thủy là một vật phẩm đang ngày càng được nhiều người quan tâm trong thời đại ngày nay.</p>
+        <h2 style="font-weight: 600; font-size:20px">
+            <strong>2, Các phương pháp tìm sim phong thủy phổ biến hiện nay</strong>
+        </h2>
+        <p>
+            Việc tra cứu, <a asp-action="FengShui" asp-controller="Home">
+                <strong>xem phong thủy sim</strong>
+            </a> liệu có hợp với bản mệnh của một người hay không là rất phức tạp. Nó đòi hỏi người luận phải có nhiều kiến thức, biết kết hợp và sử dụng các nguyên lý, phương pháp luận với nhau để đưa ra kết luận chính xác. Dưới đây là tổng hợp của Sim Hà Thành về một số quan điểm tra cứu sim phong thủy được sử dụng phổ biến hiện nay.
+        </p>
+        <h3>
+            <strong>2.1, Chọn sim dựa theo mệnh cục của người dùng</strong>
+        </h3>
+        <p>Mỗi người đều có một bản mệnh riêng đại diện cho tính cách đặc trưng của người đó tương ứng với 5 hành của bản mệnh gồm Kim, Mộc, Thủy, Hỏa, Thổ. Các chuyên gia phong thủy sẽ căn cứ vào mệnh cục của người đó cường vượng mệnh nào, nhược khắc mệnh ra sao, hỷ thần và dụng thần của họ là gì để từ đó lựa chọn ra số sim phong thủy phù hợp.</p>
+        <h3>
+            <strong>2.2, Tra cứu sim theo âm dương tương phối</strong>
+        </h3>
+        <p>Trong phong thủy, mọi thứ đều hướng tới sự cân bằng giữa âm và dương. Phong thủy sim cũng tương tự như vậy. Một số sim hợp phong thủy thì phải có sự cân bằng giữa âm và dương.</p>
+        <p>Trong dãy số điện thoại thì số chẵn sẽ mang thuộc tính m, số lẻ mang thuộc tính Dương. Khi chọn sim phong thủy thì mọi người sẽ có xu hướng cân bằng giữa âm và dương. Nếu quá lệch về m hay Dương cũng đều gây tác động không tốt xét về mặt phong thủy.</p>
+        <h3>
+            <strong>2.3, Tra cứu sim phong thủy dựa theo Quẻ Dịch Bát Quái</strong>
+        </h3>
+        <p>Trong bát quái có 8 quẻ đơn bao gồm: Càn, Khảm, Cấn, Chấn, Tốn, Ly, Khôn, Đoài. Từ 8 quẻ này kết hợp với nhau dựa trên nội quái và ngoại quái ta có 64 quẻ Kinh Dịch bao gồm quẻ Cát, quẻ Bình và quẻ Hung.</p>
+        <p>
+            Trong phong thủy sim thường quy ước 5 số đầu là quẻ ngoại quái (quẻ Thượng) và 5 số sau là quẻ nội quái (quẻ Hạ). Khi đó, mọi người sẽ có xu hướng chọn quẻ Cát hoặc ít nhất là quẻ Bình để mong mang lại nhiều vận tốt từ số điện thoại.
+        </p>
+        <h3>
+            <strong>2.4, Chọn sim theo quan niệm dân gian</strong>
+        </h3>
+        <p>Chọn sim phong thủy bằng cách tính nút 4 số cuối, hay 6 số cuối là phương pháp được nhiều người áp dụng vì khá dễ trong việc tính toán. Tuy nhiên, theo các chuyên gia về phong thủy thì tính 4 số cuối không có giá trị trong việc tra cứu, lựa chọn sim phong thủy hợp mệnh vì:</p>
+        <ul>
+            <li>Sim điện thoại gồm 10 số mà nếu chỉ tính 4 hay 6 số đuôi điện thoại thì không đảm bảo được hết các biến số khác tác động vào.</li>
+            <li>Cách tính nút 4 và 6 số cuối chỉ là phương pháp dân gian lưu truyền lại chứ không dựa vào bất kỳ lý thuyết về phong thủy chính phái nào.</li>
+        </ul>
+        <p>Một vài cách tìm sim hợp phong thủy khác tương tự 4 số cuối có thể kể tới như: chọn sim theo 6 số cuối, lấy tổng 4 số chia 80, chọn sim lộc phát, sim thần tài… Đây đều là các phương pháp chọn số đẹp theo dân gian và không mang lại nhiều ý nghĩa về mặt phong thủy.</p>
+        <h2 style="font-weight: 600; font-size:20px">
+            <strong>3, Công cụ tìm sim phong thủy tại Sim Hà Thành</strong>
+        </h2>
+        <p>Như đã đề cập ở trên, việc lựa chọn sim hợp bản mệnh đòi hỏi có sự kết hợp của rất nhiều yếu tố. Nếu bạn là người không chuyên về phong thủy thì sẽ rất khó để nắm bắt và đánh giá chiếc sim điện thoại của mình có tốt không hay nên chọn số sim nào thì hợp phong thủy…</p>
+        <p>Hiểu được những nỗi niềm đó, Sim Hà Thành đã tổng hợp nên công cụ <strong>TÌM SIM PHONG THỦY</strong> để giúp quý anh chị giải quyết vấn đề trên. Công cụ được xây dựng dựa trên sự tư vấn, góp ý của các chuyên gia phong thủy.. </p>
+        <p>Nguyên lý của Tra cứu sim phong thủy đó là dựa vào 4 trụ giờ ngày tháng năm sinh và mối quan hệ sinh, trợ, khắc, tiết, hao, hợp hóa giữa các trụ để tính ra độ vượng, nhược của ngũ hành. Từ đó sẽ tổng hợp nên các số sim phong thủy phù hợp với ngũ hành của quý gia chủ.</p>
+        <blockquote class="wp-block-quote">
+            <p>
+                <em>=&gt; Lưu ý rằng các thông tin được tổng hợp dựa trên các con số đầu vào khô khan và cứng nhắc nên kết quả trả về có thể không chính xác 100% và mang tính chất tham khảo. Để hiểu hơn về mình và có cái nhìn toàn diện hơn bạn có thể liên hệ trực tiếp với các chuyên gia phong thủy của STL để được tư vấn đầy đủ nhất.</em>
+            </p>
+        </blockquote>
+        <h2 style="font-weight: 600; font-size:20px">
+            <strong>4, Chọn sim phong thủy liệu có hiệu quả hay không?</strong>
+        </h2>
+        <p>Quý gia chủ thân mến, hiện nay đang có 2 luồng ý kiến trái chiều về việc có nên tin dùng vào cái gọi là “Sim Phong thuỷ” hay ko?</p>
+        <p>Người dùng cảm thấy may mắn, có tín hiệu tốt, thấy tích cực, gia tăng năng lượng và thu hút tài lộc thì tin tưởng, cảm nhận sự thay đổi. Người thì cảm thấy tình trạng bản thân vẫn thế, thậm chí xấu đi thì coi đó là trò vô bổ và “làm tiền”…</p>
+        <p>Mặt khác, dưới sự đánh giá từ người dùng thực tế, kết quả kinh doanh tăng trưởng và đặc biệt là sự góp ý chân thành từ những Chuyên gia Phong thuỷ có tiếng trong việc chọn số cải vận cho người dùng. <strong>Sim Hà Thành</strong> có một vài nhận định như sau: </p>
+        <p>
+            <strong>Thứ nhất,</strong> chúng tôi tôn trọng học thuật về Phong thuỷ số và những nghiên cứu ứng dụng thực tế có hiệu quả để đưa ra công thức chấm điểm, đánh giá dãy số Sim theo học thuật Phong Thuỷ. Dựa trên những sự góp ý đánh giá chân thành từ những Chuyên gia có kinh nghiệm và kết quả kiểm chứng.
+        </p>
+        <p>
+            <strong>Thứ hai,</strong> Sim Hà Thành tôn trọng những phương pháp chấm điểm, luận Sim hiện tại trên thị trường. STL hiểu rằng mỗi phương pháp luận Sim đều có cơ sở biện chứng riêng và tính hiệu quả nói chung. Cơ sở chung ở đây là việc xét m Dương, Ngũ Hành và sử dụng Kinh Dịch để luận đoán sâu sắc nhất.
+        </p>
+        <p>
+            <strong>Thứ ba,</strong> Simthanglong quan niệm sâu sắc rằng: Sự cảm nhận tích cực, sự thay đổi mạnh mẽ của Khách Hàng và hiệu quả Kinh doanh bền vững, là tiêu chí hàng đầu để phát triển doanh nghiệp và vững vàng trên con đường đưa Sim Phong thuỷ tới người dùng trong hiện tại và tương lai.
+        </p>
+        <p>
+            <strong>Tóm lại,</strong> để có thể giải quyết vấn đề lựa chọn, ra quyết định sử dụng Sim Phong thuỷ hay không? hay chọn được cho mình một số Sim Phong thuỷ ưng ý, phục vụ bản thân, công việc hanh thông viên mãn.
+        </p>
+        <p>Chúng tôi có lời khuyên, Quý vị nên có sự tham khảo từ những chuyên gia uy tín. Đến với Sim Hà Thành, chúng tôi sẽ luôn hỗ trợ Quý vị từ công cụ và sẵn sàng kết nối để trao đổi cùng chuyên gia, để giúp bạn ra quyết định đúng và thoải mái thực sự.</p>
+        <p>STL mong rằng: Quý vị nên tin vào sự cảm nhận của chính mình! Hãy để sự tư vấn chia sẻ của chúng tôi là một sự <strong>THAM KHẢO</strong>, để đưa bạn tới gần hơn với những giá trị mà bản thân mình mong muốn! </p>
+        <p>Quý vị thân mến, ai trong chúng ta cũng đều nghĩ về hai chữ Số Phận. Việc hiểu về số phận và vượt lên, đứng trên Số phận là cách chúng ta bước tiếp, hoàn thiện và tận hưởng cuộc sống này.</p>
+        <p>Mong rằng Bình an và may mắn sẽ luôn đồng hành cùng Quý vị trong hiện tại và vị lai đầy hạnh phúc phía trước!</p>
+        <p>Xin chân thành Cảm ơn!</p>
+        <ul style="padding: 0 19px;text-align: justify;">
+            <li>Hơn 10 năm làm sim phong thủy- kho số với hơn 10 triệu sim phong thủy – cung cấp ra thị trường từ 200- 500 sim phong thủy mỗi ngày.</li>
+            <li>Thương hiệu uy tín trong tư vấn và lựa chọn sim phong thủy- đội ngũ chuyên gia giầu kinh nghiệm tâm huyết với nghề. </li>
+            <li>Công thức tối ưu mạch lạc- và cam kết chất lượng- sứ mệnh của chúng tôi là mang lại niềm vui và sự cân bằng tới bách gia trăm họ. </li>
+            <li>Ứng dụng có chọn lọc tinh hoa của kinh dịch + phong thủy đông phương. </li>
+            <li>Giúp cho hàng ngàn gia chủ chọn được sim phong thủy sở nguyện như ý, sở cầu tòng tâm. </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    window.onload = function () {
+        var fengshuiAbout = document.getElementById("fengshui-about");
+        fengshuiAbout.classList.remove("hidden");
+        var itemNav = document.getElementById("phong-thuy");
+        itemNav.classList.add("active");
+    };
+
+    function CheckSimPT() {
+        var simNumber = $("#simNumber").val();
+        if (!ValidateUSPhoneNumber(simNumber)) {
+            alert('Số bạn nhập chưa đúng');
+            return;
+        }
+        var dateOfBirth = $("#dateOfBirth").val();
+        var monthOfBirth = $("#monthOfBirth").val();
+        var yearOfBirth = $("#yearOfBirth").val();
+        var hourOfBirth = $("#giosinh").val();
+        var gioitinh = $("#gioitinh").val();
+        var dataReq = {
+            "simNumber": simNumber.replaceAll(".", ""),
+            "yearOfBirth": yearOfBirth,
+            "monthOfBirth": monthOfBirth,
+            "dateOfBirth": dateOfBirth,
+            "hourOfBirth": hourOfBirth,
+            "minuteOfBirth": 0,
+            "isMale": gioitinh,
+        }
+        $.ajax({
+            url: '@Url.Action("XemDiemSim","Home")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(dataReq),
+            xhrFields: {
+                withCredentials: true // Gửi kèm cookie (nếu bạn đang dùng cookie auth)
+            },
+            success: function (data) {
+                if (data != undefined) {
+                    var fengshuiAbout = document.getElementById("fengshui-about");
+                    fengshuiAbout.classList.add("hidden");
+                    var fengshuiResult = document.getElementById("fengshui-result");
+                    fengshuiResult.classList.remove("hidden");
+                    //
+                    var congiap = document.getElementById("congiap");
+                    switch (true) {
+                        case data.menhchu.canChi.includes("Tý"):
+                            congiap.src = 'congiap/ti.png';
+                            break;
+                        case data.menhchu.canChi.includes("Sửu"):
+                            congiap.src = 'congiap/suu.png';
+                            break;
+                        case data.menhchu.canChi.includes("Dần"):
+                            congiap.src = 'congiap/dan.png';
+                            break;
+                        case data.menhchu.canChi.includes("Mão"):
+                            congiap.src = 'congiap/mao.png';
+                            break;
+                        case data.menhchu.canChi.includes("Thìn"):
+                            congiap.src = 'congiap/thin.png';
+                            break;
+                        case data.menhchu.canChi.includes("Tỵ"):
+                            congiap.src = 'congiap/ty.png';
+                            break;
+                        case data.menhchu.canChi.includes("Ngọ"):
+                            congiap.src = 'congiap/ngo.png';
+                            break;
+                        case data.menhchu.canChi.includes("Mùi"):
+                            congiap.src = 'congiap/mui.png';
+                            break;
+                        case data.menhchu.canChi.includes("Thân"):
+                            congiap.src = 'congiap/than.png';
+                            break;
+                        case data.menhchu.canChi.includes("Dậu"):
+                            congiap.src = 'congiap/dau.png';
+                            break;
+                        case data.menhchu.canChi.includes("Tuất"):
+                            congiap.src = 'congiap/tuat.png';
+                            break;
+                        default:
+                            congiap.src = 'congiap/hoi.png';
+                            break;
+                    }
+                    //
+                    $("#sosim").text(simNumber);
+                    //Mệnh chủ
+                    $("#thanchu").text('Sinh ngày ' + data.birthDay + ' (' + data.lunarBirthDay + ' Âm lịch)');
+                    $("#canchi").text(data.menhchu.canChi);
+                    $("#menhsinh").text(data.menhchu.cungSinh1 + ' - ' + data.menhchu.cungSinh2);
+                    $("#nguhanh").text(data.menhchu.nguHanh);
+                    $("#cungphi").text(data.menhchu.cungPhi1 + ' - ' + data.menhchu.cungPhi2);
+                    $("#congiap").text(data.menhchu.conGiap);
+
+                    //Âm dương tương phối
+                    var tbody = $("#tablept tbody")
+                    tbody.children().remove();
+                    var simNum = "'<tr>'";
+                    data.nguHanhSim.numberOfSim.forEach((el) => {
+                        simNum += '<td class="text-center">' + el + '</td>';
+                    });
+                    simNum += '</tr>';
+                    tbody.append(simNum);
+
+                    var amDuong = "'<tr>'";
+                    data.amDuongTuongPhoi.amDuongTuongPhoi.forEach((el) => {
+                        amDuong += '<td class="text-center">' + el + '</td>';
+                    });
+                    amDuong += '</tr>';
+                    tbody.append(amDuong);
+
+                    $("#soam").text(data.amDuongTuongPhoi.soAmAmount);
+                    $("#soduong").text(data.amDuongTuongPhoi.soDuongAmount);
+                    $("#vanSo").text(data.amDuongTuongPhoi.vanSo);
+                    $("#namsinh").text(data.menhchu.namSinh + ' - ' + data.amDuongTuongPhoi.menhAmDuong);
+
+                    //Ngũ hành sim
+                    $("#nguhanhmenh").text(data.menhchu.nguHanh);
+                    $("#nguhanhsim").text(data.nguHanhSim.nguHanhSim);
+                    $("#nguhanhsimtuongsinh").text(data.nguHanhSim.simSinhKhac);
+
+                    var tbody5hanh = $("#nguhanhsimtbl tbody")
+                    tbody5hanh.children().remove();
+                    var simNum = "'<tr>'";
+                    data.nguHanhSim.numberOfSim.forEach((el) => {
+                        simNum += '<td class="text-center">' + el + '</td>';
+                    });
+                    simNum += '</tr>';
+                    tbody5hanh.append(simNum);
+
+                    var nguHanh = "'<tr>'";
+                    data.nguHanhSim.nguHanhOfnumber.forEach((el) => {
+                        nguHanh += '<td class="text-center">' + el + '</td>';
+                    });
+                    nguHanh += '</tr>';
+                    tbody5hanh.append(nguHanh);
+
+                    var nguHanhSK = "'<tr>'";
+                    data.nguHanhSim.nguHanhSinhKhac.forEach((el) => {
+                        nguHanhSK += '<td class="text-center" colspan="2">' + el + '</td>';
+                    });
+                    nguHanhSK += '</tr>';
+                    tbody5hanh.append(nguHanhSK);
+                    //Tong nut
+                    $("#queSo").text(data.queBatQuai.queChu.queSo+' | '+ data.queBatQuai.queChu.queName);
+                    // $("#tuongQue").text(data.queBatQuai.queChu.tuongQue);
+                    $("#loiKinh").text(data.queBatQuai.queChu.loiKinh);
+                    $("#dichAm").text(data.queBatQuai.queChu.dichAm);
+                    $("#dichNghia").text(data.queBatQuai.queChu.dichNghia);
+                    $("#giaiNghia").text(data.queBatQuai.queChu.giaiNghia);
+                    $("#loaiQue").text(data.queBatQuai.queChu.loaiQue);
+                    $("#totChoViec").text(data.queBatQuai.queChu.totChoViec);
+
+                    //Tong nut
+                    $("#soNut").text(data.quanNiemDanGian.soNut);
+                    //Tong diem
+                    $("#tongdiem").text(data.quanNiemDanGian.point + data.queBatQuai.point + data.pointCuuTinhDo + data.nguHanhSim.point + data.amDuongTuongPhoi.point);
+
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    }
+    function ValidateUSPhoneNumber(phoneNumber) {
+        var regExp = /^[0-9.]{10,15}/;
+        var phone = phoneNumber.match(regExp);
+        if (phone) {
+            return true;
+        }
+        return false;
+    }
+</script>
+

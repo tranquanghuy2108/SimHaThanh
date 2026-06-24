@@ -1,0 +1,587 @@
+﻿@using Commons.Constants
+@using Models.ViewModels;
+@using Newtonsoft.Json;
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    //var userInfo = JsonConvert.DeserializeObject<UserInfoModels>(HttpContextAccessor.HttpContext?.Session.GetString(CommonConstants.PERSON_INFO_SESSION));
+    string fullName = HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList() ?? new List<string>();
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Responsive Web UI Kit &amp; Dashboard Template based on Bootstrap">
+    <meta name="author" content="AdminKit">
+    <meta name="keywords" content="adminkit, bootstrap, web ui kit, dashboard template, admin template">
+
+    <title>@ViewData["Title"] - Sim Hà Thành</title>
+
+    <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+    <link href="css/app.css" rel="stylesheet">
+    <link href="assets/css/custom.css" rel="stylesheet" />
+    <link href="~/css/style.css" rel="stylesheet" />
+    <script src="~/js/script.js"></script>
+    <script src="js/app.js"></script>
+    <link href="~/datatable/jquery.datatables.min.css" rel="stylesheet" />
+    <link href="~/css/bootstrap-select.min.css" rel="stylesheet" />
+    <link href="~/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/lib/font-awesome/css/all.css" rel="stylesheet" />
+    <link href="~/lib/font-awesome/css/all.min.css" rel="stylesheet" />
+    @* <link href="~/css/bootstrap-datetimepicker.min.css" rel="stylesheet" /> *@
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+</head>
+
+<body>
+    <div class="spinner-wrapper" id="loading-page">
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    </div>
+    <div class="wrapper">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-content js-simplebar">
+                <a class="sidebar-brand" asp-action="Index" asp-controller="Admin">
+                    <span class="">CMS_SimHàThành</span>
+                </a>
+
+                <ul class="sidebar-nav">
+
+                    <li class="sidebar-item" id="createOrder">
+                        <a class="sidebar-link" asp-action="Index" asp-controller="Admin">
+                            <i class="align-middle" data-feather="sliders"></i> <span class="align-middle">Hỏi sim</span>
+                        </a>
+                    </li>
+                    @if (role.Contains("Quản trị sim"))
+                    {
+                        <li class="sidebar-item">
+                            <a href="#sim" data-toggle="collapse" class="sidebar-link collapsed" id="SIMCollapse">
+                                <i class="align-middle" data-feather="briefcase"></i> <span class="align-middle">Sim số đẹp</span>
+                            </a>
+                            <ul id="sim" class="sidebar-dropdown list-unstyled collapse " data-parent="#sidebar">
+                                @if (role.Contains("Xem kho sim"))
+                                {
+                                    <li class="sidebar-item" id="SIMLst"><a class="sidebar-link" asp-action="Index" asp-controller="SIM">Kho sim nhà</a></li>
+                                }
+                                @if (role.Contains("Xem kho sim"))
+                                {
+                                    <li class="sidebar-item" id="SimDataLst"><a class="sidebar-link" asp-action="SimData" asp-controller="SIM">Kho sim data</a></li>
+                                }
+                                @if (role.Contains("Xem kho sim"))
+                                {
+                                    <li class="sidebar-item" id="SIMLstOfAgent"><a class="sidebar-link" asp-action="SimOfAgent" asp-controller="SIM">Kho sim đại lý</a></li>
+                                }
+                                @if (role.Contains("Xem số đẹp"))
+                                {
+                                    <li class="sidebar-item" id="SIMType"><a class="sidebar-link" asp-action="Index" asp-controller="SIMType">Loại số đẹp</a></li>
+                                }
+                                @if (role.Contains("Xem nhà mạng"))
+                                {
+                                    <li class="sidebar-item" id="SIMNetwork"><a class="sidebar-link" asp-action="Index" asp-controller="SIMNetwork">Nhà mạng</a></li>
+                                }
+                                @if (role.Contains("Xem loại sim"))
+                                {
+                                    <li class="sidebar-item" id="ProductType"><a class="sidebar-link" asp-action="Index" asp-controller="ProductType">Loại sim</a></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+
+                    @if (role.Contains("Quản trị đơn hàng"))
+                    {
+                        <li class="sidebar-item">
+                            <a href="#order" data-toggle="collapse" class="sidebar-link collapsed" id="OrderCollapse">
+                                <i class="align-middle" data-feather="shopping-cart"></i> <span class="align-middle">Đơn mua</span>
+                            </a>
+                            <ul id="order" class="sidebar-dropdown list-unstyled collapse " data-parent="#sidebar">
+                                @if (role.Contains("Xem đơn hỏi mua"))
+                                {
+                                    <li class="sidebar-item" id="SIMOrder"><a class="sidebar-link" asp-action="Index" asp-controller="SIMOrder">Đơn hỏi mua</a></li>
+                                }
+                                @if (role.Contains("Xem phiếu xuất sim"))
+                                {
+                                    @* <li class="sidebar-item" id="mySimOrder"><a class="sidebar-link" asp-action="MyOrder" asp-controller="SIMOrder">Đơn hỏi mua</a></li> *@
+                                    <li class="sidebar-item" id="phieuXuatSim"><a class="sidebar-link" asp-action="PhieuXuatSim" asp-controller="SIMOrder">Phiếu xuất sim</a></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+                    @if (role.Contains("Quản trị kho"))
+                    {
+                        <li class="sidebar-item">
+                            <a href="#warehouse" data-toggle="collapse" class="sidebar-link collapsed" id="WarehouseCollapse">
+                                <i class="align-middle" data-feather="package"></i> <span class="align-middle">Kho hàng</span>
+                            </a>
+                            <ul id="warehouse" class="sidebar-dropdown list-unstyled collapse" data-parent="#sidebar">
+                                @if (role.Contains("Xem phiếu nhập kho"))
+                                {
+                                    <li class="sidebar-item" id="goodsReceivedNoteList"><a class="sidebar-link" asp-action="GoodsReceivedNoteList" asp-controller="Warehouse">Phiếu nhập kho</a></li>
+                                }
+                                @if (role.Contains("Xem phiếu xuất kho"))
+                                {
+                                    <li class="sidebar-item" id="goodsDeliveryNoteList"><a class="sidebar-link" asp-action="GoodsDeliveryNoteList" asp-controller="Warehouse">Phiếu xuất kho</a></li>
+                                }
+                                @if (role.Contains("Xem phiếu nhập kho") || role.Contains("Xem phiếu xuất kho"))
+                                {
+                                    <li class="sidebar-item" id="materialSeriaLst"><a class="sidebar-link" asp-action="MaterialWithSeriaInfo" asp-controller="Warehouse">Mặt hàng có seria</a></li>
+                                }
+                                @if (role.Contains("Tạo mặt hàng"))
+                                {
+                                    <li class="sidebar-item" id="materialLst"><a class="sidebar-link" asp-action="CreateMaterial" asp-controller="Warehouse">Danh mục SP/DV sim</a></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+
+                    @if (role.Contains("Quản trị công nợ"))
+                    {
+                        <li class="sidebar-item">
+                            <a href="#debt" data-toggle="collapse" class="sidebar-link collapsed" id="DebtCollapse">
+                                <i class="align-middle" data-feather="dollar-sign"></i> <span class="align-middle">Công nợ</span>
+                            </a>
+                            <ul id="debt" class="sidebar-dropdown list-unstyled collapse " data-parent="#sidebar">
+                                <li class="sidebar-item" id="myDebt"><a class="sidebar-link" asp-action="MyDebt" asp-controller="Debt">Công nợ của tôi</a></li>
+                                @if (role.Contains("Xem công nợ phát sinh"))
+                                {
+                                    <li class="sidebar-item" id="debtLst"><a class="sidebar-link" asp-action="Index" asp-controller="Debt">Công nợ phát sinh</a></li>
+                                }
+                                @if (role.Contains("Xem loại công nợ"))
+                                {
+                                    <li class="sidebar-item" id="debtType"><a class="sidebar-link" asp-action="DebtType" asp-controller="Debt">Loại công nợ phát sinh</a></li>
+                                }
+                                @if (role.Contains("Xem phiếu chuyển tiền"))
+                                {
+                                    <li class="sidebar-item" id="transferMoney"><a class="sidebar-link" asp-action="TransferMoney" asp-controller="Debt">Phiếu chuyển tiền</a></li>
+                                }
+                                @if (role.Contains("Xem phiếu thu tiền"))
+                                {
+                                    <li class="sidebar-item" id="receipt"><a class="sidebar-link" asp-action="Receipt" asp-controller="Debt">Phiếu thu tiền</a></li>
+                                }
+                                @if (role.Contains("Xem công nợ nhóm đại lý"))
+                                {
+                                    <li class="sidebar-item" id="AgencyGroup"><a class="sidebar-link" asp-action="AgencyGroup" asp-controller="Report">Nhóm đại lý</a></li>
+                                }
+                                @if (role.Contains("Xem công nợ tiền tồn trong quỹ"))
+                                {
+                                    <li class="sidebar-item" id="cashFundBalanceLst"><a class="sidebar-link" asp-action="CashFundBalance" asp-controller="Debt">Tiền tồn trong quỹ</a></li>
+                                }
+                                @if (role.Contains("Xem công nợ tiền tồn trong ngân hàng"))
+                                {
+                                    <li class="sidebar-item" id="bankFundBalanceLst"><a class="sidebar-link" asp-action="BankBalance" asp-controller="Report">Tiền tồn trong ngân hàng</a></li>
+                                }
+                                @if (role.Contains("Xem công nợ vận chuyển"))
+                                {
+                                    <li class="sidebar-item" id="shippingFundBalanceLst"><a class="sidebar-link" asp-action="ShippingFundBalance" asp-controller="Debt">Công nợ vận chuyển</a></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+
+                    @if (role.Contains("Quản trị KH/Đại lý"))
+                    {
+                        <li class="sidebar-item">
+                            <a href="#agent" data-toggle="collapse" class="sidebar-link collapsed" id="AgentCollapse">
+                                <i class="align-middle" data-feather="users"></i> <span class="align-middle">KH/Đại lý</span>
+                            </a>
+                            <ul id="agent" class="sidebar-dropdown list-unstyled collapse " data-parent="#sidebar">
+                                @if (role.Contains("Xem danh sách đại lý"))
+                                {
+                                    <li class="sidebar-item" id="AgentLst"><a class="sidebar-link" asp-action="Index" asp-controller="Agent">Đại lý</a></li>
+                                }
+                                @if (role.Contains("Xem danh sách đại lý"))
+                                {
+                                    <li class="sidebar-item" id="ConsignmentAgentLst"><a class="sidebar-link" asp-action="ConsignmentAgent" asp-controller="Agent">Đại lý kí gửi</a></li>
+                                }
+                                @if (role.Contains("Xem danh sách đại lý"))
+                                {
+                                    <li class="sidebar-item" id="CusLst"><a class="sidebar-link" asp-action="Customer" asp-controller="Agent">Khách lẻ</a></li>
+                                }
+                                @if (role.Contains("Xem danh sách nhóm KH/Đại lý"))
+                                {
+                                    <li class="sidebar-item" id="AgentGroupLst"><a class="sidebar-link" asp-action="AgentGroup" asp-controller="Agent">Nhóm KH/Đại lý</a></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+                    @if (role.Contains("Quản trị báo cáo"))
+                    {
+                        <li class="sidebar-item">
+                            <a href="#report" data-toggle="collapse" class="sidebar-link collapsed" id="ReportCollapse">
+                                <i class="align-middle" data-feather="pie-chart"></i> <span class="align-middle">Báo cáo thống kê</span>
+                            </a>
+                            <ul id="report" class="sidebar-dropdown list-unstyled collapse " data-parent="#sidebar">
+
+                                @if (role.Contains("Xem báo cáo tồn kho"))
+                                {
+                                    <li class="sidebar-item" id="SimInventory"><a class="sidebar-link" asp-action="SimInventory" asp-controller="Report">Tồn kho</a></li>
+                                }
+                                @if (role.Contains("Xem báo cáo nhập hàng"))
+                                {
+                                    <li class="sidebar-item" id="InventoryMovement"><a class="sidebar-link" asp-action="InventoryMovement" asp-controller="Report">Nhập hàng hóa</a></li>
+                                }
+                                @if (role.Contains("Xem báo cáo xuất hàng"))
+                                {
+                                    <li class="sidebar-item" id="WarehouseOutbound"><a class="sidebar-link" asp-action="WarehouseOutbound" asp-controller="Report">Xuất hàng hoá</a></li>
+                                }
+                                @if (role.Contains("Xem báo cáo đơn nhập xuất hàng"))
+                                {
+                                    <li class="sidebar-item" id="OrderImportExport"><a class="sidebar-link" asp-action="OrderImportExport" asp-controller="Report">Đơn hàng nhập xuất</a></li>
+                                }
+                                @if (role.Contains("Xem báo cáo lợi nhận số đẹp"))
+                                {
+                                    <li class="sidebar-item" id="OrderProfit"><a class="sidebar-link" asp-action="OrderProfit" asp-controller="Report">Lợi nhuận số đẹp</a></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+
+                    @if (role.Contains("Quản trị App"))
+                    {
+                        <li class="sidebar-item">
+                            <a href="#appManager" data-toggle="collapse" class="sidebar-link collapsed" id="AppManagerCollapse">
+                                <i class="align-middle" data-feather="play"></i> <span class="align-middle">Quản trị app</span>
+                            </a>
+                            <ul id="appManager" class="sidebar-dropdown list-unstyled collapse " data-parent="#sidebar">
+                                @if (role.Contains("Quản lý kí quỹ"))
+                                {
+                                    <li class="sidebar-item" id="cashBook"><a class="sidebar-link" asp-action="Index" asp-controller="CashBook">Kí quỹ</a></li>
+                                }
+                                @if (role.Contains("Quản lý đấu giá"))
+                                {
+                                    <li class="sidebar-item" id="auction"><a class="sidebar-link" asp-action="Index" asp-controller="Auction">Đấu giá</a></li>
+                                }
+                                @if (role.Contains("Quản lý flashsale"))
+                                {
+                                    <li class="sidebar-item" id="flashsales"><a class="sidebar-link" asp-action="Index" asp-controller="FlashSale">Flash Sale</a></li>
+                                }
+                                @if (role.Contains("Quản lý thông báo"))
+                                {
+                                    <li class="sidebar-item" id="notifications"><a class="sidebar-link" asp-action="Index" asp-controller="Notification">Thông báo</a></li>
+                                }
+                                @if (role.Contains("Quản lý config"))
+                                {
+                                    <li class="sidebar-item" id="appConfig"><a class="sidebar-link" asp-action="Index" asp-controller="AppSysConfig">Config App</a></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+                    @if (role.Contains("Quản trị tin tức"))
+                    {
+                        <li class="sidebar-item">
+                            <a href="#newsManager" data-toggle="collapse" class="sidebar-link collapsed" id="NewsManagerCollapse">
+                                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Quản trị tin bài</span>
+                            </a>
+                            <ul id="newsManager" class="sidebar-dropdown list-unstyled collapse " data-parent="#sidebar">
+                                @if (role.Contains("Quản lý tin"))
+                                {
+                                    <li class="sidebar-item" id="new"><a class="sidebar-link" asp-action="Index" asp-controller="News">Tin bài</a></li>
+                                }
+                                @if (role.Contains("Quản lý danh mục tin"))
+                                {
+                                    <li class="sidebar-item" id="category"><a class="sidebar-link" asp-action="Index" asp-controller="Category">Danh mục tin</a></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+                    @if (role.Contains("Quản trị hệ thống"))
+                    {
+                        <li class="sidebar-item">
+                            <a href="#settings" data-toggle="collapse" class="sidebar-link collapsed" id="SettingsCollapse">
+                                <i class="align-middle" data-feather="settings"></i> <span class="align-middle">Hệ thống</span>
+                            </a>
+                            <ul id="settings" class="sidebar-dropdown list-unstyled collapse " data-parent="#sidebar">
+                                @if (role.Contains("Xem danh sách nhân viên"))
+                                {
+                                    <li class="sidebar-item" id="UserLst"><a class="sidebar-link" asp-action="Index" asp-controller="User">Tài khoản</a></li>
+                                }
+                                @if (role.Contains("Xem danh sách nhóm phân quyền"))
+                                {
+                                    <li class="sidebar-item" id="RoleLst"><a class="sidebar-link" asp-action="Index" asp-controller="Role">Phân quyền</a></li>
+                                }
+                                @if (role.Contains("Xem nhật kí hệ thống"))
+                                {
+                                    <li class="sidebar-item" id="LogLst"><a class="sidebar-link" asp-action="LogSYS" asp-controller="Report">Nhật kí hệ thống</a></li>
+                                }
+                                @if (role.Contains("Xem danh sách kênh bán hàng"))
+                                {
+                                    <li class="sidebar-item" id="contactLst"><a class="sidebar-link" asp-action="Index" asp-controller="SPContact">Kênh bán hàng</a></li>
+                                }
+                                @if (role.Contains("Xem danh sách tk bank"))
+                                {
+                                    <li class="sidebar-item" id="bankLst"><a class="sidebar-link" asp-action="Index" asp-controller="Bank">Tài khoản ngân hàng</a></li>
+                                }
+                                @if (role.Contains("Xem danh sách quốc gia"))
+                                {
+                                    <li class="sidebar-item" id="countryLst"><a class="sidebar-link" asp-action="Index" asp-controller="Country">Quốc gia</a></li>
+                                }
+                                @if (role.Contains("Xem danh sách đv vận chuyển"))
+                                {
+                                    <li class="sidebar-item" id="shippingLst"><a class="sidebar-link" asp-action="Index" asp-controller="ShippingUnit">Đơn vị vận chuyển</a></li>
+                                }
+                                @* <li class="sidebar-item" id="backupdb"><a class="sidebar-link" asp-action="BackupDB" asp-controller="SYS">Backup database</a></li> *@
+                            </ul>
+                        </li>
+                    }
+                </ul>
+
+            </div>
+        </nav>
+
+        <div class="main">
+            <nav class="navbar navbar-expand navbar-light navbar-bg">
+                <a class="sidebar-toggle d-flex">
+                    <i class="hamburger align-self-center"></i>
+                </a>
+
+                <div class="navbar-collapse collapse">
+                    <ul class="navbar-nav navbar-align">
+                        <li class="nav-item dropdown">
+                            <a class="nav-icon dropdown-toggle" asp-action="Index" asp-controller="Message">
+                                <div class="position-relative">
+                                    <i class="align-middle" data-feather="message-square"></i>
+                                    <span class="indicator" style="background: red;width: 10px;height: 10px;"></span>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-icon dropdown-toggle d-inline-block d-sm-none" href="#" data-toggle="dropdown">
+                                <i class="align-middle" data-feather="settings"></i>
+                            </a>
+
+                            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-toggle="dropdown">
+                                <img src="img/avatars/avatar.jpg" class="avatar img-fluid rounded mr-1" alt="Charles Hall" />
+                                <span class="text-dark">@fullName</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" asp-action="Profile" asp-controller="User"><i class="align-middle mr-1" data-feather="user"></i> Hồ sơ</a>
+
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" asp-action="Logout" asp-controller="Admin">Đăng xuất</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="content">
+                @RenderBody()
+            </main>
+
+            <footer class="footer">
+                <div class="container-fluid">
+                    <div class="row text-muted">
+                        <div class="col-6 text-left">
+                            <p class="mb-0">
+                                <a href="https://tigergames.vn/" class="text-muted"><strong>Tigergame ,.JSC</strong></a> &copy;
+                            </p>
+                        </div>
+                        <div class="col-6 text-right">
+                            <ul class="list-inline">
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Support</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Help Center</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Privacy</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a class="text-muted" href="#">Terms</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    @await RenderSectionAsync("Scripts", false)
+    <style>
+        .required:after {
+            content: " *";
+            color: red;
+        }
+    </style>
+    @RenderSection("scripts", required: false)
+
+    <script src="~/datatable/jquery.datatables.min.js"></script>
+    <script src="~/js/jquery-3.6.0.min.js"></script>
+    <script src="~/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/bootstrap-select.min.js"></script>
+    <script>
+        $(function () {
+            $('select').selectpicker({
+                selectAllText: 'All',
+                deselectAllText: 'None'
+            });
+            fomatCurrencyInput();
+        });
+        function fomatCurrencyInput() {
+            var currencyInput = document.getElementsByClassName("currency");
+            if (currencyInput != undefined) {
+                currencyInput.forEach((el) => {
+                    formatCurrencyInput($(el))
+                })
+            }
+        }
+        function format(inp) {
+            var start = inp.selectionStart,  // get the selection start
+                end = inp.selectionEnd;    // and end, as per the linked post
+            var s1 = inp.value.split(",").length - 1; //count the commas before edit
+            inp.value = numberWithCommas(inp.value.replace(/,|[^\d.]/g, ''));
+            var s2 = inp.value.split(",").length - s1 - 1; //count the commas after edit so as to know where to place the cursor, as the position changes, if there are new commas or some commas have been removed
+            inp.setSelectionRange(start + s2, end + s2); // set the selection start and end, as per the linked post
+        }
+        function numberWithCommas(str) {
+            var a = str.split('.');
+            var p = /\B(?=(\d{3})+(?!\d))/g;
+            if (a.length > 1)
+                return a[0].toString().replace(p, ",") + "." + a[1];
+            else
+                return str.toString().replace(p, ",");
+        }
+        function formatDate(date) {
+            if (!date) return '';
+            var d = new Date(date),
+                month = '' + (d.getMonth() + 1),
+                day = '' + d.getDate(),
+                year = d.getFullYear();
+
+            if (month.length < 2)
+                month = '0' + month;
+            if (day.length < 2)
+                day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+
+        function formatFullDate(date) {
+            if (!date) return ''; // Check if date is null or undefined, then return an empty string
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        function formatCurrency(amount) {
+            if (isNaN(amount) || amount == null) {
+                return "0";
+            }
+
+            return amount.toFixed(0).replace(/\d(?=(\d{3})+$)/g, '$&,');
+        }
+
+        function convertDateFormat(dateString) {
+            var parts = dateString.split('-');
+
+            var newDateString = parts[2] + '/' + parts[1] + '/' + parts[0];
+
+            return newDateString;
+        }
+
+        //
+        // Jquery Dependency
+        //
+        $("input[data-type='currency']").on({
+            keyup: function () {
+                formatCurrencyInput($(this));
+            },
+            blur: function () {
+                formatCurrencyInput($(this), "blur");
+            }
+        });
+
+        function formatNumber(n) {
+            // format number 1000000 to 1,234,567
+            return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        }
+
+        function formatCurrencyInput(input, blur) {
+            // appends $ to value, validates decimal side
+            // and puts cursor back in right position.
+            // get input value
+            var input_val = input.val();
+
+            // don't validate empty input
+            if (input_val === "") {
+                input.val(0);
+                return;
+            }
+
+            // check number is negative
+            var isNegative = false;
+            if (input_val.includes("-")) isNegative = true;
+
+            // original length
+            var original_len = input_val.length;
+
+            // initial caret position
+            var caret_pos = input.prop("selectionStart");
+
+            // check for decimal
+            if (input_val.indexOf(".") >= 0) {
+
+                // get position of first decimal
+                // this prevents multiple decimals from
+                // being entered
+                var decimal_pos = input_val.indexOf(".");
+
+                // split number by decimal point
+                var left_side = input_val.substring(0, decimal_pos);
+                var right_side = input_val.substring(decimal_pos);
+
+                // add commas to left side of number
+                left_side = formatNumber(left_side);
+
+                // validate right side
+                right_side = formatNumber(right_side);
+
+                // On blur make sure 2 numbers after decimal
+                // if (blur === "blur") {
+                //     right_side += "00";
+                // }
+
+                // Limit decimal to only 2 digits
+                right_side = right_side.substring(0, 2);
+
+                // join number by .
+                input_val = left_side;// + "." + right_side;
+
+            } else {
+                // no decimal entered
+                // add commas to number
+                // remove all non-digits
+                input_val = formatNumber(input_val);
+                if (isNegative)
+                    input_val = "-" + input_val;
+
+                // // final formatting
+                // if (blur === "blur") {
+                //     input_val += ".00";
+                // }
+            }
+
+            // send updated string to input
+            input.val(input_val);
+
+            // put caret back in the right position
+            var updated_len = input_val.length;
+            caret_pos = updated_len - original_len + caret_pos;
+            input[0].setSelectionRange(caret_pos, caret_pos);
+        }
+
+    </script>
+</body>
+</html>

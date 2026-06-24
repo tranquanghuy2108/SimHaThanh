@@ -1,0 +1,232 @@
+﻿@model Models.Requests.GetPagingRequest
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Quản lý kí quỹ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<input id="uRoles" type="hidden" value="@string.Join(", ", role)" />
+<h1>Quản lý kí quỹ</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-4">
+                        <label class="form-label">Nhóm KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <select id="userIds" type="text" multiple="multiple" asp-items="@ViewBag.AppUsers" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterCashBook(1)">Tìm kiếm</button>
+                </div>
+            </div>
+
+            <div class="card p-3">
+                <div class="col-4">
+                    @if (role.Contains("Duyệt kí quỹ"))
+                    {
+                    <a class="btn btn-primary" onclick="OnClickApproved(2,0);">Duyệt kí quỹ</a>
+                    <a class="btn btn-danger mx-4" onclick="OnClickApproved(3,0);">Hủy kí quỹ</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" value="" id="checkAll" onclick="OnClickCheckAll()">
+                            <input type="hidden" id="lstOrder">
+                        </th>
+                        <th>Tài khoản</th>
+                        <th>Ngày tạo</th>
+                        <th>Loại kí quỹ</th>
+                        <th>Số tiền nạp</th>
+                        <th>Số tiền rút</th>
+                        <th>Mô tả</th>
+                        <th>Ghi chú</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#AppManagerCollapse').removeClass("collapsed");
+        $('#appManager').addClass("show");
+        $('#cashBook').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    window.onload = filterCashBook(1);
+    var lstOrder = [];
+    function filterCashBook(page) {
+        Onloading();
+        var userIds = $('#userIds').val();
+        var agentGroup = [];//$('#agentGroup').val();
+        var data = { "userIds": userIds, "pageIndex": page, "pageSize": 50, "keyword": "", "isPaged": true };
+        $.ajax({
+            url: '@Url.Action("Search", "CashBook")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                data.data.forEach((el) => {
+                    var action = '';
+                    var role = $('#uRoles').val();
+                    if (role.includes("Duyệt kí quỹ"))
+                    {
+                        action += '<a class="m-1" onclick="OnClickApproved(2,' + el.id + ');" title="Approved phiếu"><i class="fa fa-check"></i></a>';
+                        action += '<a class="m-1" onclick="OnClickApproved(3,' + el.id + ');" title="Hủy phiếu"><i class="fa fa-times"></i></a>';
+                    }
+                    newBody += '<tr>'
+                        + '<td><input type="checkbox" value="' + el.id + '" id="' + el.id + '" onclick="OnClickCheckBox(' + el.id + ')"></td>'
+                        + '<td>' + el.user + '</td>'
+                        + '<td>' + el.createTime + '</td>'
+                        + '<td>' + el.cashActionType + '</td>'
+                        + '<td>' + el.receivables + '</td>'
+                        + '<td>' + el.liabilities + '</td>'
+                        + '<td>' + el.description + '</td>'
+                        + '<td>' + el.note + '</td>'
+                        + '<td>' + el.approvedStatus + '</td>'
+                        + '<td class="table-action" >'
+                        + action
+                        + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                //write paging
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterCashBook(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterCashBook(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterCashBook(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterCashBook(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    }; 
+    function OnClickCheckAll() {
+        var chkVal = document.getElementById('checkAll');
+        if (chkVal.checked === true) {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            lstOrder = [];
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                lstOrder.push(orderId);
+                document.getElementById(orderId).checked = true;
+            })
+            console.log('result ' + lstOrder);
+        } else {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                document.getElementById(orderId).checked = false;
+            })
+            lstOrder = [];
+            console.log('result ' + lstOrder);
+        }
+    }
+    function OnClickCheckBox(orderId) {
+        var chkVal = document.getElementById(orderId);
+        if (chkVal.checked === true) {
+            lstOrder.push(orderId);
+            console.log('result ' + lstOrder);
+        } else {
+            const index = lstOrder.indexOf(orderId);
+            if (index > -1) {
+                lstOrder.splice(index, 1);
+            }
+            console.log('result ' + lstOrder);
+        }
+    }
+    function OnClickApproved(status, debtId) {
+        if (debtId == 0) {
+            if (lstOrder.length > 0) {
+                var dataReq = {
+                    "debtIds": lstOrder.join(','),
+                    "status": status
+                }
+                $.ajax({
+                    url: '@Url.Action("OnApproved","CashBook")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(dataReq),
+                    success: function (data) {
+                        alert(data.message)
+                        if (data.code == "1") {
+                            window.location.href = '@Url.Action("Index","CashBook")';
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                    }
+                });
+            } else {
+                alert('Bạn chưa chọn item');
+            }
+        }
+        else {
+            var dataReq = {
+                "debtIds": debtId.toString(),
+                "status": status
+            }
+            $.ajax({
+                url: '@Url.Action("OnApproved","CashBook")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(dataReq),
+                success: function (data) {
+                    alert(data.message)
+                    if (data.code == "1") {
+                        window.location.href = '@Url.Action("Index","CashBook")';
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+</script>

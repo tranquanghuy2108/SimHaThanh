@@ -1,0 +1,70 @@
+﻿@using Models.ViewModels
+@model RoleCreate
+@{
+    ViewData["Title"] = "Tạo mới role";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Thêm mới role</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Tên quyền</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Name">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Mô tả</label>
+                    <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="CreateRole" asp-controller="Role" width="100px">Thêm mới</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="Role" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width:10%;">#</th>
+                        <th style="width:30%">Role</th>
+                        <th style="width:50%">Mô tả</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        foreach (var item in @ViewBag.DataRoles)
+                        {
+                            <tr>
+                                <td>@item.Stt</td>
+                                <td>@item.Name</td>
+                                <td>@item.Description</td>
+                                <td class="table-action">
+                                    <a asp-action="EditRole" asp-route-id="@item.Id"><i class="align-middle" data-feather="edit-2"></i></a>
+                                    <a asp-action="DeleteRole" asp-route-id="@item.Id"><i class="align-middle" data-feather="trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#SettingsCollapse').removeClass("collapsed");
+        $('#settings').addClass("show");
+        $('#RoleLst').addClass("active");
+    });
+</script>

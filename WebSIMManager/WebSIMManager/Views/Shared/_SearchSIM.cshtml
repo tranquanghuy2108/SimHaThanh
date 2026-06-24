@@ -1,0 +1,47 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model Models.Requests.GetSIMRequest
+@{
+    var IsMobile = ViewBag.IsMobile;
+}
+@if (IsMobile)
+{
+    <div class="sidebar-item search-form">
+        <form class="">
+            <input type="text" asp-for="keyword" class="form-control" placeholder="Bạn tìm sim gì?" aria-label="Search">
+            <button class="btn btn-light" type="submit" asp-action="Search" asp-controller="Home" style="background: space !important;">
+                <i class="bx bi-search"></i>
+            </button>
+        </form>
+    </div>
+    <!-- End sidebar search formn-->
+}
+else
+{
+    <div class="sidebar pt-3 pb-1" style="background:#182f33; color:white;">
+        <div class="sidebar-item search-form">
+            <form>
+                <input type="text" asp-for="keyword" class="form-control" placeholder="Số SIM..." aria-label="Search">
+                <button type="submit" asp-action="Search" asp-controller="Home">Tìm kiếm</button>
+            </form>
+            <div class="pt-3">
+                <ul style=" padding-left: 15px; ">
+                    <li>
+                        <label for="search-input">
+                            Tìm sim có số <strong>6789</strong> bạn hãy gõ <strong>6789</strong>
+                        </label>
+                    </li>
+                    <li>
+                        Tìm sim có đầu <strong>090 </strong>đuôi <strong>8888</strong> hãy gõ <strong>090 <font size="2">*</font>8888 </strong>
+                    </li>
+                    <li>
+                        Tìm sim bắt đầu bằng <strong>0914</strong> đuôi bất kỳ, hãy gõ:&nbsp; <strong>
+                            0914 <font size="2">*</font>
+                        </strong>
+                    </li>
+                </ul>
+            </div>
+        </div><!-- End sidebar search formn-->
+    </div>
+}

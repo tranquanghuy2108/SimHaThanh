@@ -1,0 +1,143 @@
+﻿@{
+    ViewData["Title"] = "Báo cáo Tiền tồn trong đơn vị vận chuyển";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Báo cáo tiền tồn trong đơn vị vận chuyển</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="col-4">
+                    <button class="btn btn-warning" onclick="exportReport()">Xuất Excel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:5%">Stt</th>
+                        <th style="width:35%">Đơn vị vận chuyển</th>
+                        <th style="width:35%">Tổng tiền</th>
+                        @* <th style="width:35%">Tiền chưa xóa CN</th> *@
+                        <th style="width:15%">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#DebtCollapse').removeClass("collapsed");
+        $('#debt').addClass("show");
+        $('#shippingFundBalanceLst').addClass("active");
+    });
+</script>
+
+<script type="text/javascript">
+    window.onload = filterReport(1);
+    var lstOrder = [];
+    function filterReport(page) {
+        Onloading();
+        var startDate = '1900-01-01';
+        var endDate = '2999-12-31';
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 50, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("SearchShippingFundBalance", "Debt")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+
+                var role = $('#uRoles').val();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                var idx = 0;
+                data.data.forEach((el) => {
+                    idx++;
+                    var action = '';
+                    action += '<a class="m-1" href="@Url.Action("ShippingFundBalanceDetail","Debt")?userId=' + el.id + '&debtType=5" title="Chi tiết công nợ"><i class="fa fa-eye"></i></a>';
+                    newBody += '<tr>'
+                        + '<td>' + idx + '</td>'
+                        + '<td>' + el.shippingInfo + '</td>'
+                        + '<td>' + formatCurrency(el.totalBalance) + '</td>'
+                        // + '<td>' + formatCurrency(el.currentBalance) + '</td>'
+                        + '<td class="table-action" >'
+                        + action
+                        + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+    function exportReport() {
+        Onloading();
+        var startDate = '1900-01-01';
+        var endDate = '2999-12-31';
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 2147483647, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("ExportShippingFundBalance", "Debt")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao tien ton trong đơn vị vận chuyển.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+</script>

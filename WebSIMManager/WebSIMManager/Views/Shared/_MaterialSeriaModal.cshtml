@@ -1,0 +1,157 @@
+﻿@{
+}
+<!-- Modal -->
+<div class="modal fade" id="materialSeriaModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Nhập seria</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="OnClickClose()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row m-1">
+                    <div class="col-9">
+                        <div class="input-group input-group-sm mb-3">
+                            <input type="file" class="form-control" id="inputFile" aria-describedby="inputGroupFileAddon04" aria-label="Upload" style="height: 30px;">
+                            <button class="btn btn-success" type="button" id="inputGroupFileAddon04" style="height: 30px;font-size: .875rem;" onclick="ReadFile()">Đọc file</button>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <a class="btn btn-info" asp-action="DownloadTemplate" asp-controller="Warehouse" style="height: 30px;padding-top: inherit;">File mẫu</a>
+                    </div>
+                </div>
+
+                <div class="m-1" style="overflow-y:auto;height: 400px;">
+                    <input type="hidden" id="warehouseIdx" />
+                    <input type="hidden" id="dataInFile" />
+                    <input type="hidden" id="materiaId" />
+                    <table id="materialSeriaTbl" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width:5%">Stt</th>
+                                <th style="width:20%">Number</th>
+                                <th style="width:20%">Seria</th>
+                                <th style="width:20%">Vị trí</th>
+                                <th style="width:35%">Kiểm tra dữ liệu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="">
+                        <a class="btn btn-info m-1" asp-action="MaterialWithSeriaInfo" asp-controller="Warehouse">Mặt hàng có seria</a>
+                        <a id="saveAllBtn" class="btn btn-warning m-1" onclick="OnSaveImportFile(1)" hidden>Lưu toàn bộ</a>
+                        <a class="btn btn-primary m-1" onclick="OnSaveImportFile(0)">Lưu dữ liệu</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var isUpdateData = false;
+    var dataImport = [];
+    var dataImportOK = [];
+    var dataImportAll = [];
+    function OnClickClose() {
+        isUpdateData = false;
+        $('#materialSeriaModal').modal('hide');
+    }
+    function ReadFile() {
+        isUpdateData = true;
+        dataImport = [];
+        var gdnid = parseInt($('#Id').val());
+        var formData = new FormData();
+        formData.append('file', $('#inputFile')[0].files[0]);
+        formData.append('isDelivery', $('#isDelivery').val());
+        formData.append('gdnid', gdnid);
+        formData.append('materiaId', $('#materiaId').val());
+
+        $.ajax({
+            url: '@Url.Action("ReadMaterialSeriaFile", "Warehouse")',
+            type: 'POST',
+            data: formData,
+            processData: false,      // Không để jQuery xử lý data
+            contentType: false,      // Không set contentType cứng
+            xhrFields: {
+                withCredentials: true // Gửi kèm cookie (nếu bạn đang dùng cookie auth)
+            },
+            success: function (result) {
+                if (result && result.length > 0) {
+                    document.getElementById('dataInFile').value = JSON.stringify(result);
+
+                    var tbody = $("#materialSeriaTbl tbody");
+                    tbody.empty();
+                    dataImport = [];
+                    dataImportOK = [];
+                    dataImportAll = [];
+                    var newBody = "";
+                    for (var i = 0; i < result.length; i++) {
+                        if (!result[i].result.includes("chưa bán"))
+                            dataImportAll.push(result[i]);
+                        if (result[i].result.length === 0)
+                            dataImportOK.push(result[i]);
+
+                        newBody += '<tr>'
+                            + '<td>' + (i + 1) + '</td>'
+                            + '<td>' + result[i].phoneNumber + '</td>'
+                            + '<td>' + result[i].seria + '</td>'
+                            + '<td>' + result[i].position + '</td>'
+                            + '<td>' + result[i].result + '</td>'
+                            + '</tr>';
+                    }
+
+                    tbody.append(newBody);
+                } else {
+                    alert('Bạn chưa đọc file import hoặc không có dữ liệu trong file import');
+                }
+            },
+            error: function (jqXHR) {
+                console.error("Lỗi:", jqXHR.status, jqXHR.responseText);
+                if (jqXHR.status === 401) {
+                    alert("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
+                } else if (jqXHR.status === 403) {
+                    alert("Bạn không có quyền truy cập chức năng này.");
+                } else {
+                    alert("Có lỗi xảy ra khi gọi API.");
+                }
+            }
+        });
+    }
+    function OnSaveImportFile(isAll) {
+        debugger;
+        if(isUpdateData == false) {
+            OnClickClose();
+            return;
+        }
+        var warehouseIdx = document.getElementById('warehouseIdx').value
+        var materialSeriaData = $('#materialSeriaData_' + warehouseIdx);
+        materialSeriaData.children().remove();
+        var idx = 0;
+        var material = '';
+        if (isAll == 1) dataImport = dataImportAll;
+        else dataImport = dataImportOK;
+        dataImport.forEach((el) => {
+            material += '<input name="Warehouses[' + warehouseIdx + '].materialSerias[' + idx + '].Number" type="hidden" value="' + el.phoneNumber + '" />'
+                + '<input name="Warehouses[' + warehouseIdx + '].materialSerias[' + idx + '].Seria" type="hidden" value="' + el.seria + '" />'
+                + '<input name="Warehouses[' + warehouseIdx + '].materialSerias[' + idx + '].Position" type="hidden" value="' + el.position + '" />';
+            idx++;
+        });
+        var amount = $('#Warehouses_' + warehouseIdx + '__Amount');
+        amount.val(dataImport.length);
+        materialSeriaData.append(material);
+        OnChangeMaterialPrice(warehouseIdx);
+        dataImport = [];
+        dataImportOK = [];
+        dataImportAll = [];
+        OnClickClose();
+    }
+</script>

@@ -1,0 +1,24 @@
+﻿@using Models.ViewModels
+@model NewsEditModel
+@{
+    ViewData["Title"] = "NewsDetail";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div>
+    <div class="block-head">Tin tức</div>
+</div>
+<div class="sidebar mt-3 p-3">
+    <div class="sidebar-item">
+        <div class="col-md-12">
+            <div class="news-title">
+                <h2>@Model.Title</h2>
+            </div>
+            <div class="news-footer">
+                <p>@Model.CreateTime</p>
+            </div>
+            <div class="news-summary">
+                @Html.Raw(@Model.Content)
+            </div>
+        </div>
+    </div><!-- End sidebar search formn-->
+</div>

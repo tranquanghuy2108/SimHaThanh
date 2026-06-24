@@ -1,0 +1,295 @@
+﻿@using Commons.Enums;
+@model Models.Requests.GetPagingRequest
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Danh sách phiếu nhập kho";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<input id="uRoles" type="hidden" value="@string.Join(", ", role)" />
+<h1>Danh sách phiếu nhập kho</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-2">
+                        <label class="form-label">Từ ngày</label>
+                        <div class="col-12 p-0">
+                            <input type="date" id="fromDate" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">Đến ngày</label>
+                        <div class="col-12 p-0">
+                            <input type="date" id="toDate" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">Nhà cung cấp</label>
+                        <div class="col-12 p-0">
+                            <select id="agentIds" type="text" asp-items="@ViewBag.Agents" multiple="multiple" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">Người tạo</label>
+                        <div class="col-12 p-0">
+                            <select id="staffIds" type="text" asp-items="@ViewBag.Staffs" multiple="multiple" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">Trạng thái</label>
+                        <div class="col-12 p-0">
+                            <select id="status" type="text" asp-items="@ViewBag.Status" data-live-search="true">
+                                <option value="0">Tất cả</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filter(1)">Tìm kiếm</button>
+                </div>
+            </div>
+
+            <div class="card p-3">
+                <div class="col-12 rows">
+                    @if (role.Contains("Tạo phiếu nhập kho"))
+                    {
+                        <a class="btn btn-success" asp-action="CreateGoodsReceivedNote" asp-controller="Warehouse">Tạo phiếu nhập kho</a>
+                    }
+                    @if (role.Contains("Duyệt công nợ"))
+                    {
+                        <a class="btn btn-primary mx-4" onclick="OnClickApprovedPXS(2,0);">Duyệt phiếu</a>
+                        <a class="btn btn-danger" onclick="OnClickApprovedPXS(3,0);">Hủy phiếu</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:2%">
+                            <input type="checkbox" value="" id="checkAll" onclick="OnClickCheckAll()">
+                            <input type="hidden" id="lstOrder">
+                        </th>
+                        <th>Ngày tạo phiếu</th>
+                        <th>Ngày nhập kho</th>
+                        <th>Người lập</th>
+                        <th>Mã phiếu</th>
+                        <th>Nhà cung cấp</th>
+                        <th>Mặt hàng</th>
+                        <th>Tổng đơn hàng</th>
+                        <th>Tiền đã trả</th>
+                        <th>Nợ phát sinh</th>
+                        <th>Ghi chú</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#WarehouseCollapse').removeClass("collapsed");
+        $('#warehouse').addClass("show");
+        $('#goodsReceivedNoteList').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    window.onload = filter(1);
+    var lstOrder = [];
+    function filter(page) {
+        var agent = $('#agentIds').val();
+        var staff = $('#staffIds').val();
+        var status = $('#status').val();
+        var data = { "debtPrefix": "PXSCN", "apprStatus": parseInt(status), "staffIds": staff, "SupplierIds": agent, "pageIndex": page, "pageSize": 50 };
+        $.ajax({
+            url: '@Url.Action("SearchGoodsReceivedNote","Warehouse")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                data.data.forEach((el) => {
+                    var action = '';
+                    var role = $('#uRoles').val();
+                    if (role.includes("Sửa phiếu nhập kho")) {
+                        action += '<a class="m-1" href="@Url.Action("EditGoodsReceivedNote","Warehouse")?id=' + el.id + '" title="Chi tiết PNK"><i class="fa fa-edit"></i></a>';
+                    }
+                    if (role.includes("Duyệt công nợ")) {
+                        action += '<a class="m-1" onclick="OnClickApprovedPXS(2,' + el.id + ');" title="Approved phiếu"><i class="fa fa-check"></i></a>';
+                        action += '<a class="m-1" onclick="OnClickApprovedPXS(3,' + el.id + ');" title="Hủy phiếu"><i class="fa fa-times"></i></a>';
+                    }
+                    if (role.includes("Xóa phiếu nhập kho")) {
+                        action += '<a class="m-1" onclick="OnClickDelete(' + el.id + ');" title="Xóa PNK"><i class="fa fa-trash"></i></a>';
+                    }
+                    newBody += '<tr>'
+                        + '<td><input type="checkbox" value="' + el.id + '" id="' + el.id + '" onclick="OnClickCheckBox(' + el.id + ')"></td>'
+                        + '<td>' + el.createTime + '</td>'
+                        + '<td>' + el.receivedDate + '</td>'
+                        + '<td>' + el.createBy + '</td>'
+                        + '<td><a class="m-1" href="@Url.Action("EditGoodsReceivedNote", "Warehouse")?id=' + el.id + '" title="Chi tiết PNK">' + el.code + '</i></a></td>'
+                        + '<td>' + el.supplierName + '</td>'
+                        + '<td>' + el.warehouses + '</td>'
+                        + '<td>' + el.totalPrice.toFixed(1).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '</td>'
+                        + '<td>' + el.tienDaTra.toFixed(1).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '</td>'
+                        + '<td>' + el.tienPhaiTra.toFixed(1).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '</td>'
+                        + '<td>' + el.note + '</td>'
+                        + '<td>' + el.approvedStatus + '</td>'
+                        + '<td class="table-action" >'
+                        + action
+                        + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                //write paging
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filter(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filter(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filter(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filter(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    };
+
+    function OnClickCheckAll() {
+        var chkVal = document.getElementById('checkAll');
+        if (chkVal.checked === true) {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            lstOrder = [];
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                lstOrder.push(orderId);
+                document.getElementById(orderId).checked = true;
+            })
+            console.log('result ' + lstOrder);
+        } else {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                document.getElementById(orderId).checked = false;
+            })
+            lstOrder = [];
+            console.log('result ' + lstOrder);
+        }
+    }
+    function OnClickCheckBox(orderId) {
+        var chkVal = document.getElementById(orderId);
+        if (chkVal.checked === true) {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            lstOrder.push(orderId);
+            console.log('result ' + lstOrder);
+        } else {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            const index = lstOrder.indexOf(orderId);
+            if (index > -1) {
+                lstOrder.splice(index, 1);
+            }
+            console.log('result ' + lstOrder);
+        }
+    }
+    function OnClickApprovedPXS(status, debtId) {
+        if (debtId == 0) {
+            if (lstOrder.length > 0) {
+                var dataReq = {
+                    "debtIds": lstOrder.join(','),
+                    "status": status
+                }
+                $.ajax({
+                    url: '@Url.Action("ApprovedGoodsReceivedNote","Warehouse")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(dataReq),
+                    success: function (data) {
+                        alert(data.message)
+                        if (data.code == "1") {
+                            window.location.href = '@Url.Action("GoodsReceivedNoteList","Warehouse")';
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                    }
+                });
+            } else {
+                alert('Bạn chưa chọn item');
+            }
+        }
+        else {
+            var dataReq = {
+                "debtIds": debtId.toString(),
+                "status": status
+            }
+            $.ajax({
+                url: '@Url.Action("ApprovedGoodsReceivedNote","Warehouse")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(dataReq),
+                success: function (data) {
+                    alert(data.message)
+                    if (data.code == "1") {
+                        window.location.href = '@Url.Action("GoodsReceivedNoteList","Warehouse")';
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+    function OnClickDelete(id) {
+        if (confirm("Bạn có chắc chắn xóa!") == true) {
+            $.ajax({
+                url: '@Url.Action("DeleteGoodsReceivedNote","Warehouse")?id=' + id + '',
+                type: "GET",
+                contentType: "application/json",
+                success: function (data) {
+                    alert(data.message)
+                    if (data.code == "1") {
+                        window.location.href = '@Url.Action("GoodsReceivedNoteList","Warehouse")';
+                    }
+                },
+                error: function (xhr) {
+                    alert('Có lỗi trong quá trình xóa dữ liệu')
+                    console.log(xhr);
+                }
+            });
+        } 
+    }
+</script>

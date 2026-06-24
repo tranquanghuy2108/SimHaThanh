@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Tin tức";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div>
+    <div class="block-head">Tin tức</div>
+</div>
+<div>
+    @{
+        foreach (var item in @ViewBag.NewsPaging)
+        {
+            <div class="sidebar mt-3 p-3">
+                <div class="sidebar-item">
+                    <div class="row">
+                        <div class="col-md-3 news-img">
+                            <img src="~/img/icons/icon-web.png" />
+                        </div>
+                        <div class="col-md-9">
+                            <a asp-action="NewsDetail" asp-controller="Home" asp-route-id="@item.Id">
+                                <div class="news-title">
+                                    <p>@item.Title</p>
+                                </div>
+                            </a>
+                            <div class="news-summary">
+                                <p>@item.Summary</p>
+                            </div>
+                            <div class="news-footer">
+                                <p>@item.CreateTime</p>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- End sidebar search formn-->
+            </div>
+        }
+    }
+</div>
+
+<script>
+    window.onload = function () {
+        var itemNav = document.getElementById("tin-tuc");
+        itemNav.classList.add("active");
+    };
+</script>

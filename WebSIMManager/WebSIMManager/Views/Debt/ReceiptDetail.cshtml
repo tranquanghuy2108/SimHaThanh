@@ -1,0 +1,411 @@
+﻿@using Models.ViewModels
+@model ReceiptModel
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+	var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+	ViewData["Title"] = "Xem phiếu thu/chi tiền";
+	Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Xem phiếu thu tiền/chi</h1>
+
+<div class="col-12">
+	<div class="card">
+		<form method="post">
+			<div class="card-header">
+				<div class="card">
+					<div class="col-md-12">
+						<div class="card mt-3">
+							<div class="card-body px-3">
+								<div class="row">
+									<div class="col-md-9 p-3">
+										<div class="row">
+											<div class="form-group col-8">
+												<label class="form-label">Khách hàng/Đại lý</label>
+												<div class="p-0">
+													<select class="form-control" asp-for="AgentId" asp-items="ViewBag.Agents" type="text" data-live-search="true" style="border: 1px solid #ced4da;border-radius: .25rem;" onchange="OnChangeSupplier()">
+													</select>
+													<input type="hidden" class="form-control" asp-for="AgentName" />
+													<input type="hidden" class="form-control" asp-for="Id" />
+												</div>
+											</div>
+											<div class="form-group col-4">
+												<label class="form-label required">Số Đt/Địa chỉ</label>
+												<div class="p-0">
+													<input type="text" class="form-control" asp-for="AgentInfo" />
+												</div>
+											</div>
+											<div class="form-group col-4">
+												<label class="form-label required">Ngày lập phiếu</label>
+												<div class="p-0">
+													<input type="datetime-local" class="form-control" asp-for="ReceiptDate" onchange="OnChangeReceiptDate()"/>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div class="col-md-3 p-3">
+										<div class="form-group">
+											<label class="form-label">Mã phiếu</label>
+											<div class="p-0">
+												<input type="text" class="form-control" asp-for="Code" readonly />
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="form-label">Người lập</label>
+											<div class="p-0">
+												<select class="form-control" asp-for="CreateBy" asp-items="ViewBag.Staffs" type="text" data-live-search="true" style="border: 1px solid #ced4da;border-radius: .25rem;" onchange="OnChangeSupplier()" readonly>
+												</select>
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="form-label">Ngày lập</label>
+											<div class="p-0">
+												<input type="text" class="form-control" asp-for="CreateTime" readonly />
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!--Sim info-->
+
+							<div class="card-body px-3 row">
+								<div class="col-md-8">
+									<div class="row">
+										<div class="form-group col-md-4">
+											<label class="form-label">Loại phiếu</label>
+											<select class="form-control" asp-for="typeOfReceived" asp-items="ViewBag.TypeOfReceived" onchange="OnChangeTypeOfReceived()"></select>
+										</div>
+									</div>
+									<div class="row">
+										<div class="form-group col-md-4">
+											<label class="form-label">Nợ cũ</label>
+											<input type="text" class="form-control currency" data-type="currency" asp-for="OldDebt" onchange="OnChangeAmount();" />
+										</div>
+										<div class="form-group col-md-4">
+											<label class="form-label required">Số tiền đã thanh toán</label>
+											<div id="receivables" class="form-group">
+												<input type="text" class="form-control currency" data-type="currency" asp-for="Receivables" onchange="OnChangeAmount();" />
+											</div>
+											<div id="liabilities" class="form-group">
+												<input type="text" class="form-control currency" data-type="currency" asp-for="Liabilities" onchange="OnChangeAmount();" />
+											</div>
+										</div>
+										<div class="form-group col-md-4">
+											<label class="form-label">Nợ mới</label>
+											<input type="text" class="form-control currency" data-type="currency" asp-for="NewDebt" readonly />
+										</div>
+									</div>
+									<div class="row">
+										<div class="form-group col-md-4">
+											<label class="form-label required">Hình thức thanh toán</label>
+											<select class="form-control" asp-for="formOfPayment" asp-items="ViewBag.FormOfPayment" onchange="OnChangeFormOfPayment()"></select>
+										</div>
+										<div id="bankDelivery" class="col-md-8">
+											<div class="row">
+												<div class="form-group col-md-6">
+													<label class="form-label">Tài khoản ngân hàng</label>
+													<div class="p-0">
+														<select asp-for="BankId" asp-items="@ViewBag.Banks" type="text" data-live-search="true">
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div class="col-md-12">
+										<div class="form-group">
+											<label class="form-label">Ghi chú</label>
+											<textarea class="form-control" rows="2" asp-for="Note"></textarea>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div asp-validation-summary="All" class="text-danger"></div>
+				<a class="btn btn-secondary m-3 btn-default" asp-action="Receipt" asp-controller="Debt" width="100px">Trở về</a>
+        </form>
+        <div class="card-body px-3" style="overflow: auto;">
+            <div class="form-group col-12 row">
+                <div class="col-4">
+                    <span id="beginningBalance"></span>
+                </div>
+                <div class="col-4">
+                    <span id="incidentalDebt"></span>
+                </div>
+                <div class="col-4">
+                    <span id="endingBalance"></span>
+                </div>
+            </div>
+
+            <table id="myTable" class="table table-bordered table-striped" style="min-width:2500px;">
+                <thead>
+                    <tr>
+                        <th colspan="4">Thông tin phiếu</th>
+                        <th colspan="4">Thông tin phát sinh chi tiết</th>
+                        <th colspan="2">P/S trong kỳ</th>
+                        <th></th>
+                        <th colspan="4">Thông tin khác</th>
+                    </tr>
+                    <tr>
+                        <th>Ngày phát sinh</th>
+                        <th>Mã phiếu</th>
+                        <th>Loại phiếu</th>
+                        <th>Tên đại lý</th>
+                        <th>Số sim</th>
+                        <th>Giá niêm yết</th>
+                        <th>Giá thu về</th>
+                        <th>Phí PS</th>
+                        <th>P/S Tăng</th>
+                        <th>P/S Giảm</th>
+                        <th>Công nợ PS</th>
+                        <th> Diễn giải/Ghi chú</th>
+                        <th>Hình thức giao dịch</th>
+                        <th>COD </th>
+                        <th>Người lập</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    $(function () {
+        $('#DebtCollapse').removeClass("collapsed");
+        $('#debt').addClass("show");
+        $('#receipt').addClass("active");
+        OnChangeSupplier();
+        OnChangeFormOfPayment();
+        OnChangeTypeOfReceived();
+        window.onload = filterReport(1);
+    });
+</script>
+<script type="text/javascript">
+    function OnChangeFormOfPayment() {
+        var payOrderType = $('#formOfPayment').val();
+        var bankDelivery = document.getElementById('bankDelivery');
+        bankDelivery.classList.add("hidden");
+        if (payOrderType == "2")
+            bankDelivery.classList.remove("hidden");
+    }
+    function OnChangeTypeOfReceived() {
+        var typeOfReceived = $('#typeOfReceived').val();
+        var receivables = document.getElementById('receivables');
+        var liabilities = document.getElementById('liabilities');
+        receivables.classList.add("hidden");
+        liabilities.classList.add("hidden");
+        if (typeOfReceived == "1"){
+            $("#Liabilities").val(0);
+            receivables.classList.remove("hidden");
+        }
+        else{
+            $("#Receivables").val(0);
+            liabilities.classList.remove("hidden");
+        }
+        OnChangeAmount();
+    }
+    function OnChangeSupplier() {
+        var supplierId = document.getElementById('AgentId');
+        var data = { "userId": supplierId.value };
+        $.ajax({
+            url: '@Url.Action("GetUserInfo", "SIMOrder")',
+            type: "POST",
+            contentType: 'application/x-www-form-urlencoded',
+            data: data,
+            success: function (response) {
+                document.getElementById('AgentName').value = response.fullName;
+                document.getElementById('AgentInfo').value = response.phoneNumber + "/" + response.address;
+                //document.getElementById('AgentAddress').value = response.address;
+                document.getElementById('OldDebt').value = response.oldDebt;
+                OnChangeAmount()
+                fomatCurrencyInput();
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    }
+    function OnChangeReceiptDate() {
+        var supplierId = document.getElementById('AgentId');
+        var receiptDate = document.getElementById('ReceiptDate');
+
+        var data = { "AgentId": supplierId.value, "receiptDate": receiptDate.value };
+        $.ajax({
+            url: '@Url.Action("CheckOldDebtOfAgent", "Debt")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (response) {
+                debugger;
+                document.getElementById('OldDebt').value = response;
+                OnChangeAmount()
+                fomatCurrencyInput();
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    }
+
+    function OnChangeAmount() {
+        var OldDebt = document.getElementById('OldDebt');
+        var NewDebt = document.getElementById('NewDebt');
+        var Receivables = document.getElementById('Receivables');
+        var Liabilities = document.getElementById('Liabilities');
+
+        NewDebt.value = parseFloat(OldDebt.value.replaceAll(",", "")) + parseFloat(Receivables.value.replaceAll(",", "")) - parseFloat(Liabilities.value.replaceAll(",", ""));
+        fomatCurrencyInput();
+    }
+</script>
+
+<script type="text/javascript">
+    const url = new URL(window.location.href);
+    $('#startDate').val(url.searchParams.get('startDate'));
+    $('#endDate').val(url.searchParams.get('endDate'));
+
+    var lstOrder = [];
+    function filterReport(page) {
+        debugger
+        Onloading();
+        var agentId = $('#AgentId').val();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        var timeReport = "";
+        if (startDate === '') {
+            startDate = null;
+        }
+        if (endDate === '') {
+            endDate = null;
+        }
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 50, "agentId": [agentId], "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("SearchCustomerDebt", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+
+                console.log(data.data);
+                data.data.forEach((el) => {
+                    var invoiceCode = (el.invoiceCode ? el.invoiceCode : '');
+                    if (invoiceCode.includes("PXK"))
+                        invoiceCode = '<a href="@Url.Action("GoodsDeliveryNoteDetail", "Warehouse")?id=' + el.invoiceId + '" title="Chi tiết PXK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+                    else if (invoiceCode.includes("PNK"))
+                        invoiceCode = '<a href="@Url.Action("GoodsReceivedNoteDetail", "Warehouse")?id=' + el.invoiceId + '" title="Chi tiết PNK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+                    else if (invoiceCode.includes("PXSim"))
+                        invoiceCode = '<a href="@Url.Action("XuatSimDetail", "SIMOrder")?debtid=' + el.invoiceId + '" title="Chi tiết PNK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+                    else
+                        invoiceCode = '<a href="@Url.Action("ReceiptDetail", "Debt")?id=' + el.invoiceId + '" title="Chi tiết PNK ' + el.invoiceCode + '">' + el.invoiceCode + '</a>';
+                    newBody += '<tr>'
+                        + '<td>' + formatFullDate(new Date(el.transactionDate)) + '</td>'
+                        //+ '<td>' + (el.invoiceCode ? el.invoiceCode : '') + '</td>'
+                        + '<td>' + invoiceCode + '</td>'
+                        + '<td>' + (el.invoiceType ? el.invoiceType : '') + '</td>'
+                        + '<td>' + (el.agentName) + '</td>'
+                        + '<td>' + (el.numberOfSIMs ? el.numberOfSIMs : '') + '</td>'
+                        + '<td>' + formatCurrency(el.listedPrice) + '</td>'
+                        + '<td>' + formatCurrency(el.actualPriceReceived) + '</td>'
+                        + '<td>' + formatCurrency(el.incidentalFee) + '</td>'
+                        + '<td>' + formatCurrency(el.increaseIncidents) + '</td>'
+                        + '<td>' + formatCurrency(el.decreaseIncidents) + '</td>'
+                        + '<td>' + formatCurrency(el.incidentalDebt) + '</td>'
+                        + '<td>' + (el.note ? el.note : '') + '</td>'
+                        + '<td>' + (el.transactionMethod ? el.transactionMethod : '') + '</td>'
+                        + '<td>' + (el.cod ? el.cod : '') + '</td>'
+                        + '<td>' + (el.creator ? el.creator : '') + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                var beginningBalance = data.data[0].beginningBalance ?? 0;
+                var incidentalDebt = data.data.reduce((total, el) => total + el.incidentalDebt, 0)
+                $("#beginningBalance").html("Nợ đầu kỳ: " + formatCurrency(beginningBalance) + " đ.");
+                $("#incidentalDebt").html("Phát sinh trong kỳ: " + formatCurrency(incidentalDebt) + " đ.");
+                $("#endingBalance").html("Công nợ cuối kỳ: " + formatCurrency(beginningBalance + incidentalDebt) + " đ. (Lưu ý: Số âm là nợ đại lý)");
+
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+    function exportReport() {
+        Onloading();
+        var agentId = $('#AgentId').val();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (startDate === '') {
+            startDate = null;
+        }
+        if (endDate === '') {
+            endDate = null;
+        }
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 50, "agentId": agentId, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("ExportCustomerDebt", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao chi tiet cn khach hang.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+    function OnClickAddReceive() {
+        //window.location.href = '@Url.Action("CreateReceipt", "Debt")?agentId=' + @ViewBag.UserId;
+    }
+</script>

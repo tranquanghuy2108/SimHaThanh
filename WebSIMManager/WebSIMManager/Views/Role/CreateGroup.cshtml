@@ -1,0 +1,62 @@
+﻿@using Models.ViewModels
+@model AppGroupCreate
+@{
+    ViewData["Title"] = "Tạo mới role group";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Thêm mới nhóm quyền</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                <div class="row col-6">
+                    <div class="form-group col-6">
+                        <label class="form-label required">Tên group</label>
+                        <input type="text" class="form-control" placeholder="" asp-for="Name">
+                    </div>
+                    <div class="form-group col-6">
+                        <label class="form-label">Quyền trong group</label>
+                        <div class="">
+                            <select type="text" class="form-control col-12" placeholder="" asp-for="RoleIds" multiple="multiple" asp-items="@ViewBag.ListRoles" data-live-search="true" data-actions-box="true"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-6">
+                    <label class="form-label">Mô tả</label>
+                    <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                </div>
+                <div class="form-group col-6">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" asp-for="IsStaffRole">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            Quyền cho nhân viên
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group col-md-6">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="CreateGroup" asp-controller="Role" width="100px">Thêm mới</button>
+                    <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="Role" width="100px">Trở về</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $('#RoleIds').multiselect({
+            allSelectedText: 'All',
+            includeSelectAllOption: true
+        })
+            .multiselect('updateButtonText');;
+    });
+</script>
+<script>
+    $(function () {
+        $('#SettingsCollapse').removeClass("collapsed");
+        $('#settings').addClass("show");
+        $('#RoleLst').addClass("active");
+    });
+</script>

@@ -1,0 +1,147 @@
+/* _content/WebSIMManager/Views/Shared/_AdminLayout.cshtml.rz.scp.css */
+/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+a.navbar-brand[b-glnp8814t7] {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+a[b-glnp8814t7] {
+  color: #0077cc;
+}
+
+.btn-primary[b-glnp8814t7] {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.nav-pills .nav-link.active[b-glnp8814t7], .nav-pills .show > .nav-link[b-glnp8814t7] {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.border-top[b-glnp8814t7] {
+  border-top: 1px solid #e5e5e5;
+}
+.border-bottom[b-glnp8814t7] {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow[b-glnp8814t7] {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy[b-glnp8814t7] {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+.footer[b-glnp8814t7] {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}
+/* _content/WebSIMManager/Views/Shared/_AgentLayout.cshtml.rz.scp.css */
+/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+a.navbar-brand[b-p28c7gu0zw] {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+a[b-p28c7gu0zw] {
+  color: #0077cc;
+}
+
+.btn-primary[b-p28c7gu0zw] {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.nav-pills .nav-link.active[b-p28c7gu0zw], .nav-pills .show > .nav-link[b-p28c7gu0zw] {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.border-top[b-p28c7gu0zw] {
+  border-top: 1px solid #e5e5e5;
+}
+.border-bottom[b-p28c7gu0zw] {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow[b-p28c7gu0zw] {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy[b-p28c7gu0zw] {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+.footer[b-p28c7gu0zw] {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}
+/* _content/WebSIMManager/Views/Shared/_Layout.cshtml.rz.scp.css */
+/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+a.navbar-brand[b-0fss28apbz] {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+a[b-0fss28apbz] {
+  color: #0077cc;
+}
+
+.btn-primary[b-0fss28apbz] {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.nav-pills .nav-link.active[b-0fss28apbz], .nav-pills .show > .nav-link[b-0fss28apbz] {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.border-top[b-0fss28apbz] {
+  border-top: 1px solid #e5e5e5;
+}
+.border-bottom[b-0fss28apbz] {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow[b-0fss28apbz] {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy[b-0fss28apbz] {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+.footer[b-0fss28apbz] {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}

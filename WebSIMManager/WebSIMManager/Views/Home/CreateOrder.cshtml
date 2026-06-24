@@ -1,0 +1,198 @@
+﻿@model Models.ViewModels.SIMOrderModel
+@{
+    var IsMobile = ViewBag.IsMobile;
+    ViewData["Title"] = "Đặt Sim";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}@if (!IsMobile)
+{
+    <partial name="_SearchSIM" />
+    <h2 class="text-center">
+        <strong>
+            @ViewBag.SimInfo.SIMType - @ViewBag.SimInfo.SIMNumber
+        </strong>
+    </h2>
+    <div class="block">
+        <form class=" block-body" method="post" asp-action="CreateOrder" asp-controller="Home">
+            <div class="container sidebar">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div>
+                            <div class="row">
+                                <label class="col-md-4 pt-2">Số sim:</label>
+                                <span class="col-md-8 simso">@ViewBag.SimInfo.SIMNumber</span>
+                            </div>
+                            <div class="row">
+                                <label class="col-md-4">Giá bán:</label>
+                                <strong class="col-md-8">@ViewBag.SimInfo.SIMPrice ₫</strong>
+                            </div>
+                            <div class="row">
+                                <label class="col-md-4">Loại sim:</label>
+                                <span class="col-md-8">@ViewBag.SimInfo.SIMType</span>
+                            </div>
+                            <div class="row">
+                                <label class="col-md-4">Nhà mạng:</label>
+                                <span class="col-md-8">@ViewBag.SimInfo.SIMNetwork</span>
+                            </div>
+                            <div class="row">
+                                <label class="col-md-4">Mô tả:</label>
+                                <strong class="col-md-8">@ViewBag.SimInfo.Remark</strong>
+                            </div>
+                            <div class="row">
+                                <label class="col-md-4 pt-1">Trạng thái:</label>
+                                <strong class="col-md-8 simstatus">@ViewBag.SimInfo.SIMStatus</strong>
+                            </div>
+                            <span style="font-style: italic;font-size: 13px;">- Giao sim miễn phí trên toàn quốc !</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="block-head">Đặt mua Sim</div>
+            <div id="frm-order" style=" background: #cfe6d0; border: 1px solid #ccc; padding: 10px;" data-gtm-vis-has-fired1352901_310="1">
+                @* <div class="mb-3">
+                    <label class="form-label required">Điện thoại liên hệ:</label>
+                    <input type="text" asp-for="PhoneNum" class="form-control" placeholder="Nhập số điện thoại">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label required">Họ tên:</label>
+                    <input type="text" asp-for="Name" class="form-control" placeholder="Nhập họ và tên">
+                </div> *@
+                <div class="mb-3">
+                    <label class="form-label required">Địa chỉ liên hệ:</label>
+                    <input type="text" asp-for="Address" class="form-control" placeholder="Nhập địa chỉ">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Yêu cầu thêm:</label>
+                    <input type="text" asp-for="Note" class="form-control" placeholder="Nhập địa chỉ">
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="text-center p-3">
+                    @{
+                        if (@ViewBag.SimInfo.SIMStatus == "Sẵn sàng")
+                        {
+                            <button class="btn btn-danger" type="submit" asp-action="CreateOrder" asp-controller="Home" asp-route-SIMId="@ViewBag.SimInfo.Id">Đặt Sim</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-danger" type="submit" asp-action="CreateOrder" asp-controller="Home" asp-route-SIMId="@ViewBag.SimInfo.Id" disabled>Đặt Sim</button>
+                        }
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="sidebar mt-4">
+        <div style=" padding:10px; ">
+            <strong>Hướng dẫn cách thức mua sim @ViewBag.SimInfo.SIMNumber :</strong>
+            <br> ▪ Cách 1: Sim Thăng Long giao sim và thu tiền tận nhà miễn phí (áp dụng Hà Nội, Tp.HCM và các tỉnh/thành có đại lý)
+            <br> ▪ Cách 2: Quý khách đến cửa hàng tại Hà Nội hoặc Tp.HCM ( <a asp-action="Contact" asp-controller="Home" style="color: blue !important;">Xem địa chỉ cửa hàng tại đây</a>)
+            <br> ▪ Cách 3: Đặt cọc và thanh toán tiền còn lại khi nhận sim (áp dụng tại các tỉnh không có đại lý): Quý khách đảm bảo việc mua hàng bằng cách đặt cọc tối thiểu 10% giá trị sim qua chuyển khoản hoặc mã thẻ cào ( <a asp-action="Payment" asp-controller="Home" style="color: blue !important;">Xem danh sách tài khoản ngân hàng tại đây</a>). Chúng tôi sẽ gửi bưu điện phát sim đến tay quý khách và thu tiền còn lại
+            <em>(Hệ thống bưu điện trên cả nước đều cung cấp dịch vụ thu hộ tiền cho người bán - gọi tắt là COD. Theo đó, bưu điện sẽ giao hàng (sim) đến tận tay quý khách và thu tiền cho chúng tôi)</em>
+            <br>
+            <br>
+            <em>
+                Chúc quý khách gặp nhiều may mắn khi sở hữu thuê bao <strong>@ViewBag.SimInfo.SIMNumber</strong>
+            </em>
+        </div>
+    </div>
+}
+else
+{
+    <h2 class="text-center">
+        <strong>
+            @ViewBag.SimInfo.SIMType - @ViewBag.SimInfo.SIMNumber
+        </strong>
+    </h2>
+    <div class="block mt-15 p-2">
+        <form class=" block-body" method="post" asp-action="CreateOrder" asp-controller="Home">
+            <div id="frm-order" style=" border: 1px solid #ccc; padding: 10px;">
+                <div class="row">
+                    <div class="border-3">
+                        <div class="row">
+                            <label class="col-5" style="text-align: right;padding-top: 5px;">Số sim:</label>
+                            <span class="col-7 simso">@Html.Raw(ViewBag.SimInfo.SIMNumber)</span>
+                        </div>
+                        <div class="row">
+                            <label class="col-5" style="text-align: right;">Giá bán:</label>
+                            <strong class="col-7">@ViewBag.SimInfo.SIMPrice ₫</strong>
+                        </div>
+                        <div class="row">
+                            <label class="col-5" style="text-align: right;">Loại sim:</label>
+                            <span class="col-7">@ViewBag.SimInfo.SIMType</span>
+                        </div>
+                        <div class="row">
+                            <label class="col-5" style="text-align: right;">Nhà mạng:</label>
+                            <span class="col-7">@ViewBag.SimInfo.SIMNetwork</span>
+                        </div>
+                        <div class="row">
+                            <label class="col-5" style="text-align: right;">Mô tả:</label>
+                            <strong class="col-7">@ViewBag.SimInfo.Remark</strong>
+                        </div>
+                        <div class="row">
+                            <label class="col-5 pt-1" style="text-align: right;">Trạng thái:</label>
+                            <strong class="col-7 simstatus">@ViewBag.SimInfo.SIMStatus</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-2">
+                <h3 class="detail_form_title">Đặt mua sim <br><span>- Miễn phí giao sim toàn quốc<br>- Nhận sim kiểm tra xong mới phải trả tiền</span></h3>
+            </div>
+            <div>
+                <div class="mb-3">
+                    <input type="text" asp-for="Address" class="form-control" placeholder="Địa chỉ giao sim">
+                </div>
+                <div class="mb-3">
+                    <input type="text" asp-for="Note" class="form-control" placeholder="Yêu cầu khác">
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="text-center">
+                    @{
+                        if (@ViewBag.SimInfo.SIMStatus == "Sẵn sàng")
+                        {
+                            <button class="detail_form_submit" type="submit" asp-action="CreateOrder" asp-controller="Home" asp-route-SIMId="@ViewBag.SimInfo.Id">
+                                Đặt Sim
+                                <span>
+                                    Nhân viên giao dịch sẽ gọi lại sau ít phút
+                                </span>
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-danger" type="submit" asp-action="CreateOrder" asp-controller="Home" asp-route-SIMId="@ViewBag.SimInfo.Id" disabled>Đặt Sim</button>
+                        }
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="p-3">
+        <div class="process">
+            <div class="process_item">
+                <div class="process_item_num">1</div>
+                <p>Đặt mua</p>
+            </div>
+            <div class="process_item">
+                <div class="process_item_num">2</div>
+                <p>Gửi thông tin</p>
+            </div>
+            <div class="process_item">
+                <div class="process_item_num">3</div>
+                <p>ĐK chính chủ</p>
+            </div>
+            <div class="process_item">
+                <div class="process_item_num">4</div>
+                <p>Giao sim</p>
+            </div>
+        </div>
+        <div class="helper">
+            <h4 class="helper_title">Thủ tục đăng ký chính chủ sim:</h4>
+            <p>- Ảnh Chứng minh thư hoặc Căn cước công dân hoặc Hộ chiếu của chủ thuê bao.</p>
+            <p>- Ảnh chân dung chủ thuê bao tại thời điểm giao dịch.</p>
+            <p>
+                <i>Quý khách vui lòng chuẩn bị trước để cung cấp cho nhân viên giao dịch khi mua sim.</i>
+            </p>
+        </div>
+    </div>
+}

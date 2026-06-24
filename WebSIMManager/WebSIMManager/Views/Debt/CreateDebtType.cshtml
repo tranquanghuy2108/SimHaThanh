@@ -1,0 +1,54 @@
+﻿@using Models.ViewModels
+@model DebtTypeModel
+@{
+    ViewData["Title"] = "Thêm mới loại công nợ phát sinh";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Thêm mới loại công nợ phát sinh</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <form method="post">
+                        @*  @Html.HiddenFor(x=>x.Id) *@
+                        <div class="form-group">
+                            <label class="form-label required">Mã loại phiếu</label>
+                            <input type="text" class="form-control col-md-6" asp-for="Code" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Tên loại phiếu</label>
+                            <input type="text" class="form-control col-md-6" asp-for="Name" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Hình thức phát sinh</label>
+                            <div class="col-12 p-0">
+                                <select asp-for="DebtReceiveType" asp-items="@ViewBag.DebtReceiveTypes" type="text" data-live-search="true">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" rows="2" placeholder="Mô tả" asp-for="Description"></textarea>
+                        </div>
+
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                        <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="CreateDebtType" asp-controller="Debt" width="100px">Thêm mới</button>
+                        <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="DebtType" asp-controller="Debt" width="100px">Trở về</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $('#DebtCollapse').removeClass("collapsed");
+        $('#debt').addClass("show");
+        $('#debtType').addClass("active");
+    });
+</script>

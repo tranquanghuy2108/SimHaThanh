@@ -1,0 +1,177 @@
+﻿@{
+    ViewData["Title"] = "Báo cáo tiền tồn trong ngân hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Báo cáo tiền tồn trong ngân hàng</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+@*                     <div class="col-3">
+                        <label class="form-label">Tìm kiếm</label>
+                        <input id="keyword" type="hidden" class="form-control">
+                    </div> *@
+                    <input id="keyword" type="hidden" class="form-control">
+                    <div class="col-3">
+                        <label class="form-label">Từ ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="startDate" type="date" class="form-control" placeholder="Nhập ngày bắt đầu" />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Đến ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="endDate" type="date" class="form-control" placeholder="Nhập ngày kết thúc" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-12 row">
+                    <div class="col-4">
+                        <button class="btn btn-primary" onclick="filterReport(1)">Tìm kiếm</button>
+                        <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Ngân hàng</th>
+                        <th>Tên tài khoản</th>
+                        <th>Số tài khoản</th>
+                        <th>Tổng tiền đã duyệt</th>
+                        <th>Tiền chưa duyệt</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#DebtCollapse').removeClass("collapsed");
+        $('#debt').addClass("show");
+        $('#bankFundBalanceLst').addClass("active");
+    });
+</script>
+
+<script type="text/javascript">
+    window.onload = filterReport(1);
+    var lstOrder = [];
+    function filterReport(page) {
+        Onloading();
+        var keyword = $('#keyword').val();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (startDate === '') {
+            startDate = null;
+        }
+        if (endDate === '') {
+            endDate = null;
+        }
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 50, "keyword": keyword, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("SearchBankBalance", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+
+                console.log(data.data);
+                data.data.forEach((el) => {
+                    var action = '';
+                    action += '<a class="m-1" href="@Url.Action("BankFundBalanceDetail", "Debt")?id=' + el.id + '&debtType=4" title="Chi tiết công nợ"><i class="fa fa-eye"></i></a>';
+                    newBody += '<tr>'
+                        + '<td>' + el.bankName + '</td>'
+                        + '<td>' + el.accountName + '</td>'
+                        + '<td>' + el.accountNumber + '</td>'
+                        + '<td>' + formatCurrency(el.approvedTotalAmount) + '</td>'
+                        + '<td>' + formatCurrency(el.waitingApprovedTotalAmount) + '</td>'
+                        + '<td class="table-action" >' + action + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+    function exportReport() {
+        Onloading();
+        var keyword = $('#keyword').val(); 
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (startDate === '') {
+            startDate = null;
+        }
+        if (endDate === '') {
+            endDate = null;
+        }
+        var data = { "isPaged": true, "pageIndex": 1, "pageSize": 50, "keyword": keyword, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("ExportBankBalance", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao tien ton trong ngan hang.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+</script>

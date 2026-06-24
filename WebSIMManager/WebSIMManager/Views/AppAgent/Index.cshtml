@@ -1,0 +1,131 @@
+﻿@model Models.Requests.SearchSIMOfAgentOnAppRequest
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Kho SIM đại lý";
+    Layout = "~/Views/Shared/_AgentLayout.cshtml";
+}
+<input id="uRoles" type="hidden" value="@string.Join(", ", role)" />
+<h1>Danh sách Sim</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <form>
+                    <div class="form-group col-12 row">
+                        <div class="col-4">
+                            <label class="form-label">Số điện thoại</label>
+                            <input asp-for="keyword" type="text" class="form-control">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label">Trạng thái</label>
+                            <div class="col-12 p-0">
+                                <select asp-for="simOnAppStatus" asp-items="@ViewBag.SimsOnAppStatus" data-live-search="true">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <button class="btn btn-primary">Tìm kiếm</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card p-3">
+                <div class="col-12 rows">
+                    <a class="btn btn-primary" asp-action="Create" asp-controller="AppAgent">Tạo mới SIM</a>
+                    <a class="btn btn-success mx-4" asp-action="ImportCSV" asp-controller="AppAgent">Import SIM</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Số sim</th>
+                        <th>Seria</th>
+                        <th>Sim số đẹp</th>
+                        <th>Nhà mạng</th>
+                        <th>Giá bán lẻ</th>
+                        <th>Giá thu về</th>
+                        <th>Ghi chú</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        if (@ViewBag.DataView != null)
+                        {
+                            foreach (var item in @ViewBag.DataView)
+                            {
+                                <tr>
+                                    <td>@item.SIMNumber</td>
+                                    <td>@item.SIMSeriaNumber</td>
+                                    <td>@item.SIMType</td>
+                                    <td>@item.Network</td>
+                                    <td>@item.SIMPrice</td>
+                                    <td>@item.SIMPriceOfAgent</td>
+                                    <td>@item.Description</td>
+                                    <td>@item.Status</td>
+                                    <td class="table-action">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" title="Sửa đấu giá"><i class="align-middle" data-feather="edit-2"></i></a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                    @if (ViewBag.Pager.TotalPages > 0)
+                    {
+                        @if (ViewBag.Pager.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-pageIndex="1"
+                                   asp-route-keyword="@ViewBag.Pager.Key.keyword">
+                                    Trang đầu
+                                </a>
+                            </li>
+                        }
+                        @for (var pge = ViewBag.Pager.StartPage; pge <= ViewBag.Pager.EndPage; pge++)
+                        {
+                            <li class="page-item @(pge == ViewBag.Pager.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-pageIndex="@pge"
+                                   asp-route-pageIndex="@ViewBag.Pager.TotalPages"
+                                   asp-route-keyword="@ViewBag.Pager.Key.keyword">@pge</a>
+                            </li>
+                        }
+                        @if (ViewBag.Pager.CurrentPage < ViewBag.Pager.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-pageIndex="@ViewBag.Pager.TotalPages"
+                                   asp-route-keyword="@ViewBag.Pager.Key.keyword">
+                                    Trang cuối
+                                </a>
+                            </li>
+                        }
+                    }
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#mySim').addClass("active");
+    });
+</script>

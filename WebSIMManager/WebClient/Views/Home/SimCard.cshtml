@@ -1,0 +1,393 @@
+﻿@using Commons.Enums;
+@model Models.Requests.GetSIMRequest
+@{
+    ViewData["Title"] = "Trang chủ";
+    var IsMobile = ViewBag.IsMobile;
+}
+<div class="block mt-15">
+    <div class="block-head">SIM SỐ ĐẸP</div>
+    <div class="block-body p-3">
+        <div class="sim-table--body col-12 px-0">
+            <div class="sim-table--wrap">
+                @if (@ViewBag.SimSoDep.Count > 0)
+                {
+                    <div class="row">
+                        @foreach (var item in @ViewBag.SimSoDep)
+                        {
+                            <div class="col-6 col-xl-4 pl-0">
+                                <div class="container sim-item sim-hot">
+                                    <a onclick="AddSimToCart(@item.Id, '@item.SIMNumber', @item.SIMPrice);">
+                                        <div class="row">
+                                            <div class="col-4" style="max-width: 55px;">
+                                                @if (item.Network.ToLower().Contains("viettel"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-vietel.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("vina"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("mobi"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-mobi.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("vietnamobile"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("gmobile"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-gmobile.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("itel"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-itel.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("reddi"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-reddi.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="sim-item--number">@Html.Raw(item.SIMNumber)</span><br>
+                                                <span class="sim-item--price">@item.SIMPrice.ToString("#,##0")đ</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-12 p-3 m3 text-center">
+                        <a class="btn btn-warning" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.sosim" asp-route-slug="0*">Xem thêm ...</a>
+                    </div>
+                }
+                else
+                {
+                    <h4>Không tìm thấy sản phẩm nào.</h4>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="block mt-15">
+    <div class="block-head">SIM KHUYẾN MÃI</div>
+    <div class="block-body p-3">
+        <div class="sim-table--body col-12 px-0">
+            <div class="sim-table--wrap">
+                @if (@ViewBag.SimKhuyenMai.Count > 0)
+                {
+                    <div class="row">
+                        @foreach (var item in @ViewBag.SimKhuyenMai)
+                        {
+                            <div class="col-6 col-xl-4 pl-0">
+                                <div class="container sim-item sim-hot">
+                                    <a href="javascript:void(0)"
+                                        onclick="AddSimToCart(@item.Id, '@item.SIMNumber', @item.SIMPrice)">
+                                        <div class="row">
+                                            <div class="col-4" style="max-width: 55px;">
+                                                @if (item.Network.ToLower().Contains("viettel"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-vietel.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("vina"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("mobi"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-mobi.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("vietnamobile"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("gmobile"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-gmobile.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("itel"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-itel.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else if (item.Network.ToLower().Contains("reddi"))
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-reddi.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                                else
+                                                {
+                                                    <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                }
+                                            </div>
+                                            <div class="col-8" style="max-width: 130px;">
+                                                <p>
+                                                    <span class="sim-item--number">@Html.Raw(item.SIMNumber)</span><br>
+                                                    <span class="sim-item--price">@item.SIMPrice.ToString("#,##0") đ</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-12 p-3 m3 text-center">
+                        <a class="btn btn-warning" asp-action="Search" asp-controller="Home" asp-route-searchType="@SearchType.sosim" asp-route-slug="0*">Xem thêm ...</a>
+                    </div>
+                }
+                else
+                {
+                    <h4>Không tìm thấy sản phẩm nào.</h4>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* @if (@ViewBag.SimTraGop.Count > 0)
+{
+    <div class="block mt-15">
+        <div class="block-head">SIM TRẢ GÓP</div>
+        <div class="block-body p-3">
+            <div class="sim-table--body col-12 px-0">
+                <div class="sim-table--wrap">
+                    @if (@ViewBag.SimTraGop.Count > 0)
+                    {
+                        <div class="row">
+                            @foreach (var item in @ViewBag.SimTraGop)
+                            {
+
+                                <div class="col-6 col-xl-4 pl-0">
+                                    <div class="container sim-item sim-hot">
+                                        <a asp-controller="Home" asp-action="CreateOrder" asp-route-id="@item.Id">
+                                            <div class="row">
+                                                <div style="max-width: 55px;">
+                                                    @if (item.Network.ToLower().Contains("viettel"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-vietel.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.Network.ToLower().Contains("vina"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.Network.ToLower().Contains("mobi"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-mobi.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.Network.ToLower().Contains("vietnamobile"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.Network.ToLower().Contains("gmobile"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-gmobile.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.Network.ToLower().Contains("itel"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-itel.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else if (item.Network.ToLower().Contains("reddi"))
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-reddi.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <img class="lazy" src="~/assets/img/network/sim-vina.png" style="width: 50px;height: auto;padding-top: 5px;" />
+                                                    }
+                                                </div>
+                                                <div style="max-width: 130px;">
+                                                    <p>
+                                                        <span class="sim-item--number">@Html.Raw(item.SIMNumber)</span>
+                                                        <span class="sim-item--price">@item.SIMPrice.ToString("#,##0") đ</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-12 p-3 m3 text-center">
+                            <a class="btn btn-warning"
+                               asp-action="Search"
+                               asp-route-pageIndex="1"
+                               asp-route-searchType="@SearchType.SimType"
+                               asp-route-keyword="simtragop">Xem thêm ...</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <h4>Không tìm thấy sản phẩm nào.</h4>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+} *@
+
+<script>
+    window.onload = function () {
+        var menuTop = document.getElementById("sim-so-dep");
+        menuTop.classList.add("active");
+    };
+    function SearchSIMOnHome() {
+        var simNumber = $("#simNumber").val();
+        if (!ValidateUSPhoneNumber(simNumber)) {
+            alert('Số bạn nhập chưa đúng');
+            return;
+        }
+        var dateOfBirth = $("#dateOfBirth").val();
+        var monthOfBirth = $("#monthOfBirth").val();
+        var yearOfBirth = $("#yearOfBirth").val();
+        var hourOfBirth = $("#giosinh").val();
+        var gioitinh = $("#gioitinh").val();
+        var dataReq = {
+            "simNumber": simNumber.replaceAll(".", ""),
+            "yearOfBirth": yearOfBirth,
+            "monthOfBirth": monthOfBirth,
+            "dateOfBirth": dateOfBirth,
+            "hourOfBirth": hourOfBirth,
+            "minuteOfBirth": 0,
+            "isMale": gioitinh,
+        }
+        $.ajax({
+            url: '@Url.Action("XemDiemSim", "Home")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(dataReq),
+            xhrFields: {
+                withCredentials: true // Gửi kèm cookie (nếu bạn đang dùng cookie auth)
+            },
+            success: function (data) {
+                if (data != undefined) {
+                    var fengshuiAbout = document.getElementById("fengshui-about");
+                    fengshuiAbout.classList.add("hidden");
+                    var fengshuiResult = document.getElementById("fengshui-result");
+                    fengshuiResult.classList.remove("hidden");
+                    //
+                    var congiap = document.getElementById("congiap");
+                    switch (true) {
+                        case data.menhchu.canChi.includes("Tý"):
+                            congiap.src = 'congiap/ti.png';
+                            break;
+                        case data.menhchu.canChi.includes("Sửu"):
+                            congiap.src = 'congiap/suu.png';
+                            break;
+                        case data.menhchu.canChi.includes("Dần"):
+                            congiap.src = 'congiap/dan.png';
+                            break;
+                        case data.menhchu.canChi.includes("Mão"):
+                            congiap.src = 'congiap/mao.png';
+                            break;
+                        case data.menhchu.canChi.includes("Thìn"):
+                            congiap.src = 'congiap/thin.png';
+                            break;
+                        case data.menhchu.canChi.includes("Tỵ"):
+                            congiap.src = 'congiap/ty.png';
+                            break;
+                        case data.menhchu.canChi.includes("Ngọ"):
+                            congiap.src = 'congiap/ngo.png';
+                            break;
+                        case data.menhchu.canChi.includes("Mùi"):
+                            congiap.src = 'congiap/mui.png';
+                            break;
+                        case data.menhchu.canChi.includes("Thân"):
+                            congiap.src = 'congiap/than.png';
+                            break;
+                        case data.menhchu.canChi.includes("Dậu"):
+                            congiap.src = 'congiap/dau.png';
+                            break;
+                        case data.menhchu.canChi.includes("Tuất"):
+                            congiap.src = 'congiap/tuat.png';
+                            break;
+                        default:
+                            congiap.src = 'congiap/hoi.png';
+                            break;
+                    }
+                    //
+                    $("#sosim").text(simNumber);
+                    //Mệnh chủ
+                    $("#thanchu").text('Sinh ngày ' + data.birthDay + ' (' + data.lunarBirthDay + ' Âm lịch)');
+                    $("#canchi").text(data.menhchu.canChi);
+                    $("#menhsinh").text(data.menhchu.cungSinh1 + ' - ' + data.menhchu.cungSinh2);
+                    $("#nguhanh").text(data.menhchu.nguHanh);
+                    $("#cungphi").text(data.menhchu.cungPhi1 + ' - ' + data.menhchu.cungPhi2);
+                    $("#congiap").text(data.menhchu.conGiap);
+
+                    //Âm dương tương phối
+                    var tbody = $("#tablept tbody")
+                    tbody.children().remove();
+                    var simNum = "'<tr>'";
+                    data.nguHanhSim.numberOfSim.forEach((el) => {
+                        simNum += '<td class="text-center">' + el + '</td>';
+                    });
+                    simNum += '</tr>';
+                    tbody.append(simNum);
+
+                    var amDuong = "'<tr>'";
+                    data.amDuongTuongPhoi.amDuongTuongPhoi.forEach((el) => {
+                        amDuong += '<td class="text-center">' + el + '</td>';
+                    });
+                    amDuong += '</tr>';
+                    tbody.append(amDuong);
+
+                    $("#soam").text(data.amDuongTuongPhoi.soAmAmount);
+                    $("#soduong").text(data.amDuongTuongPhoi.soDuongAmount);
+                    $("#vanSo").text(data.amDuongTuongPhoi.vanSo);
+                    $("#namsinh").text(data.menhchu.namSinh + ' - ' + data.amDuongTuongPhoi.menhAmDuong);
+
+                    //Ngũ hành sim
+                    $("#nguhanhmenh").text(data.menhchu.nguHanh);
+                    $("#nguhanhsim").text(data.nguHanhSim.nguHanhSim);
+                    $("#nguhanhsimtuongsinh").text(data.nguHanhSim.simSinhKhac);
+
+                    var tbody5hanh = $("#nguhanhsimtbl tbody")
+                    tbody5hanh.children().remove();
+                    var simNum = "'<tr>'";
+                    data.nguHanhSim.numberOfSim.forEach((el) => {
+                        simNum += '<td class="text-center">' + el + '</td>';
+                    });
+                    simNum += '</tr>';
+                    tbody5hanh.append(simNum);
+
+                    var nguHanh = "'<tr>'";
+                    data.nguHanhSim.nguHanhOfnumber.forEach((el) => {
+                        nguHanh += '<td class="text-center">' + el + '</td>';
+                    });
+                    nguHanh += '</tr>';
+                    tbody5hanh.append(nguHanh);
+
+                    var nguHanhSK = "'<tr>'";
+                    data.nguHanhSim.nguHanhSinhKhac.forEach((el) => {
+                        nguHanhSK += '<td class="text-center" colspan="2">' + el + '</td>';
+                    });
+                    nguHanhSK += '</tr>';
+                    tbody5hanh.append(nguHanhSK);
+                    //Tong nut
+                    $("#queSo").text(data.queBatQuai.queChu.queSo + ' | ' + data.queBatQuai.queChu.queName);
+                    // $("#tuongQue").text(data.queBatQuai.queChu.tuongQue);
+                    $("#loiKinh").text(data.queBatQuai.queChu.loiKinh);
+                    $("#dichAm").text(data.queBatQuai.queChu.dichAm);
+                    $("#dichNghia").text(data.queBatQuai.queChu.dichNghia);
+                    $("#giaiNghia").text(data.queBatQuai.queChu.giaiNghia);
+                    $("#loaiQue").text(data.queBatQuai.queChu.loaiQue);
+                    $("#totChoViec").text(data.queBatQuai.queChu.totChoViec);
+
+                    //Tong nut
+                    $("#soNut").text(data.quanNiemDanGian.soNut);
+                    //Tong diem
+                    $("#tongdiem").text(data.quanNiemDanGian.point + data.queBatQuai.point + data.pointCuuTinhDo + data.nguHanhSim.point + data.amDuongTuongPhoi.point);
+
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    }
+</script>

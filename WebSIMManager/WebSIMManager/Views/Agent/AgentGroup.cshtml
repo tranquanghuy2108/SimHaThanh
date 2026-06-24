@@ -1,0 +1,115 @@
+﻿@using Commons.Enums;
+@model Models.Requests.GetPagingRequest
+@{
+    ViewData["Title"] = "Nhóm đại lý";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Quản lý nhóm đại lý</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card">
+                <div class="row">
+                    <div class="col-sm-6 text-left">
+                        <a class="btn btn-primary m-3" asp-action="AgentGroupCreate" asp-controller="Agent">Thêm nhóm đại lý</a>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <form class="form-inline d-none d-sm-inline-block m-3">
+                            <div class="input-group input-group-navbar">
+                                <input type="text" asp-for="keyword" class="form-control" placeholder="Tên nhóm đại lý..." aria-label="Search">
+                                <div class="input-group-append">
+                                    <button class="btn" type="submit" asp-action="AgentGroup" asp-controller="Agent">
+                                        <i class="align-middle" data-feather="search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body px-3">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:12%">Mã nhóm</th>
+                        <th style="width:18%">Tên nhóm</th>
+                        <th style="width:25%">Chiết khấu(%)</th>
+                        <th style="width:35%">Ghi chú</th>
+                        <th style="width:10%">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        foreach (var item in @ViewBag.DataView)
+                        {
+                            <tr>
+                                <td>@item.Code</td>
+                                <td>@item.Name</td>
+                                <td>
+                                    @foreach (var discount in item.discount)
+                                    {
+                                        @(discount.PriceFrom + " - " + discount.PriceTo + " : " + discount.DiscountPer + "%") <br/>
+                                    }
+                                </td>
+                                <td>@item.Description</td>
+                                <td class="table-action">
+                                    <a asp-action="AgentGroupEdit" asp-route-id="@item.Id"><i class="fa fa-edit"></i></a>
+                                    <a asp-action="AgentGroupDelete" asp-route-id="@item.Id"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                    @if (ViewBag.Pager.TotalPages > 0)
+                    {
+                        @if (ViewBag.Pager.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="AgentGroup"
+                                   asp-route-pageIndex="1"
+                                   asp-route-keyword="@ViewBag.Pager.Key.keyword">
+                                    Trang đầu
+                                </a>
+                            </li>
+                        }
+                        @for (var pge = ViewBag.Pager.StartPage; pge <= ViewBag.Pager.EndPage; pge++)
+                        {
+                            <li class="page-item @(pge == ViewBag.Pager.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   asp-action="AgentGroup"
+                                   asp-route-pageIndex="@pge"
+                                   asp-route-pageIndex="@ViewBag.Pager.TotalPages"
+                                   asp-route-keyword="@ViewBag.Pager.Key.keyword">@pge</a>
+                            </li>
+                        }
+                        @if (ViewBag.Pager.CurrentPage < ViewBag.Pager.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="AgentGroup"
+                                   asp-route-pageIndex="@ViewBag.Pager.TotalPages"
+                                   asp-route-keyword="@ViewBag.Pager.Key.keyword">
+                                    Trang cuối
+                                </a>
+                            </li>
+                        }
+                    }
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#AgentCollapse').removeClass("collapsed");
+        $('#agent').addClass("show");
+        $('#AgentGroupLst').addClass("active");
+    });
+</script>

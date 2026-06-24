@@ -1,0 +1,177 @@
+﻿@using Models.ViewModels
+@model MaterialModel
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Quản lý mặt hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Quản lý mặt hàng</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post" onsubmit="Onloading();">
+                <div class="row  col-md-8">
+                    <div class="form-group col-md-4">
+                        <label class="form-label required">Mã mặt hàng</label>
+                        <input type="text" class="form-control" placeholder="" asp-for="Code">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label class="form-label required">Tên mặt hàng</label>
+                        <input type="text" class="form-control" placeholder="" asp-for="Name">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label class="form-label required">Giá</label>
+                        <input type="number" class="form-control" placeholder="" asp-for="Price">
+                    </div>
+                    <div class="form-group col-4">
+                        <label class="form-label">Nhà mạng</label>
+                        <div class="">
+                            <select type="text" class="form-control col-12" asp-for="NetworkId" asp-items="@ViewBag.Networks" data-live-search="true" data-actions-box="true"></select>
+                        </div>
+                    </div>
+                    <div class="form-group col-4">
+                        <label class="form-label">Loại mặt hàng</label>
+                        <div class="">
+                            <select type="text" class="form-control col-12" asp-for="MaterialTypeId" asp-items="@ViewBag.MaterialTypes" data-live-search="true" data-actions-box="true"></select>
+                        </div>
+                    </div>
+                    <div class="form-group col-4">
+                        <label class="form-label">Nhóm mặt hàng</label>
+                        <div class="">
+                            <select type="text" class="form-control col-12" asp-for="MaterialGroupId" asp-items="@ViewBag.MaterialGroups" data-live-search="true" data-actions-box="true"></select>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label class="form-label">Mô tả</label>
+                        <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                    </div>
+                </div>
+                <div class="row col-md-8">
+                    <div class="form-group col-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" asp-for="UsingSeria">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Nhập kèm seria
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group col-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" asp-for="IsSimEmbryo">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Là sim trắng
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group col-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" asp-for="IsActive">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Đang hoạt động
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="CreateMaterial" asp-controller="Warehouse" width="100px">Thêm mới mặt hàng</button>
+
+                @if (role.Contains("Tạo loại mặt hàng"))
+                {
+                    <a class="btn btn-success m-3 btn-default" asp-action="CreateMaterialType" asp-controller="Warehouse" width="100px">Quản lý loại mặt hàng</a>
+                }
+                @if (role.Contains("Tạo nhóm mặt hàng"))
+                {
+                    <a class="btn btn-warning m-3 btn-default" asp-action="CreateMaterialGroup" asp-controller="Warehouse" width="100px">Quản lý nhóm mặt hàng</a>
+                }
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width:3%;">#</th>
+                        <th style="width:10%">Mã mặt hàng</th>
+                        <th style="width:10%">Tên mặt hàng</th>
+                        <th style="width:6%">Giá bán</th>
+                        <th style="width:10%">Nhà mạng</th>
+                        <th style="width:10%">Loại mặt hàng</th>
+                        <th style="width:10%">Nhóm mặt hàng</th>
+                        <th style="width:15%">Mô tả</th>
+                        <th style="width:5%">Nhập/Xuất seria</th>
+                        <th style="width:5%">Sim trắng</th>
+                        <th style="width:5%">Đang hoạt động</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int idx = 0;
+                        foreach (var item in @ViewBag.DataTable)
+                        {
+                            idx++;
+                            <tr>
+                                <td>@idx</td>
+                                <td>@item.Code</td>
+                                <td>@item.Name</td>
+                                <td>@item.Price</td>
+                                <td>@item.Network</td>
+                                <td>@item.MaterialType</td>
+                                <td>@item.MaterialGroup</td>
+                                <td>@item.Description</td>
+                                <td>
+                                    <div class="form-group col-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input mt-1" type="checkbox" checked="@item.UsingSeria" disabled>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="form-group col-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" checked="@item.IsSimEmbryo" disabled>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="form-group col-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" checked="@item.IsActive" disabled>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="table-action">
+                                    @if (role.Contains("Sửa mặt hàng"))
+                                    {
+                                        <a asp-action="EditMaterial" asp-route-id="@item.Id"><i class="align-middle" data-feather="edit-2"></i></a>
+                                    }
+                                    @if (role.Contains("Xóa mặt hàng"))
+                                    {
+                                        <a asp-action="DeleteMaterial" asp-route-id="@item.Id"><i class="align-middle" data-feather="trash"></i></a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#WarehouseCollapse').removeClass("collapsed");
+        $('#warehouse').addClass("show");
+        $('#materialLst').addClass("active");
+    });
+</script>

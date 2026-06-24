@@ -1,0 +1,859 @@
+{
+  "dataNamSinhPT": [
+    {
+      "NamSinh": 1924,
+      "CanChi": "Giáp Tý",
+      "ConGiap": "Ốc Thượng Chi Thử – Chuột ở nóc nhà",
+      "CungSinh1": "Hải Trung Kim",
+      "CungSinh2": "Vàng trong biển",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1925,
+      "CanChi": "Ất Sửu",
+      "ConGiap": "Hải Nội Chi Ngưu – Trâu trong biển",
+      "CungSinh1": "Hải Trung Kim",
+      "CungSinh2": "Vàng trong biển",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 1926,
+      "CanChi": "Bính Dần",
+      "ConGiap": "Sơn Lâm Chi Hổ – Hổ trong rừng",
+      "CungSinh1": "Lư Trung Hỏa",
+      "CungSinh2": "Lửa trong lò",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 1927,
+      "CanChi": "Đinh Mão",
+      "ConGiap": "Vọng Nguyệt Chi Thố – Thỏ ngắm trăng",
+      "CungSinh1": "Lư Trung Hỏa",
+      "CungSinh2": "Lửa trong lò",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1928,
+      "CanChi": "Mậu Thìn",
+      "ConGiap": "Thanh Ôn Chi Long – Rồng trong sạch, ôn hoà",
+      "CungSinh1": "Đại Lâm Mộc",
+      "CungSinh2": "Gỗ rừng già",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Kim"
+    },
+    {
+      "NamSinh": 1929,
+      "CanChi": "Kỷ Tỵ",
+      "ConGiap": "Phúc Khí Chi Xà – Rắn có phúc",
+      "CungSinh1": "Đại Lâm Mộc",
+      "CungSinh2": "Gỗ rừng già",
+      "CungPhi1": "Cấn Thổ",
+      "CungPhi2": "Đoài Kim"
+    },
+    {
+      "NamSinh": 1930,
+      "CanChi": "Canh Ngọ",
+      "ConGiap": "Thất Lý Chi Mã – Ngựa trong nhà",
+      "CungSinh1": "Lộ Bàng Thổ",
+      "CungSinh2": "Đất bên đường",
+      "CungPhi1": "Đoài Kim",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 1931,
+      "CanChi": "Tân Mùi",
+      "ConGiap": "Đắc Lộc Chi Dương – Dê có lộc",
+      "CungSinh1": "Lộ Bàng Thổ",
+      "CungSinh2": "Đất bên đường",
+      "CungPhi1": "Càn Kim",
+      "CungPhi2": "Ly Hoả"
+    },
+    {
+      "NamSinh": 1932,
+      "CanChi": "Nhâm Thân",
+      "ConGiap": "Thanh Tú Chi Hầu – Khỉ thanh tú",
+      "CungSinh1": "Kiếm Phong Kim",
+      "CungSinh2": "Vàng chuôi kiếm",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Khảm Thuỷ"
+    },
+    {
+      "NamSinh": 1933,
+      "CanChi": "Quý Dậu",
+      "ConGiap": "Lâu Túc Kê – Gà nhà gác",
+      "CungSinh1": "Kiếm Phong Kim",
+      "CungSinh2": "Vàng chuôi kiếm",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1934,
+      "CanChi": "Giáp Tuất",
+      "ConGiap": "Thủ Thân Chi Cẩu – Chó giữ mình",
+      "CungSinh1": "Sơn Đầu Hỏa",
+      "CungSinh2": "Lửa trên núi",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 1935,
+      "CanChi": "Ất Hợi",
+      "ConGiap": "Quá Vãng Chi Trư – Lợn hay đi",
+      "CungSinh1": "Sơn Đầu Hỏa",
+      "CungSinh2": "Lửa trên núi",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 1936,
+      "CanChi": "Bính Tý",
+      "ConGiap": "Điền Nội Chi Thử – Chuột trong ruộng",
+      "CungSinh1": "Giản Hạ Thủy",
+      "CungSinh2": "Nước khe suối",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1937,
+      "CanChi": "Đinh Sửu",
+      "ConGiap": "Hồ Nội Chi Ngưu – Trâu trong hồ nước",
+      "CungSinh1": "Giản Hạ Thủy",
+      "CungSinh2": "Nước khe suối",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Kim"
+    },
+    {
+      "NamSinh": 1938,
+      "CanChi": "Mậu Dần",
+      "ConGiap": "Quá Sơn Chi Hổ – Hổ qua rừng",
+      "CungSinh1": "Thành Đầu Thổ",
+      "CungSinh2": "Đất đắp thành",
+      "CungPhi1": "Cấn Thổ",
+      "CungPhi2": "Đoài Kim"
+    },
+    {
+      "NamSinh": 1939,
+      "CanChi": "Kỷ Mão",
+      "ConGiap": "Sơn Lâm Chi Thố – Thỏ ở rừng",
+      "CungSinh1": "Thành Đầu Thổ",
+      "CungSinh2": "Đất đắp thành",
+      "CungPhi1": "Đoài Kim",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 1940,
+      "CanChi": "Canh Thìn",
+      "ConGiap": "Thứ Tính Chi Long – Rồng khoan dung",
+      "CungSinh1": "Bạch Lạp Kim",
+      "CungSinh2": "Vàng sáp ong",
+      "CungPhi1": "Càn Kim",
+      "CungPhi2": "Ly Hoả"
+    },
+    {
+      "NamSinh": 1941,
+      "CanChi": "Tân Tỵ",
+      "ConGiap": "Đông Tàng Chi Xà – Rắn ngủ đông",
+      "CungSinh1": "Bạch Lạp Kim",
+      "CungSinh2": "Vàng sáp ong",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Khảm Thuỷ"
+    },
+    {
+      "NamSinh": 1942,
+      "CanChi": "Nhâm Ngọ",
+      "ConGiap": "Quân Trung Chi Mã – Ngựa chiến",
+      "CungSinh1": "Dương Liễu Mộc",
+      "CungSinh2": "Gỗ cây dương",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1943,
+      "CanChi": "Quý Mùi",
+      "ConGiap": "Quần Nội Chi Dương – Dê trong đàn",
+      "CungSinh1": "Dương Liễu Mộc",
+      "CungSinh2": "Gỗ cây dương",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 1944,
+      "CanChi": "Giáp Thân",
+      "ConGiap": "Quá Thụ Chi Hầu – Khỉ leo cây",
+      "CungSinh1": "Tuyền Trung Thủy",
+      "CungSinh2": "Nước trong suối",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 1945,
+      "CanChi": "Ất Dậu",
+      "ConGiap": "Xướng Ngọ Chi Kê – Gà gáy trưa",
+      "CungSinh1": "Tuyền Trung Thủy",
+      "CungSinh2": "Nước trong suối",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1946,
+      "CanChi": "Bính Tuất",
+      "ConGiap": "Tự Miên Chi Cẩu – Chó đang ngủ",
+      "CungSinh1": "Ốc Thượng Thổ",
+      "CungSinh2": "Đất nóc nhà",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Kim"
+    },
+    {
+      "NamSinh": 1947,
+      "CanChi": "Đinh Hợi",
+      "ConGiap": "Quá Sơn Chi Trư – Lợn qua núi",
+      "CungSinh1": "Ốc Thượng Thổ",
+      "CungSinh2": "Đất nóc nhà",
+      "CungPhi1": "Cấn Thổ",
+      "CungPhi2": "Đoài Kim"
+    },
+    {
+      "NamSinh": 1948,
+      "CanChi": "Mậu Tý",
+      "ConGiap": "Thương Nội Chi Trư – Chuột trong kho",
+      "CungSinh1": "Thích Lịch Hỏa",
+      "CungSinh2": "Lửa sấm sét",
+      "CungPhi1": "Đoài Kim",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 1949,
+      "CanChi": "Kỷ Sửu",
+      "ConGiap": "Lâm Nội Chi Ngưu – Trâu trong chuồng",
+      "CungSinh1": "Thích Lịch Hỏa",
+      "CungSinh2": "Lửa sấm sét",
+      "CungPhi1": "Càn Kim",
+      "CungPhi2": "Ly Hoả"
+    },
+    {
+      "NamSinh": 1950,
+      "CanChi": "Canh Dần",
+      "ConGiap": "Xuất Sơn Chi Hổ – Hổ xuống núi",
+      "CungSinh1": "Tùng Bách Mộc",
+      "CungSinh2": "Gỗ tùng bách",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Khảm Thuỷ"
+    },
+    {
+      "NamSinh": 1951,
+      "CanChi": "Tân Mão",
+      "ConGiap": "Ẩn Huyệt Chi Thố – Thỏ trong hang",
+      "CungSinh1": "Tùng Bách Mộc",
+      "CungSinh2": "Gỗ tùng bách",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1952,
+      "CanChi": "Nhâm Thìn",
+      "ConGiap": "Hành Vũ Chi Long – Rồng phun mưa",
+      "CungSinh1": "Trường Lưu Thủy",
+      "CungSinh2": "Nước chảy mạnh",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 1953,
+      "CanChi": "Quý Tỵ",
+      "ConGiap": "Thảo Trung Chi Xà – Rắn trong cỏ",
+      "CungSinh1": "Trường Lưu Thủy",
+      "CungSinh2": "Nước chảy mạnh",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 1954,
+      "CanChi": "Giáp Ngọ",
+      "ConGiap": "Vân Trung Chi Mã – Ngựa trong mây",
+      "CungSinh1": "Sa Trung Kim",
+      "CungSinh2": "Vàng trong cát",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1955,
+      "CanChi": "Ất Mùi",
+      "ConGiap": "Kính Trọng Chi Dương – Dê được quý mến",
+      "CungSinh1": "Sa Trung Kim",
+      "CungSinh2": "Vàng trong cát",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Kim"
+    },
+    {
+      "NamSinh": 1956,
+      "CanChi": "Bính Thân",
+      "ConGiap": "Sơn Thượng Chi Hầu – Khỉ trên núi",
+      "CungSinh1": "Sơn Hạ Hỏa",
+      "CungSinh2": "Lửa trên núi",
+      "CungPhi1": "Cấn Thổ",
+      "CungPhi2": "Đoài Kim"
+    },
+    {
+      "NamSinh": 1957,
+      "CanChi": "Đinh Dậu",
+      "ConGiap": "Độc Lập Chi Kê – Gà độc thân",
+      "CungSinh1": "Sơn Hạ Hỏa",
+      "CungSinh2": "Lửa trên núi",
+      "CungPhi1": "Đoài Kim",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 1958,
+      "CanChi": "Mậu Tuất",
+      "ConGiap": "Tiến Sơn Chi Cẩu – Chó vào núi",
+      "CungSinh1": "Bình Địa Mộc",
+      "CungSinh2": "Gỗ đồng bằng",
+      "CungPhi1": "Càn Kim",
+      "CungPhi2": "Ly Hoả"
+    },
+    {
+      "NamSinh": 1959,
+      "CanChi": "Kỷ Hợi",
+      "ConGiap": "Đạo Viện Chi Trư – Lợn trong tu viện",
+      "CungSinh1": "Bình Địa Mộc",
+      "CungSinh2": "Gỗ đồng bằng",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Khảm Thuỷ"
+    },
+    {
+      "NamSinh": 1960,
+      "CanChi": "Canh Tý",
+      "ConGiap": "Lương Thượng Chi Thử – Chuột trên xà",
+      "CungSinh1": "Bích Thượng Thổ",
+      "CungSinh2": "Đất tò vò",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1961,
+      "CanChi": "Tân Sửu",
+      "ConGiap": "Lộ Đồ Chi Ngưu – Trâu trên đường",
+      "CungSinh1": "Bích Thượng Thổ",
+      "CungSinh2": "Đất tò vò",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 1962,
+      "CanChi": "Nhâm Dần",
+      "ConGiap": "Quá Lâm Chi Hổ – Hổ qua rừng",
+      "CungSinh1": "Kim Bạch Kim",
+      "CungSinh2": "Vàng pha bạc",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 1963,
+      "CanChi": "Quý Mão",
+      "ConGiap": "Quá Lâm Chi Thố – Thỏ qua rừng",
+      "CungSinh1": "Kim Bạch Kim",
+      "CungSinh2": "Vàng pha bạc",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1964,
+      "CanChi": "Giáp Thìn",
+      "ConGiap": "Phục Đầm Chi Lâm – Rồng ẩn ở đầm",
+      "CungSinh1": "Phú Đăng Hỏa",
+      "CungSinh2": "Lửa đèn to",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Kim"
+    },
+    {
+      "NamSinh": 1965,
+      "CanChi": "Ất Tỵ",
+      "ConGiap": "Xuất Huyệt Chi Xà – Rắn rời hang",
+      "CungSinh1": "Phú Đăng Hỏa",
+      "CungSinh2": "Lửa đèn to",
+      "CungPhi1": "Cấn Thổ",
+      "CungPhi2": "Đoài Kim"
+    },
+    {
+      "NamSinh": 1966,
+      "CanChi": "Bính Ngọ",
+      "ConGiap": "Hành Lộ Chi Mã – Ngựa chạy trên đường",
+      "CungSinh1": "Thiên Hà Thủy",
+      "CungSinh2": "Nước trên trời",
+      "CungPhi1": "Đoài Kim",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 1967,
+      "CanChi": "Đinh Mùi",
+      "ConGiap": "Thất Quần Chi Dương – Dê lạc đàn",
+      "CungSinh1": "Thiên Hà Thủy",
+      "CungSinh2": "Nước trên trời",
+      "CungPhi1": "Càn Kim",
+      "CungPhi2": "Ly Hoả"
+    },
+    {
+      "NamSinh": 1968,
+      "CanChi": "Mậu Thân",
+      "ConGiap": "Độc Lập Chi Hầu – Khỉ độc thân",
+      "CungSinh1": "Đại Trạch Thổ",
+      "CungSinh2": "Đất nền nhà",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Khảm Thuỷ"
+    },
+    {
+      "NamSinh": 1969,
+      "CanChi": "Kỷ Dậu",
+      "ConGiap": "Báo Hiệu Chi Kê – Gà gáy",
+      "CungSinh1": "Đại Trạch Thổ",
+      "CungSinh2": "Đất nền nhà",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1970,
+      "CanChi": "Canh Tuất",
+      "ConGiap": "Tự Quan Chi Cẩu – Chó nhà chùa",
+      "CungSinh1": "Thoa Xuyến Kim",
+      "CungSinh2": "Vàng trang sức",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 1971,
+      "CanChi": "Tân Hợi",
+      "ConGiap": "Khuyên Dưỡng Chi Trư – Lợn nuôi nhốt",
+      "CungSinh1": "Thoa Xuyến Kim",
+      "CungSinh2": "Vàng trang sức",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 1972,
+      "CanChi": "Nhâm Tý",
+      "ConGiap": "Sơn Thượng Chi Thử – Chuột trên núi",
+      "CungSinh1": "Tang Đố Mộc",
+      "CungSinh2": "Gỗ cây dâu",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1973,
+      "CanChi": "Quý Sửu",
+      "ConGiap": "Lan Ngoại Chi Ngưu – Trâu ngoài chuồng",
+      "CungSinh1": "Tang Đố Mộc",
+      "CungSinh2": "Gỗ cây dâu",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Kim"
+    },
+    {
+      "NamSinh": 1974,
+      "CanChi": "Giáp Dần",
+      "ConGiap": "Lập Định Chi Hổ – Hổ tự lập",
+      "CungSinh1": "Đại Khe Thủy",
+      "CungSinh2": "Nước khe lớn",
+      "CungPhi1": "Cấn Thổ",
+      "CungPhi2": "Đoài Kim"
+    },
+    {
+      "NamSinh": 1975,
+      "CanChi": "Ất Mão",
+      "ConGiap": "Đắc Đạo Chi Thố – Thỏ đắc đạo",
+      "CungSinh1": "Đại Khe Thủy",
+      "CungSinh2": "Nước khe lớn",
+      "CungPhi1": "Đoài Kim",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 1976,
+      "CanChi": "Bính Thìn",
+      "ConGiap": "Thiên Thượng Chi Long – Rồng trên trời",
+      "CungSinh1": "Sa Trung Thổ",
+      "CungSinh2": "Đất pha cát",
+      "CungPhi1": "Càn Kim",
+      "CungPhi2": "Ly Hoả"
+    },
+    {
+      "NamSinh": 1977,
+      "CanChi": "Đinh Tỵ",
+      "ConGiap": "Đầm Nội Chi Xà – Rắn trong đầm",
+      "CungSinh1": "Sa Trung Thổ",
+      "CungSinh2": "Đất pha cát",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Khảm Thuỷ"
+    },
+    {
+      "NamSinh": 1978,
+      "CanChi": "Mậu Ngọ",
+      "ConGiap": "Cứu Nội Chi Mã – Ngựa trong chuồng",
+      "CungSinh1": "Thiên Thượng Hỏa",
+      "CungSinh2": "Lửa trên trời",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1979,
+      "CanChi": "Kỷ Mùi",
+      "ConGiap": "Thảo Dã Chi Dương – Dê đồng cỏ",
+      "CungSinh1": "Thiên Thượng Hỏa",
+      "CungSinh2": "Lửa trên trời",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 1980,
+      "CanChi": "Canh Thân",
+      "ConGiap": "Thực Quả Chi Hầu – Khỉ ăn hoa quả",
+      "CungSinh1": "Thạch Lựu Mộc",
+      "CungSinh2": "Gỗ cây lựu đá",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 1981,
+      "CanChi": "Tân Dậu",
+      "ConGiap": "Long Tàng Chi Kê – Gà trong lồng",
+      "CungSinh1": "Thạch Lựu Mộc",
+      "CungSinh2": "Gỗ cây lựu đá",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1982,
+      "CanChi": "Nhâm Tuất",
+      "ConGiap": "Cố Gia Chi Khuyển – Chó về nhà",
+      "CungSinh1": "Đại Hải Thủy",
+      "CungSinh2": "Nước biển lớn",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Kim"
+    },
+    {
+      "NamSinh": 1983,
+      "CanChi": "Quý Hợi",
+      "ConGiap": "Lâm Hạ Chi Trư – Lợn trong rừng",
+      "CungSinh1": "Đại Hải Thủy",
+      "CungSinh2": "Nước biển lớn",
+      "CungPhi1": "Cấn Thổ",
+      "CungPhi2": "Đoài Kim"
+    },
+    {
+      "NamSinh": 1984,
+      "CanChi": "Giáp Tý",
+      "ConGiap": "Ốc Thượng Chi Thử – Chuột ở nóc nhà",
+      "CungSinh1": "Hải Trung Kim",
+      "CungSinh2": "Vàng trong biển",
+      "CungPhi1": "Đoài Kim",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 1985,
+      "CanChi": "Ất Sửu",
+      "ConGiap": "Hải Nội Chi Ngưu – Trâu trong biển",
+      "CungSinh1": "Hải Trung Kim",
+      "CungSinh2": "Vàng trong biển",
+      "CungPhi1": "Càn Kim",
+      "CungPhi2": "Ly Hoả"
+    },
+    {
+      "NamSinh": 1986,
+      "CanChi": "Bính Dần",
+      "ConGiap": "Sơn Lâm Chi Hổ – Hổ trong rừng",
+      "CungSinh1": "Lư Trung Hỏa",
+      "CungSinh2": "Lửa trong lò",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Khảm Thuỷ"
+    },
+    {
+      "NamSinh": 1987,
+      "CanChi": "Đinh Mão",
+      "ConGiap": "Vọng Nguyệt Chi Thố – Thỏ ngắm trăng",
+      "CungSinh1": "Lư Trung Hỏa",
+      "CungSinh2": "Lửa trong lò",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1988,
+      "CanChi": "Mậu Thìn",
+      "ConGiap": "Thanh Ôn Chi Long – Rồng trong sạch, ôn hoà",
+      "CungSinh1": "Đại Lâm Mộc",
+      "CungSinh2": "Gỗ rừng già",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 1989,
+      "CanChi": "Kỷ Tỵ",
+      "ConGiap": "Phúc Khí Chi Xà – Rắn có phúc",
+      "CungSinh1": "Đại Lâm Mộc",
+      "CungSinh2": "Gỗ rừng già",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 1990,
+      "CanChi": "Canh Ngọ",
+      "ConGiap": "Thất Lý Chi Mã – Ngựa trong nhà",
+      "CungSinh1": "Lộ Bàng Thổ",
+      "CungSinh2": "Đất đường đi",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 1991,
+      "CanChi": "Tân Mùi",
+      "ConGiap": "Đắc Lộc Chi Dương – Dê có lộc",
+      "CungSinh1": "Lộ Bàng Thổ",
+      "CungSinh2": "Đất đường đi",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Kim"
+    },
+    {
+      "NamSinh": 1992,
+      "CanChi": "Nhâm Thân",
+      "ConGiap": "Thanh Tú Chi Hầu – Khỉ thanh tú",
+      "CungSinh1": "Kiếm Phong Kim",
+      "CungSinh2": "Vàng mũi kiếm",
+      "CungPhi1": "Cấn Thổ",
+      "CungPhi2": "Đoài Kim"
+    },
+    {
+      "NamSinh": 1993,
+      "CanChi": "Quý Dậu",
+      "ConGiap": "Lâu Túc Kê – Gà nhà gác",
+      "CungSinh1": "Kiếm Phong Kim",
+      "CungSinh2": "Vàng mũi kiếm",
+      "CungPhi1": "Đoài Kim",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 1994,
+      "CanChi": "Giáp Tuất",
+      "ConGiap": "Thủ Thân Chi Cẩu – Chó giữ mình",
+      "CungSinh1": "Sơn Đầu Hỏa",
+      "CungSinh2": "Lửa trên núi",
+      "CungPhi1": "Càn Kim",
+      "CungPhi2": "Ly Hoả"
+    },
+    {
+      "NamSinh": 1995,
+      "CanChi": "Ất Hợi",
+      "ConGiap": "Quá Vãng Chi Trư – Lợn hay đi",
+      "CungSinh1": "Sơn Đầu Hỏa",
+      "CungSinh2": "Lửa trên núi",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Khảm Thuỷ"
+    },
+    {
+      "NamSinh": 1996,
+      "CanChi": "Bính Tý",
+      "ConGiap": "Điền Nội Chi Thử – Chuột trong ruộng",
+      "CungSinh1": "Giảm Hạ Thủy",
+      "CungSinh2": "Nước cuối nguồn",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 1997,
+      "CanChi": "Đinh Sửu",
+      "ConGiap": "Hồ Nội Chi Ngưu – Trâu trong hồ nước",
+      "CungSinh1": "Giảm Hạ Thủy",
+      "CungSinh2": "Nước cuối nguồn",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 1998,
+      "CanChi": "Mậu Dần",
+      "ConGiap": "Quá Sơn Chi Hổ – Hổ qua rừng",
+      "CungSinh1": "Thành Đầu Thổ",
+      "CungSinh2": "Đất trên thành",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 1999,
+      "CanChi": "Kỷ Mão",
+      "ConGiap": "Sơn Lâm Chi Thố – Thỏ ở rừng",
+      "CungSinh1": "Thành Đầu Thổ",
+      "CungSinh2": "Đất trên thành",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 2000,
+      "CanChi": "Canh Thìn",
+      "ConGiap": "Thứ Tính Chi Long – Rồng khoan dung",
+      "CungSinh1": "Bạch Lạp Kim",
+      "CungSinh2": "Vàng chân đèn",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Kim"
+    },
+    {
+      "NamSinh": 2001,
+      "CanChi": "Tân Tỵ",
+      "ConGiap": "Đông Tàng Chi Xà – Rắn ngủ đông",
+      "CungSinh1": "Bạch Lạp Kim",
+      "CungSinh2": "Vàng chân đèn",
+      "CungPhi1": "Cấn Thổ",
+      "CungPhi2": "Đoài Kim"
+    },
+    {
+      "NamSinh": 2002,
+      "CanChi": "Nhâm Ngọ",
+      "ConGiap": "Quân Trung Chi Mã – Ngựa chiến",
+      "CungSinh1": "Dương Liễu Mộc",
+      "CungSinh2": "Gỗ cây dương",
+      "CungPhi1": "Đoài Kim",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 2003,
+      "CanChi": "Quý Mùi",
+      "ConGiap": "Quần Nội Chi Dương – Dê trong đàn",
+      "CungSinh1": "Dương Liễu Mộc",
+      "CungSinh2": "Gỗ cây dương",
+      "CungPhi1": "Càn Kim",
+      "CungPhi2": "Ly Hoả"
+    },
+    {
+      "NamSinh": 2004,
+      "CanChi": "Giáp Thân",
+      "ConGiap": "Quá Thụ Chi Hầu – Khỉ leo cây",
+      "CungSinh1": "Tuyền Trung Thủy",
+      "CungSinh2": "Nước trong suối",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Khảm Thuỷ"
+    },
+    {
+      "NamSinh": 2005,
+      "CanChi": "Ất Dậu",
+      "ConGiap": "Xướng Ngọ Chi Kê – Gà gáy trưa",
+      "CungSinh1": "Tuyền Trung Thủy",
+      "CungSinh2": "Nước trong suối",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 2006,
+      "CanChi": "Bính Tuất",
+      "ConGiap": "Tự Miên Chi Cẩu – Chó đang ngủ",
+      "CungSinh1": "Ốc Thượng Thổ",
+      "CungSinh2": "Đất nóc nhà",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 2007,
+      "CanChi": "Đinh Hợi",
+      "ConGiap": "Quá Sơn Chi Trư – Lợn qua núi",
+      "CungSinh1": "Ốc Thượng Thổ",
+      "CungSinh2": "Đất nóc nhà",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 2008,
+      "CanChi": "Mậu Tý",
+      "ConGiap": "Thương Nội Chi Thư – Chuột trong kho",
+      "CungSinh1": "Thích Lịch Hỏa",
+      "CungSinh2": "Lửa sấm sét",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 2009,
+      "CanChi": "Kỷ Sửu",
+      "ConGiap": "Lâm Nội Chi Ngưu – Trâu trong chuồng",
+      "CungSinh1": "Thích Lịch Hỏa",
+      "CungSinh2": "Lửa sấm sét",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Kim"
+    },
+    {
+      "NamSinh": 2010,
+      "CanChi": "Canh Dần",
+      "ConGiap": "Xuất Sơn Chi Hổ – Hổ xuống núi",
+      "CungSinh1": "Tùng Bách Mộc",
+      "CungSinh2": "Gỗ tùng bách",
+      "CungPhi1": "Cấn Thổ",
+      "CungPhi2": "Đoài Kim"
+    },
+    {
+      "NamSinh": 2011,
+      "CanChi": "Tân Mão",
+      "ConGiap": "Ẩn Huyệt Chi Thố – Thỏ",
+      "CungSinh1": "Tùng Bách Mộc",
+      "CungSinh2": "Gỗ tùng bách",
+      "CungPhi1": "Đoài Kim",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 2012,
+      "CanChi": "Nhâm Thìn",
+      "ConGiap": "Hành Vũ Chi Long – Rồng phun mưa",
+      "CungSinh1": "Trường Lưu Thủy",
+      "CungSinh2": "Nước chảy mạnh",
+      "CungPhi1": "Càn Kim",
+      "CungPhi2": "Ly Hoả"
+    },
+    {
+      "NamSinh": 2013,
+      "CanChi": "Quý Tỵ",
+      "ConGiap": "Thảo Trung Chi Xà – Rắn trong cỏ",
+      "CungSinh1": "Trường Lưu Thủy",
+      "CungSinh2": "Nước chảy mạnh",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Khảm Thuỷ"
+    },
+    {
+      "NamSinh": 2014,
+      "CanChi": "Giáp Ngọ",
+      "ConGiap": "Vân Trung Chi Mã – Ngựa trong mây",
+      "CungSinh1": "Sa Trung Kim",
+      "CungSinh2": "Vàng trong cát",
+      "CungPhi1": "Tốn Mộc",
+      "CungPhi2": "Khôn Thổ"
+    },
+    {
+      "NamSinh": 2015,
+      "CanChi": "Ất Mùi",
+      "ConGiap": "Kính Trọng Chi Dương – Dê được quý mến",
+      "CungSinh1": "Sa Trung Kim",
+      "CungSinh2": "Vàng trong cát",
+      "CungPhi1": "Chấn Mộc",
+      "CungPhi2": "Chấn Mộc"
+    },
+    {
+      "NamSinh": 2016,
+      "CanChi": "Bính Thân",
+      "ConGiap": "Sơn Thượng Chi Hầu – Khỉ trên núi",
+      "CungSinh1": "Sơn Hạ Hỏa",
+      "CungSinh2": "Lửa trên núi",
+      "CungPhi1": "Khôn Thổ",
+      "CungPhi2": "Tốn Mộc"
+    },
+    {
+      "NamSinh": 2017,
+      "CanChi": "Đinh Dậu",
+      "ConGiap": "Độc Lập Chi Kê – Gà độc thân",
+      "CungSinh1": "Sơn Hạ Hỏa",
+      "CungSinh2": "Lửa trên núi",
+      "CungPhi1": "Khảm Thuỷ",
+      "CungPhi2": "Cấn Thổ"
+    },
+    {
+      "NamSinh": 2018,
+      "CanChi": "Mậu Tuất",
+      "ConGiap": "Tiến Sơn Chi Cẩu – Chó vào núi",
+      "CungSinh1": "Bình Địa Mộc",
+      "CungSinh2": "Gỗ đồng bằng",
+      "CungPhi1": "Ly Hoả",
+      "CungPhi2": "Càn Ki"
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+﻿@{
+    ViewData["Title"] = "FengShui";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div>
+    <div class="block-head">SIM phong thủy</div>
+</div>
+
+<div class="sidebar " style="background:#182f33; color:white;">
+    <div class="sidebar-item px-5">
+        <form class="px-5">
+            <div class="mb-3">
+                <label for="exampleInputEmail1" class="form-label">Giờ sinh</label>
+                <select style="width:100%;" class="form-select pr-3" name="giosinh" id="giosinh">
+                    <option selected="selected" value="1">Tý (23-12h)</option>
+                    <option value="2">Sửu (1h-3h)</option>
+                    <option value="3">Dần (3h-5h)</option>
+                    <option value="4">Mão (5h-7h)</option>
+                    <option value="5">Thìn (7h-9h)</option>
+                    <option value="6">Tỵ (9h-11h)</option>
+                    <option value="7">Ngọ (11h-13h)</option>
+                    <option value="8">Mùi (13h-15h)</option>
+                    <option value="9">Thân (15h-17h)</option>
+                    <option value="10">Dậu (17h-19h)</option>
+                    <option value="11">Tuất (19h-21h)</option>
+                    <option value="12">Hợi (21h-23h)</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputEmail1" class="form-label">Ngày tháng năm sinh</label>
+                <input type="date" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label for="exampleInputEmail1" class="form-label">Giới tính</label>
+                <select style="width:100%;" class="form-select pr-3" name="giosinh" id="giosinh">
+                    <option selected="selected" value="1">Nam</option>
+                    <option value="0">Nữ</option>
+                </select>
+            </div>
+
+            <div class="mt-5 position-relative text-center">
+                <button type="submit" class="btn btn-danger" width="300px">Tìm sim hợp tuổi</button>
+            </div>
+        </form>
+    </div><!-- End sidebar search formn-->
+</div>
+<div>
+    <div class="result_pt" style="position: relative;">
+        <div class="list_suggest">
+            <table id="customers"></table>
+            <table class="tblsim-res2" width="100%" border="0" cellpadding="2" cellspacing="1" bgcolor="#CCCCCC"></table>
+        </div>
+        <p>
+            <strong>Chọn sim phong thủy</strong> hợp với bản mệnh là mối quan tâm của rất nhiều người hiện nay. Trong bài viết này, <strong>Sim Thăng Long</strong> xin giới thiệu tới các bạn công cụ <strong>tìm sim hợp tuổi</strong> và đánh giá của chúng tôi về các phương pháp tra cứu sim phong thủy hiện nay.
+        </p>
+        <h2 style="font-weight: 600; font-size:20px">
+            <strong>1, Giới thiệu về sim phong thủy</strong>
+        </h2>
+        <p>Sim phong thủy được hiểu là sim số điện thoại mang trong mình trường năng lượng mạnh mẽ có ảnh hưởng, tác động đến với chủ nhân của số sim đó. Cơ sở lý luận của phong thủy sim dựa trên giờ, ngày, tháng, năm sinh (Tứ Trụ), ngũ hành kết hợp với dịch học cổ Phương Đông.</p>
+        <p>Do dựa vào tứ trụ của mỗi người nên bản mệnh chỉ hợp với một nhóm số điện thoại nhất định. Sim phong thủy là một vật phẩm đang ngày càng được nhiều người quan tâm trong thời đại ngày nay.</p>
+        <h2 style="font-weight: 600; font-size:20px">
+            <strong>2, Các phương pháp tìm sim phong thủy phổ biến hiện nay</strong>
+        </h2>
+        <p>
+            Việc tra cứu, <a asp-action="FengShui" asp-controller="Home">
+                <strong>xem phong thủy sim</strong>
+            </a> liệu có hợp với bản mệnh của một người hay không là rất phức tạp. Nó đòi hỏi người luận phải có nhiều kiến thức, biết kết hợp và sử dụng các nguyên lý, phương pháp luận với nhau để đưa ra kết luận chính xác. Dưới đây là tổng hợp của Sim Thăng Long về một số quan điểm tra cứu sim phong thủy được sử dụng phổ biến hiện nay.
+        </p>
+        <h3>
+            <strong>2.1, Chọn sim dựa theo mệnh cục của người dùng</strong>
+        </h3>
+        <p>Mỗi người đều có một bản mệnh riêng đại diện cho tính cách đặc trưng của người đó tương ứng với 5 hành của bản mệnh gồm Kim, Mộc, Thủy, Hỏa, Thổ. Các chuyên gia phong thủy sẽ căn cứ vào mệnh cục của người đó cường vượng mệnh nào, nhược khắc mệnh ra sao, hỷ thần và dụng thần của họ là gì để từ đó lựa chọn ra số sim phong thủy phù hợp.</p>
+        <h3>
+            <strong>2.2, Tra cứu sim theo âm dương tương phối</strong>
+        </h3>
+        <p>Trong phong thủy, mọi thứ đều hướng tới sự cân bằng giữa âm và dương. Phong thủy sim cũng tương tự như vậy. Một số sim hợp phong thủy thì phải có sự cân bằng giữa âm và dương.</p>
+        <p>Trong dãy số điện thoại thì số chẵn sẽ mang thuộc tính m, số lẻ mang thuộc tính Dương. Khi chọn sim phong thủy thì mọi người sẽ có xu hướng cân bằng giữa âm và dương. Nếu quá lệch về m hay Dương cũng đều gây tác động không tốt xét về mặt phong thủy.</p>
+        <h3>
+            <strong>2.3, Tra cứu sim phong thủy dựa theo Quẻ Dịch Bát Quái</strong>
+        </h3>
+        <p>Trong bát quái có 8 quẻ đơn bao gồm: Càn, Khảm, Cấn, Chấn, Tốn, Ly, Khôn, Đoài. Từ 8 quẻ này kết hợp với nhau dựa trên nội quái và ngoại quái ta có 64 quẻ Kinh Dịch bao gồm quẻ Cát, quẻ Bình và quẻ Hung.</p>
+        <p>
+            Trong phong thủy sim thường quy ước 5 số đầu là quẻ ngoại quái (quẻ Thượng) và 5 số sau là quẻ nội quái (quẻ Hạ). Khi đó, mọi người sẽ có xu hướng chọn quẻ Cát hoặc ít nhất là quẻ Bình để mong mang lại nhiều vận tốt từ số điện thoại. 
+        </p>
+        <h3>
+            <strong>2.4, Chọn sim theo quan niệm dân gian</strong>
+        </h3>
+        <p>Chọn sim phong thủy bằng cách tính nút 4 số cuối, hay 6 số cuối là phương pháp được nhiều người áp dụng vì khá dễ trong việc tính toán. Tuy nhiên, theo các chuyên gia về phong thủy thì tính 4 số cuối không có giá trị trong việc tra cứu, lựa chọn sim phong thủy hợp mệnh vì:</p>
+        <ul>
+            <li>Sim điện thoại gồm 10 số mà nếu chỉ tính 4 hay 6 số đuôi điện thoại thì không đảm bảo được hết các biến số khác tác động vào.</li>
+            <li>Cách tính nút 4 và 6 số cuối chỉ là phương pháp dân gian lưu truyền lại chứ không dựa vào bất kỳ lý thuyết về phong thủy chính phái nào.</li>
+        </ul>
+        <p>Một vài cách tìm sim hợp phong thủy khác tương tự 4 số cuối có thể kể tới như: chọn sim theo 6 số cuối, lấy tổng 4 số chia 80, chọn sim lộc phát, sim thần tài… Đây đều là các phương pháp chọn số đẹp theo dân gian và không mang lại nhiều ý nghĩa về mặt phong thủy.</p>
+        <h2 style="font-weight: 600; font-size:20px">
+            <strong>3, Công cụ tìm sim phong thủy tại Sim Thăng Long</strong>
+        </h2>
+        <p>Như đã đề cập ở trên, việc lựa chọn sim hợp bản mệnh đòi hỏi có sự kết hợp của rất nhiều yếu tố. Nếu bạn là người không chuyên về phong thủy thì sẽ rất khó để nắm bắt và đánh giá chiếc sim điện thoại của mình có tốt không hay nên chọn số sim nào thì hợp phong thủy…</p>
+        <p>Hiểu được những nỗi niềm đó, Sim Thăng Long đã tổng hợp nên công cụ <strong>TÌM SIM PHONG THỦY</strong> để giúp quý anh chị giải quyết vấn đề trên. Công cụ được xây dựng dựa trên sự tư vấn, góp ý của các chuyên gia phong thủy.. </p>
+        <p>Nguyên lý của Tra cứu sim phong thủy đó là dựa vào 4 trụ giờ ngày tháng năm sinh và mối quan hệ sinh, trợ, khắc, tiết, hao, hợp hóa giữa các trụ để tính ra độ vượng, nhược của ngũ hành. Từ đó sẽ tổng hợp nên các số sim phong thủy phù hợp với ngũ hành của quý gia chủ.</p>
+        <blockquote class="wp-block-quote">
+            <p>
+                <em>=&gt; Lưu ý rằng các thông tin được tổng hợp dựa trên các con số đầu vào khô khan và cứng nhắc nên kết quả trả về có thể không chính xác 100% và mang tính chất tham khảo. Để hiểu hơn về mình và có cái nhìn toàn diện hơn bạn có thể liên hệ trực tiếp với các chuyên gia phong thủy của STL để được tư vấn đầy đủ nhất.</em>
+            </p>
+        </blockquote>
+        <h2 style="font-weight: 600; font-size:20px">
+            <strong>4, Chọn sim phong thủy liệu có hiệu quả hay không?</strong>
+        </h2>
+        <p>Quý gia chủ thân mến, hiện nay đang có 2 luồng ý kiến trái chiều về việc có nên tin dùng vào cái gọi là “Sim Phong thuỷ” hay ko?</p>
+        <p>Người dùng cảm thấy may mắn, có tín hiệu tốt, thấy tích cực, gia tăng năng lượng và thu hút tài lộc thì tin tưởng, cảm nhận sự thay đổi. Người thì cảm thấy tình trạng bản thân vẫn thế, thậm chí xấu đi thì coi đó là trò vô bổ và “làm tiền”…</p>
+        <p>Mặt khác, dưới sự đánh giá từ người dùng thực tế, kết quả kinh doanh tăng trưởng và đặc biệt là sự góp ý chân thành từ những Chuyên gia Phong thuỷ có tiếng trong việc chọn số cải vận cho người dùng. <strong>Sim Thăng Long</strong> có một vài nhận định như sau: </p>
+        <p>
+            <strong>Thứ nhất,</strong> chúng tôi tôn trọng học thuật về Phong thuỷ số và những nghiên cứu ứng dụng thực tế có hiệu quả để đưa ra công thức chấm điểm, đánh giá dãy số Sim theo học thuật Phong Thuỷ. Dựa trên những sự góp ý đánh giá chân thành từ những Chuyên gia có kinh nghiệm và kết quả kiểm chứng.
+        </p>
+        <p>
+            <strong>Thứ hai,</strong> Sim Thăng Long tôn trọng những phương pháp chấm điểm, luận Sim hiện tại trên thị trường. STL hiểu rằng mỗi phương pháp luận Sim đều có cơ sở biện chứng riêng và tính hiệu quả nói chung. Cơ sở chung ở đây là việc xét m Dương, Ngũ Hành và sử dụng Kinh Dịch để luận đoán sâu sắc nhất.
+        </p>
+        <p>
+            <strong>Thứ ba,</strong> Simthanglong quan niệm sâu sắc rằng: Sự cảm nhận tích cực, sự thay đổi mạnh mẽ của Khách Hàng và hiệu quả Kinh doanh bền vững, là tiêu chí hàng đầu để phát triển doanh nghiệp và vững vàng trên con đường đưa Sim Phong thuỷ tới người dùng trong hiện tại và tương lai.
+        </p>
+        <p>
+            <strong>Tóm lại,</strong> để có thể giải quyết vấn đề lựa chọn, ra quyết định sử dụng Sim Phong thuỷ hay không? hay chọn được cho mình một số Sim Phong thuỷ ưng ý, phục vụ bản thân, công việc hanh thông viên mãn.
+        </p>
+        <p>Chúng tôi có lời khuyên, Quý vị nên có sự tham khảo từ những chuyên gia uy tín. Đến với Sim Thăng Long, chúng tôi sẽ luôn hỗ trợ Quý vị từ công cụ và sẵn sàng kết nối để trao đổi cùng chuyên gia, để giúp bạn ra quyết định đúng và thoải mái thực sự.</p>
+        <p>STL mong rằng: Quý vị nên tin vào sự cảm nhận của chính mình! Hãy để sự tư vấn chia sẻ của chúng tôi là một sự <strong>THAM KHẢO</strong>, để đưa bạn tới gần hơn với những giá trị mà bản thân mình mong muốn! </p>
+        <p>Quý vị thân mến, ai trong chúng ta cũng đều nghĩ về hai chữ Số Phận. Việc hiểu về số phận và vượt lên, đứng trên Số phận là cách chúng ta bước tiếp, hoàn thiện và tận hưởng cuộc sống này.</p>
+        <p>Mong rằng Bình an và may mắn sẽ luôn đồng hành cùng Quý vị trong hiện tại và vị lai đầy hạnh phúc phía trước!</p>
+        <p>Xin chân thành Cảm ơn!</p>
+        <ul style="padding: 0 19px;text-align: justify;">
+            <li>Hơn 10 năm làm sim phong thủy- kho số với hơn 10 triệu sim phong thủy – cung cấp ra thị trường từ 200- 500 sim phong thủy mỗi ngày.</li>
+            <li>Thương hiệu uy tín trong tư vấn và lựa chọn sim phong thủy- đội ngũ chuyên gia giầu kinh nghiệm tâm huyết với nghề. </li>
+            <li>Công thức tối ưu mạch lạc- và cam kết chất lượng- sứ mệnh của chúng tôi là mang lại niềm vui và sự cân bằng tới bách gia trăm họ. </li>
+            <li>Ứng dụng có chọn lọc tinh hoa của kinh dịch + phong thủy đông phương. </li>
+            <li>Giúp cho hàng ngàn gia chủ chọn được sim phong thủy sở nguyện như ý, sở cầu tòng tâm. </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    window.onload = function () {
+        var itemNav = document.getElementById("phong-thuy");
+        itemNav.classList.add("active");
+    };
+</script>
+

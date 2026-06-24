@@ -1,0 +1,324 @@
+﻿@using Commons.Enums;
+@model Models.Requests.GetPagingRequest
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Danh sách đơn hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<input id="uRoles" type="hidden" value="@string.Join(", ", role)" />
+<h1>Danh sách đơn hàng</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">KH/Đại lý</label>
+                        <div class="col-12 p-0">
+                            <select id="agents" type="text" multiple="multiple" asp-items="@ViewBag.Agents" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterSIM(1)">Tìm kiếm</button>
+                </div>
+            </div>
+
+            <div class="card p-3">
+                <div class="col-12 rows">
+                    @if (role.Contains("Xuất sim"))
+                    {
+                        <a class="btn btn-primary" onclick="OnClickXuatSim(0);">Xuất sim</a>
+                    }
+                    @if (role.Contains("Hủy đơn hỏi mua"))
+                    {
+                        <a class="btn btn-danger mx-4" onclick="OnClickCancel(0);">Hủy order</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:2%">
+                            <input type="checkbox" value="" id="checkAll" onclick="OnClickCheckAll()">
+                            <input type="hidden" id="lstOrder">
+                        </th>
+                        <th style="width:8%">Ngày đặt</th>
+                        <th style="width:8%">Số điện thoại</th>
+                        <th style="width:8%">Loại sim</th>
+                        <th style="width:8%">Báo giá</th>
+                        <th style="width:8%">Giá bán</th>
+                        <th style="width:10%">Tên người đặt</th>
+                        <th style="width:8%">Sđt liên hệ</th>
+                        <th style="width:18%">Địa chỉ người đặt</th>
+                        <th style="width:10%">Hình thức thanh toán</th>
+                        <th style="width:10%">Người xử lý</th>
+                        <th style="width:5%">Trạng thái</th>
+                        <th style="width:5%">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#OrderCollapse').removeClass("collapsed");
+        $('#order').addClass("show");
+        $('#SIMOrder').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    window.onload = filterSIM(1);
+    var lstOrder = [];
+    function filterSIM(page) {
+        var agents = $('#agents').val();
+        var data = { "isMyOrder": false, "userId": "", "agents": agents, "pageIndex": page, "pageSize": 50 };
+        $.ajax({
+            url: '@Url.Action("SearchOrderNew","SIMOrder")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                data.data.forEach((el) => {
+
+                    var action = '';
+                    var role = $('#uRoles').val();
+                    if (role.includes("Sửa đơn hỏi mua"))
+                        action += '<a class="m-1" href="@Url.Action("Edit","SIMOrder")?id=' + el.id + '" title="Chỉnh sửa"><i class="fa fa-edit"></i></a>';
+                    if (role.includes("Xuất sim"))
+                        action += '<a class="m-1" onclick="OnClickXuatSim(' + el.id + ');" title="Xuất sim"><i class="fa fa-dollar"></i></a>';
+                    if (role.includes("Hủy đơn hỏi mua"))
+                        action += '<a class="m-1" onclick="OnClickCancel(' + el.id + ');" title="Hủy order"><i class="fa fa-times"></i></a>';
+                    newBody += '<tr>'
+                        + '<td><input type="checkbox" value="' + el.id + '" id="' + el.id + '" onclick="OnClickCheckBox(' + el.id + ')"></td>'
+                        + '<td>' + el.createTime + '</td>'
+                        + '<td>' + el.simNumber + '</td>'
+                        + '<td>' + el.productType + '</td>'
+                        + '<td>' + el.priceOfSim + '</td>'
+                        + '<td>' + el.priceOrder + '</td>'
+                        + '<td>' + el.name + '</td>'
+                        + '<td>' + el.phoneNum + '</td>'
+                        + '<td>' + el.address + '</td>'
+                        + '<td>' + el.payOrderType + '</td>'
+                        + '<td>' + el.pic + '</td>'
+                        + '<td>' + el.status + '</td>'
+                        + '<td class="table-action" >'
+                        + action
+                        + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                //write paging
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterSIM(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterSIM(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterSIM(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterSIM(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    };
+
+    function OnClickCheckAll() {
+        var chkVal = document.getElementById('checkAll');
+        if (chkVal.checked === true) {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            lstOrder = [];
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                lstOrder.push(orderId);
+                document.getElementById(orderId).checked = true;
+            })
+            console.log('result ' + lstOrder);
+        } else {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            $('tr td input').each(function () {
+                var orderId = parseInt($(this).val());
+                document.getElementById(orderId).checked = false;
+            })
+            lstOrder = [];
+            console.log('result ' + lstOrder);
+        }
+    }
+    function OnClickCheckBox(orderId) {
+        var chkVal = document.getElementById(orderId);
+        if (chkVal.checked === true) {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            lstOrder.push(orderId);
+            console.log('result ' + lstOrder);
+        } else {
+            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
+            const index = lstOrder.indexOf(orderId);
+            if (index > -1) {
+                lstOrder.splice(index, 1);
+            }
+            console.log('result ' + lstOrder);
+        }
+    }
+    function OnClickXuatSim(orderId) {
+        if (orderId == 0) {
+            if (lstOrder.length > 0) {
+                var dataReq = {
+                    "ids": lstOrder
+                }
+                $.ajax({
+                    url: '@Url.Action("CheckListOrderIsOneAgent","SIMOrder")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(dataReq),
+                    success: function (resp) {
+                        if (resp.data) {
+                            $.ajax({
+                                url: '@Url.Action("CheckListOrderIsAvalible","SIMOrder")',
+                                type: "POST",
+                                contentType: "application/json",
+                                data: JSON.stringify(dataReq),
+                                success: function (resp2) {
+                                    if (resp2.code == '1') {
+                                        window.location.href = '@Url.Action("XuatSim","SIMOrder")' + '?orderIds=' + resp2.data;
+                                    } else {
+                                        alert(resp2.message)
+                                    }
+                                },
+                                error: function (xhr) {
+                                    console.log(xhr);
+                                }
+                            });
+                        } else {
+                            alert('Bạn cần chọn cùng 1 KH/Đại lý mua sim.')
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                    }
+                });
+            } else {
+                alert('Bạn chưa chọn item');
+            }
+        }
+        else {
+            var orderIdsArr = [];
+            orderIdsArr.push(orderId);
+            var req = { "ids": orderIdsArr };
+            $.ajax({
+                url: '@Url.Action("CheckListOrderIsAvalible","SIMOrder")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(req),
+                success: function (resp2) {
+                    if (resp2.code == '1') {
+                        window.location.href = '@Url.Action("XuatSim","SIMOrder")' + '?orderIds=' + resp2.data;
+                    } else {
+                        alert(resp2.message)
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+    function OnClickCancel(orderId) {
+        if (orderId == 0) {
+            if (lstOrder.length > 0) {
+                var dataReq = {
+                    "ids": lstOrder
+                }
+                $.ajax({
+                    url: '@Url.Action("CheckListOrderIsOneAgent","SIMOrder")',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(dataReq),
+                    success: function (resp) {
+                        if (resp.data) {
+                            var req = {
+                                "orderIds": lstOrder.join(","),
+                                "status": 2
+                            }
+                            $.ajax({
+                                url: '@Url.Action("OnApprovedOrder","SIMOrder")',
+                                type: "POST",
+                                contentType: "application/json",
+                                data: JSON.stringify(req),
+                                success: function (resp2) {
+                                    alert(resp2.message)
+                                    if (resp2.code == '1') {
+                                        window.location.href = '@Url.Action("Index","SIMOrder")';
+                                    }
+                                },
+                                error: function (xhr) {
+                                    console.log(xhr);
+                                }
+                            });
+                        } else {
+                            alert('Bạn cần chọn cùng 1 KH/Đại lý mua sim')
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                    }
+                });
+            } else {
+                alert('Bạn chưa chọn item');
+            }
+        }
+        else {
+            var req = {
+                "orderIds": orderId.toString(),
+                "status": 2
+            }
+            $.ajax({
+                url: '@Url.Action("OnApprovedOrder","SIMOrder")',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(req),
+                success: function (resp2) {
+                    alert(resp2.message)
+                    if (resp2.code == '1') {
+                        window.location.href = '@Url.Action("Index","SIMOrder")';
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                }
+            });
+        }
+    }
+</script>

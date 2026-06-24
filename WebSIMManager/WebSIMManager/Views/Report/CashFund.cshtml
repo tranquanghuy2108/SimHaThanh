@@ -1,0 +1,168 @@
+﻿@{
+    ViewData["Title"] = "Báo cáo Quỹ tiền mặt";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Báo cáo Quỹ tiền mặt</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">Từ ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="startDate" type="date" class="form-control" placeholder="Nhập ngày bắt đầu" />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Đến ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="endDate" type="date" class="form-control" placeholder="Nhập ngày kết thúc" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterReport(1)">Tìm kiếm</button>
+                    <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3">
+            <table id="myTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Ngày phát sinh</th>
+                        <th>Mã phiếu</th>
+                        <th>Tên khách hàng</th>
+                        <th>Thu</th>
+                        <th>Chi</th>
+                        <th>Diễn giải</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#ReportCollapse').removeClass("collapsed");
+        $('#report').addClass("show");
+        $('#CashFund').addClass("active");
+    });
+</script>
+
+<script type="text/javascript">
+    window.onload = filterReport(1);
+    var lstOrder = [];
+    function filterReport(page) {
+        Onloading();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (startDate === null || startDate === '') {
+            startDate = '1900-01-01';
+        }
+        if (endDate === null || endDate === '') {
+            endDate = '2999-12-31';
+        }
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 50, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("SearchCashFund", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+
+                console.log(data.data);
+                data.data.forEach((el) => {
+                    newBody += '<tr>'
+                        + '<td>' + formatDate(new Date(el.dateCreated)) + '</td>'
+                        + '<td>' + (el.invoiceCode ? el.invoiceCode : '') + '</td>'
+                        + '<td>' + (el.customerName ? el.customerName : '') + '</td>'
+                        + '<td>' + formatCurrency(el.income) + '</td>'
+                        + '<td>' + formatCurrency(el.expense) + '</td>'
+                        + '<td>' + (el.description ? el.description : '') + '</td>'
+                        + '<td>' + (el.note ? el.note : '') + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+    function exportReport() {
+        Onloading();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (startDate === null || startDate === '') {
+            startDate = '1900-01-01';
+        }
+        if (endDate === null || endDate === '') {
+            endDate = '2999-12-31';
+        }
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 50, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("ExportCashFund", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao quy tien mat.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+</script>

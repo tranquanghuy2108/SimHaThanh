@@ -1,0 +1,86 @@
+﻿@model Models.Requests.GetPagingRequest
+@{
+    ViewData["Title"] = "Danh sách danh mục";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Danh sách danh mục</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-sm-6 text-left">
+                    <a class="btn btn-primary" asp-action="Create" asp-controller="Category">Thêm danh mục</a>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <form class="form-inline d-none d-sm-inline-block">
+                        <div class="input-group input-group-navbar">
+                            <input type="text" asp-for="keyword" class="form-control" placeholder="Số SIM..." aria-label="Search">
+                            <div class="input-group-append">
+                                <button class="btn" type="submit" asp-action="Index" asp-controller="Category">
+                                    <i class="align-middle" data-feather="search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th style="width:5%;">#</th>
+                    <th style="width:25%">Danh mục</th>
+                    <th style="width:25%">Danh mục cha</th>
+                    <th style="width:25%">Tóm tắt</th>
+                    <th style="width:10%">Đường dẫn</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    foreach (var item in @ViewBag.DataView)
+                    {
+                        <tr>
+                            <td>@item.stt</td>
+                            <td>@item.Name</td>
+                            <td>@item.Parent</td>
+                            <td>@item.Summary</td>
+                            <td>@item.Url</td>
+                            <td class="table-action">
+                                <a asp-action="Edit" asp-route-id="@item.Id"><i class="align-middle" data-feather="edit-2"></i></a>
+                                <a asp-action="Delete" asp-route-id="@item.Id"><i class="align-middle" data-feather="trash"></i></a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (ViewBag.Pager.TotalPages > 0)
+    {
+        <nav aria-label="Page navigation example">
+            <ul class="pagination pagination-md">
+
+                @if (ViewBag.Pager.CurrentPage > 1)
+                {
+
+                }
+                @for (var pge = ViewBag.Pager.StartPage; pge <= ViewBag.Pager.EndPage; pge++)
+                {
+                    <li class="page-item @(pge == ViewBag.Pager.CurrentPage ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pageIndex="@pge" asp-route-keyword="@ViewBag.Pager.Key">@pge</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>
+
+<script>
+    $(function () {
+        $('#NewsCollapse').removeClass("collapsed");
+        $('#news').addClass("show");
+        $('#catagory').addClass("active");
+    });
+</script>

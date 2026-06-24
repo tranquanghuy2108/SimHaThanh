@@ -1,0 +1,175 @@
+﻿
+@{
+    ViewData["Title"] = "Nguyên vật liệu kèm seria";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Nguyên vật liệu kèm seria</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">Số đt (hoặc Mã PNK/PXK)</label>
+                        <input id="keyword" type="text" class="form-control">
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Loại sản phẩm</label>
+                        <div class="col-12 p-0">
+                            <select id="MateriaSeriaIds" type="text" multiple="multiple" asp-items="@ViewBag.MateriaSeriaIds" data-live-search="true">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Trạng thái</label>
+                        <div class="col-12 p-0">
+                            <select id="HadSelled" type="text">
+                                <option value="0">Tất cả</option>
+                                <option value="1">Chưa bán</option>
+                                <option value="2">Đã bán</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterMateriaSeriaIds(1)">Tìm kiếm</button>
+                    <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
+                </div>
+            </div>
+        </div>
+
+        @* <div class="card-body px-3"> *@
+        <div class="position-relative">
+            <table id="myTable" class="table table-bordered table-striped" style="position: sticky;">
+                <thead class="bg-light sticky-top top-0">
+                    <tr>
+                        <th>Mã phiếu nhập</th>
+                        <th>Số sim</th>
+                        <th>Seria</th>
+                        <th>Vị trí</th>
+                        <th>Phân loại</th>
+                        <th>Trạng thái</th>
+                        <th>Mã phiếu xuất</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#WarehouseCollapse').removeClass("collapsed");
+        $('#warehouse').addClass("show");
+        $('#materialSeriaLst').addClass("active");
+    });
+</script>
+<script type="text/javascript">
+    window.onload = filterMateriaSeriaIds(1);
+    var lstOrder = [];
+    function filterMateriaSeriaIds(page) {
+        Onloading();
+        var keyword = $('#keyword').val();
+        var MateriaSeriaIds = $('#MateriaSeriaIds').val().toString();
+        var HadSelled = $('#HadSelled').val().toString();
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 50, "keyword": keyword, "MateriaSeriaIds": MateriaSeriaIds, "HadSelled": HadSelled };
+        $.ajax({
+            url: '@Url.Action("GetMaterialWithSeriaInfo", "Warehouse")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (resp) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+                resp.data.forEach((el) => {
+                    var gdnCode = '';
+                    var grnCode = '';
+                    if (el.gdnCode)
+                        gdnCode = '<a href="@Url.Action("GoodsDeliveryNoteDetail", "Warehouse")?id=' + el.gdnId + '" title="Chi tiết PXK ' + el.gdnCode + '">' + el.gdnCode + '</a>';
+                    if (el.grnCode)
+                        grnCode = '<a href="@Url.Action("GoodsReceivedNoteDetail", "Warehouse")?id=' + el.grnId + '" title="Chi tiết PNK ' + el.grnCode + '">' + el.grnCode + '</a>';
+                    newBody += '<tr>'
+                        + '<td>' + grnCode + '</td>'
+                        + '<td>' + (el.number ?? '') + '</td>'
+                        + '<td>' + (el.seria ?? '') + '</td>'
+                        + '<td>' + (el.position ?? '') + '</td>'
+                        + '<td>' + (el.materialCode ?? '') + '</td>'
+                        + '<td>' + (el.hadSelled ? 'Đã bán' : 'Chưa bán') + '</td>'
+                        + '<td>' + gdnCode + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+                //write paging
+                console.log(resp.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (resp.pager.totalPages > 0) {
+                    if (resp.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterMateriaSeriaIds(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = resp.pager.startPage; pge <= resp.pager.endPage; pge++) {
+                        if (pge == resp.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterMateriaSeriaIds(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterMateriaSeriaIds(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (resp.pager.currentPage < resp.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterMateriaSeriaIds(' + resp.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+    
+
+    function exportReport() {
+        Onloading();
+        var keyword = $('#keyword').val();
+        var MateriaSeriaIds = $('#MateriaSeriaIds').val().toString();
+        var HadSelled = $('#HadSelled').val().toString();
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 50, "keyword": keyword, "MateriaSeriaIds": MateriaSeriaIds, "HadSelled": HadSelled };
+        $.ajax({
+            url: '@Url.Action("ExportMaterialWithSeriaInfo", "Warehouse")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'Danh sách sản phẩm kèm seria.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+
+</script>
+

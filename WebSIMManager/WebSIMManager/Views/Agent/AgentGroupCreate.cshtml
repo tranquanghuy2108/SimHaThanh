@@ -1,0 +1,120 @@
+﻿@using Models.ViewModels
+@model CollaboratorsGroupEditModels
+@{
+    ViewData["Title"] = "Thêm nhóm KH/Đại lý";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Thêm nhóm KH/Đại lý</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Tên nhóm KH/Đại lý</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Name">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">% Chiết khấu</label>
+                    <div id="discountLst">
+                        @if (Model?.discount != null)
+                        {
+                            @for (int i = 0; i < Model?.discount.Count(); i++)
+                            {
+                                <div class="row" id="row_@(i)">
+                                    <div class="form-group col-md-4">
+                                        <label class="form-label">Giá từ</label>
+                                        <input type="number" class="form-control" asp-for="discount[i].PriceFrom" />
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label class="form-label">đến</label>
+                                        <input type="number" class="form-control" asp-for="discount[i].PriceTo" />
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label class="form-label">Chiết khấu</label>
+                                        <input type="number" class="form-control" asp-for="discount[i].DiscountPer" />
+                                    </div>
+                                    @if (i != 0)
+                                    {
+                                        <div class="form-group col-md-1" style="padding-top: 2rem;">
+                                            <a title="Xóa sản phẩm" onclick="OnRemoveRow(@i)"><i class="fa fa-trash"></i></a>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="row" id="row_0">
+                                <div class="form-group col-md-4">
+                                    <label class="form-label">Giá từ</label>
+                                    <input type="number" class="form-control" name="discount[0].PriceFrom" id="discount_0__PriceFrom" value="0" />
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label class="form-label">đến</label>
+                                    <input type="number" class="form-control" name="discount[0].PriceTo" id="discount_0__PriceTo" value="0" />
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label class="form-label">Chiết khấu</label>
+                                    <input type="number" class="form-control" name="discount[0].DiscountPer" id="discount_0__DiscountPer" value="0" />
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <a class="btn btn-default btn-warning" onclick="OnClickAddDiscount()">Thêm mức chiết khấu</a>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" asp-for="IsForAgent">
+                    <label class="form-check-label" for="flexCheckChecked">
+                        Là chiết khấu đại lý cho mình
+                    </label>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="AgentGroupCreate" asp-controller="Agent" width="100px">Thêm mới</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="AgentGroup" asp-controller="Agent" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    var rowIdx = 0;
+    $(function () {
+        $('#AgentCollapse').removeClass("collapsed");
+        $('#agent').addClass("show");
+        $('#AgentGroupLst').addClass("active");
+
+        rowIdx = $('#discountLst .row').length;
+    });
+    function OnRemoveRow(i) {
+        document.getElementById('row_' + i).remove();
+    }
+    function OnClickAddDiscount() {
+        //Write table tbody
+        var discountLst = $("#discountLst");
+        var newDiscount = '<div class="row" id="row_' + rowIdx + '">'
+            + '<div class="form-group col-md-4">'
+            + '<label class="form-label">Giá từ</label>'
+            + '<input type="number" class="form-control" name="discount[' + rowIdx + '].PriceFrom" id="discount_' + rowIdx + '__PriceFrom" value="0"/>'
+            + '</div>'
+            + '<div class="form-group col-md-4">'
+            + '<label class="form-label">đến</label>'
+            + '<input type="number" class="form-control" name="discount[' + rowIdx + '].PriceTo" id="discount_' + rowIdx + '__PriceTo" value="0"/>'
+            + '</div>'
+            + '<div class="form-group col-md-3">'
+            + '<label class="form-label">Chiết khấu</label>'
+            + '<input type="number" class="form-control" name="discount[' + rowIdx + '].DiscountPer" id="discount_' + rowIdx + '__DiscountPer" value="0"/>'
+            + '</div>'
+            + '<div class="form-group col-md-1" style="padding-top: 2rem;">'
+            + '<label class="form-label"></label>'
+            + '<a title="Xóa chiết khấu" onclick="OnRemoveRow(' + rowIdx + ')"><i class="fa fa-trash"></i></a>'
+            + '</div>'
+            + '</div>'
+        discountLst.append(newDiscount);
+        rowIdx++;
+    }
+</script>

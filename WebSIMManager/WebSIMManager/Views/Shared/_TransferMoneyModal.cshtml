@@ -1,0 +1,80 @@
+﻿@{
+}
+<!-- Modal -->
+<div class="modal fade" id="transferMoneyModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Tạo phiếu chuyển tiền</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="OnClickClose()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="m-4">
+                    <div class="form-group">
+                        <label class="form-label">Người nhận</label>
+                        <select type="text" class="form-control col-12" id="ReceiverId" asp-items="@ViewBag.UserIds" data-live-search="true">
+                        </select>
+                        <input id="sim-id" type="hidden" />
+                        <input id="debt-ids" type="hidden" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Số tiền</label>
+                        <input id="Amount" type="text" class="form-control currency" data-type="currency" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mô tả</label>
+                        <textArea id="Description" rows="2" type="text" class="form-control" readonly></textArea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ghi chú</label>
+                        <textArea id="Note" rows="2" type="text" class="form-control"></textArea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="OnClickClose();">Close</button>
+                <button type="button" class="btn btn-primary" onclick="CreateNewTransferMoney();">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function OnClickClose() {
+        $('#transferMoneyModal').modal('hide');
+    }
+    function CreateNewTransferMoney() {
+        //var code = $('#Code').val();
+        var amount = $('#Amount').val();
+        var receiverId = $('#ReceiverId').val();
+        var remittersId = $('#userId').val();
+        var description = $('#Description').val();
+        var note = $('#Note').val();
+        var dataReq = {
+            "Id": 0,
+            "Code": "",
+            "Amount": parseFloat(amount.replaceAll(",", "")),
+            "ReceiverId": receiverId,
+            "RemittersId": remittersId,
+            "DebtStaffIds": lstOrder,
+            "Description": description,
+            "Note": note,
+        }
+        $.ajax({
+            url: '@Url.Action("CreateTransferMoney","Debt")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(dataReq),
+            success: function (resp) {
+                alert(resp.message);
+                if (resp.code == '1') {
+                    window.location.href = '@Url.Action("MyDebt","Debt")';
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    }
+</script>

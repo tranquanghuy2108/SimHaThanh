@@ -1,0 +1,46 @@
+﻿@using Models.ViewModels
+@model SPContactEditModel
+@{
+    ViewData["Title"] = "Chỉnh sửa kênh bán hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Chỉnh sửa kênh bán hàng</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                @Html.HiddenFor(x=>x.Id)
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Tên kênh bán hàng</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Name">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="PhoneNumber">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Tài khoản</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Account">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea class="form-control" rows="2" placeholder="" asp-for="Description"></textarea>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Edit" asp-controller="SPContact" width="100px">Cập nhật</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="SPContact" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $('#SettingsCollapse').removeClass("collapsed");
+        $('#settings').addClass("show");
+        $('#contactLst').addClass("active");
+    });
+</script>

@@ -1,0 +1,84 @@
+﻿@using Models.ViewModels
+@model NewsEditModel
+@{
+    ViewData["Title"] = "Thêm mới tin tức";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Thêm mới tin tức</h1>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Tiêu đề</label>
+                    <input type="text" class="form-control" onchange="locdau(this);" placeholder="" asp-for="Title">
+                    @Html.HiddenFor(model =>model.Id)
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Đường dẫn</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Slug">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Tóm tắt</label>
+                    <input type="text" class="form-control" placeholder="" asp-for="Summary">
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Nội dung</label>
+                    <textarea id="editor" class="form-control" rows="2" placeholder="" asp-for="Content"></textarea>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-label required">Danh mục</label>
+                    <select type="text" class="form-control" placeholder="" asp-for="CategoryId" asp-items="@ViewBag.Category"></select>
+                </div>
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <button type="submit" class="btn btn-primary m-3 btn-default" asp-action="Create" asp-controller="News" width="100px">Thêm mới</button>
+                <button type="submit" class="btn btn-secondary m-3 btn-default" asp-action="Index" asp-controller="News" width="100px">Trở về</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="~/js/ckeditor.js"></script>
+<script>
+    ClassicEditor
+        .create(document.querySelector('#editor'), {
+            // toolbar: [ 'heading', '|', 'bold', 'italic', 'link' ]
+        })
+        .then(editor => {
+            window.editor = editor;
+        })
+        .catch(err => {
+            console.error(err.stack);
+        });
+</script>
+<script>
+    $(function () {
+        $('#NewsCollapse').removeClass("collapsed");
+        $('#news').addClass("show");
+        $('#newslst').addClass("active");
+    });
+    function locdau(obj) 
+    {
+        var str;
+        if (eval(obj))
+            str = eval(obj).value;
+        else
+            str = obj;
+        str = str.toLowerCase();
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+        str = str.replace(/đ/g, "d");
+        /* tìm và thay thế các kí tự đặc biệt trong chuỗi sang kí tự - */
+        str= str.replace(/!|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'| |\"|\&|\#|\[|\]|~|$|_/g,"-");  
+        //str= str.replace(/-+-/g,"-"); //thay thế 2- thành 1-
+        //cắt bỏ ký tự - ở đầu và cuối chuỗi
+        str = str.replace(/^\-+|\-+$/g, "");
+        //eval(obj).value = str.toUpperCase();
+        $('#Slug').val(str);
+    }
+</script>

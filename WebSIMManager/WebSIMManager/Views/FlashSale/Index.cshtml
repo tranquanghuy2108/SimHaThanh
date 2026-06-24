@@ -1,0 +1,119 @@
+﻿@using Commons.Enums;
+@model Models.Requests.GetPagingRequest
+@using System.Security.Claims;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(x => x.Value).ToArray();
+    ViewData["Title"] = "Quản lý Flashsale";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="row">
+                    <div class="col-sm-6 text-left">
+                        <a class="btn btn-primary" asp-action="Create" asp-controller="FlashSale">Thêm flashsale</a>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <form class="form-inline d-none d-sm-inline-block">
+                            <div class="input-group input-group-navbar">
+                                <input type="text" asp-for="keyword" class="form-control" placeholder="Tên phiên flashsale..." aria-label="Search">
+                                <div class="input-group-append">
+                                    <button class="btn" type="submit" asp-action="Index" asp-controller="FlashSale">
+                                        <i class="align-middle" data-feather="search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-3">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width:5%">STT</th>
+                        <th style="width:20%">Phiên flashsale</th>
+                        <th style="width:20%">Thời gian bắt đầu</th>
+                        <th style="width:20%">Thời gian kết thúc</th>
+                        <th style="width:30%">Ghi chú</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var idx = 0;
+                        foreach (var item in @ViewBag.DataView)
+                        {
+                            idx++;
+                            <tr>
+                                <td>@idx</td>
+                                <td>@item.Name</td>
+                                <td>@item.StartTime</td>
+                                <td>@item.EndTime</td>
+                                <td>@item.Description</td>
+                                <td class="table-action">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" title="Sửa flashsale"><i class="align-middle" data-feather="edit-2"></i></a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" title="Xóa flashsale"><i class="align-middle" data-feather="trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+            <div id="paging" class="px-3">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination pagination-md">
+                        @if (ViewBag.Pager.TotalPages > 0)
+                        {
+                            @if (ViewBag.Pager.CurrentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-pageIndex="1"
+                                       asp-route-keyword="@ViewBag.Pager.Key.keyword">
+                                        Trang đầu
+                                    </a>
+                                </li>
+                            }
+                            @for (var pge = ViewBag.Pager.StartPage; pge <= ViewBag.Pager.EndPage; pge++)
+                            {
+                                <li class="page-item @(pge == ViewBag.Pager.CurrentPage ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-pageIndex="@pge"
+                                       asp-route-pageIndex="@ViewBag.Pager.TotalPages"
+                                       asp-route-keyword="@ViewBag.Pager.Key.keyword">@pge</a>
+                                </li>
+                            }
+                            @if (ViewBag.Pager.CurrentPage < ViewBag.Pager.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-pageIndex="@ViewBag.Pager.TotalPages"
+                                       asp-route-keyword="@ViewBag.Pager.Key.keyword">
+                                        Trang cuối
+                                    </a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#AppManagerCollapse').removeClass("collapsed");
+        $('#appManager').addClass("show");
+        $('#flashsales').addClass("active");
+    });
+</script>
+

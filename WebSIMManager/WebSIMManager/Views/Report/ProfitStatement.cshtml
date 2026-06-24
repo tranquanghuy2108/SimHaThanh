@@ -1,0 +1,196 @@
+﻿@{
+    ViewData["Title"] = "Báo cáo Lợi nhuận số đẹp";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Báo cáo Lợi nhuận số đẹp</h1>
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="card p-3">
+                <div class="form-group col-12 row">
+                    <div class="col-3">
+                        <label class="form-label">Từ ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="startDate" type="date" class="form-control" placeholder="Nhập ngày bắt đầu" />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Đến ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="endDate" type="date" class="form-control" placeholder="Nhập ngày kết thúc" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary" onclick="filterReport(1)">Tìm kiếm</button>
+                    <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-3" style="overflow: auto;">
+            <table id="myTable" class="table table-bordered table-striped" style="min-width:2500px;">
+                <thead>
+                    <tr>
+                        <th colspan="5">Thông tin phiếu</th>
+                        <th colspan="6">Thông tin sim</th>
+                        <th>Lãi</th>
+                        <th>Tổng</th>
+                        <th>Lãi</th>
+                        <th colspan="3">Nhân viên thực hiện</th>
+                    </tr>
+                    <tr>
+                        <th>Ngày xuất</th>
+                        <th>Mã phiếu</th>
+                        <th>Mã KH</th>
+                        <th>Tên KH</th>
+                        <th>Kênh bán</th>
+                        <th>Sim nhà</th>
+                        <th>Số sim</th>
+                        <th>Vị trí</th>
+                        <th>Đại lý có sim</th>
+                        <th>Tiền nhập</th>
+                        <th>Tiền bán</th>
+                        <th>Chưa trừ phí</th>
+                        <th>Các chi phí</th>
+                        <th>Đã trừ phí</th>
+                        <th>Người bán</th>
+                        <th>Người lập</th>
+                        <th>Người ghi nhận</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="paging" class="px-3">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination pagination-md">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#ReportCollapse').removeClass("collapsed");
+        $('#report').addClass("show");
+        $('#ProfitStatement').addClass("active");
+    });
+</script>
+
+<script type="text/javascript">
+    window.onload = filterReport(1);
+    var lstOrder = [];
+    function filterReport(page) {
+        Onloading();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (startDate === null || startDate === '') {
+            startDate = '1900-01-01';
+        }
+        if (endDate === null || endDate === '') {
+            endDate = '2999-12-31';
+        }
+        var data = { "isPaged": true, "pageIndex": page, "pageSize": 50, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("SearchProfitStatemente", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (data) {
+                OnloadingSuccess();
+                //Write table tbody
+                var tbody = $("#myTable tbody")
+                tbody.children().remove();
+                var newBody = "";
+
+                console.log(data.data);
+                data.data.forEach((el) => {
+                    newBody += '<tr>'
+                        + '<td>' + formatDate(new Date(el.exportDate)) + '</td>'
+                        + '<td>' + el.invoiceCode + '</td>'
+                        + '<td>' + (el.customerCode ? el.customerCode : '') + '</td>'
+                        + '<td>' + (el.customerName ? el.customerName : '') + '</td>'
+                        + '<td>' + (el.customerName ? el.customerName : '') + '</td>'
+                        + '<td>' + el.homeSIM + '</td>'
+                        + '<td>' + (el.numberOfSIMs ? el.numberOfSIMs : '') + '</td>'
+                        + '<td>' + (el.location ? el.location : '') + '</td>'
+                        + '<td>' + (el.agency ? el.agency : '') + '</td>'
+                        + '<td>' + formatCurrency(el.purchaseAmount) + '</td>'
+                        + '<td>' + formatCurrency(el.sellingAmount) + '</td>'
+                        + '<td>' + formatCurrency(el.notDeductedFee) + '</td>'
+                        + '<td>' + formatCurrency(el.expenses) + '</td>'
+                        + '<td>' + formatCurrency(el.deductedFee) + '</td>'
+                        + '<td>' + (el.seller ? el.seller : '') + '</td>'
+                        + '<td>' + (el.creator ? el.creator : '') + '</td>'
+                        + '<td>' + (el.recorder ? el.recorder : '') + '</td>'
+                        + '</tr>';
+                });
+                tbody.append(newBody);
+
+                console.log(data.pager);
+                var paging = $("#paging .pagination")
+                paging.children().remove();
+                var pagingItem = "";
+                if (data.pager.totalPages > 0) {
+                    if (data.pager.currentPage > 1) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(1)" >Trang đầu</a></li>'
+                    };
+                    for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
+                        if (pge == data.pager.currentPage)
+                            pagingItem += '<li class="page-item active"><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                        else
+                            pagingItem += '<li class="page-item "><a class="page-link" onclick="filterReport(' + pge + ')" >' + pge + '</a></li>'
+                    }
+                    if (data.pager.currentPage < data.pager.totalPages) {
+                        pagingItem += '<li class="page-item" ><a class="page-link" onclick="filterReport(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
+                    };
+                }
+                paging.append(pagingItem);
+            },
+            error: function (xhr) {
+                OnloadingSuccess();
+                console.log(xhr);
+            }
+        });
+    };
+
+    function exportReport() {
+        Onloading();
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        if (startDate === null || startDate === '') {
+            startDate = '1900-01-01';
+        }
+        if (endDate === null || endDate === '') {
+            endDate = '2999-12-31';
+        }
+        var data = { "isPaged": false, "pageIndex": 1, "pageSize": 50, "startDate": startDate, "endDate": endDate };
+        $.ajax({
+            url: '@Url.Action("ExportProfitStatemente", "Report")',
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (data) {
+                OnloadingSuccess();
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'bao cao loi nhuan so dep.xlsx';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+</script>

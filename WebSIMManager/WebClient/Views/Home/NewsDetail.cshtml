@@ -1,0 +1,22 @@
+﻿@{
+    ViewData["Title"] = @ViewBag.NewsDetail.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div>
+    <div class="block-head">Tin tức</div>
+</div>
+<div class="sidebar mt-3 p-3" style="background-color: #fff;">
+    <div class="sidebar-item">
+        <div class="col-md-12">
+            <div class="news-title">
+                <h2>@ViewBag.NewsDetail.Title</h2>
+            </div>
+            <div class="news-footer">
+                <p>@ViewBag.NewsDetail.CreateTime</p>
+            </div>
+            <div class="news-summary">
+                @Html.Raw(@ViewBag.NewsDetail.Content)
+            </div>
+        </div>
+    </div><!-- End sidebar search formn-->
+</div>
