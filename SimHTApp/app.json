@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "AppSimHT",
+    "slug": "appsimht",
+    "version": "1.0.9",
+    "orientation": "portrait",
+    "icon": "./assets/AppImages/logoSIMHT.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/AppImages/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/AppImages/logoSIMHT.png",
+          "color": "#ffffff"
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.simhathanh.appsim",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.simhathanh.appsim",
+      "versionCode": 9,
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/AppImages/logoSIMHT.png"
+    },
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "12a76e6d-0ade-49aa-a507-13b676ba03a7"
+      }
+    }
+  }
+}
