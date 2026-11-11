@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Models.Responses;
@@ -19,26 +19,19 @@ namespace WebSIMAPI.Controllers
         private readonly ISystemConfigRepository _systemConfigRepository;
         private readonly IBankRepository _bankRepository;
 
-        public AccountController(
-            IAccountRepository accountRepository,
-            IContactRepository contactRepository,
-            ISystemConfigRepository systemConfigRepository,
-            IBankRepository bankRepository
-        )
+        public AccountController(IAccountRepository accountRepository, IContactRepository contactRepository, ISystemConfigRepository systemConfigRepository, IBankRepository bankRepository)
         {
             _accountRepository = accountRepository;
             _contactRepository = contactRepository;
             _systemConfigRepository = systemConfigRepository;
             _bankRepository = bankRepository;
         }
-
         [EnableCors("MyPolicy")]
         [HttpPost("authenticate")]
         [AllowAnonymous]
         public async Task<IActionResult> Authenticate([FromBody] LoginRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var response = await _accountRepository.AuthenticateAPI(request, isCMS: false);
 
@@ -53,12 +46,9 @@ namespace WebSIMAPI.Controllers
         [EnableCors("MyPolicy")]
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<IActionResult> Register(
-            [FromBody] UserMobileCreateRequest userCreateRequest
-        )
+        public async Task<IActionResult> Register([FromBody] UserMobileCreateRequest userCreateRequest)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var result = _accountRepository.CreateUserMobile(userCreateRequest);
 
@@ -68,15 +58,13 @@ namespace WebSIMAPI.Controllers
             }
             return Ok(result);
         }
-
         // POST api/<AccountController>
         [EnableCors("MyPolicy")]
         [HttpPost("change-password")]
         [Authorize]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var result = await _accountRepository.ChangePassword(request);
 
@@ -91,10 +79,9 @@ namespace WebSIMAPI.Controllers
         [EnableCors("MyPolicy")]
         [HttpPost("update-info")]
         [Authorize]
-        public IActionResult UpdateUserInfo([FromBody] UserEditRequest request)
+        public  IActionResult UpdateUserInfo([FromBody] UserEditRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var result = _accountRepository.Update(request, true);
 
@@ -111,8 +98,7 @@ namespace WebSIMAPI.Controllers
         [Authorize]
         public IActionResult UpdateUserInfo([FromBody] Guid userId)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var result = _accountRepository.Delete(userId, userId.ToString());
 
@@ -122,51 +108,43 @@ namespace WebSIMAPI.Controllers
             }
             return Ok(result);
         }
-
         // POST api/<AccountController>
         [EnableCors("MyPolicy")]
         [HttpPost("get-userinfo")]
         [Authorize]
         public IActionResult GetUserInfo([FromBody] Guid userId)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var result = _accountRepository.GetUserForApp(userId);
 
             return Ok(result);
         }
-
         [HttpPost("get-spcontact")]
         [Authorize]
         public IActionResult GetSPContact()
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var result = _contactRepository.GetSPContactAPI();
 
             return Ok(result);
         }
-
         [HttpPost("get-config")]
         [Authorize]
         public IActionResult GetAppSysConfig()
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var result = _systemConfigRepository.GetAppSysConfig();
 
             return Ok(result);
         }
-
         [HttpPost("get-bankInfo")]
         [Authorize]
         public IActionResult GetBankInfo()
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var result = _bankRepository.GetBankForApp();
 

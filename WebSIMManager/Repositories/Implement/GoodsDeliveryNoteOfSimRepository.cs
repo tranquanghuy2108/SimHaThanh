@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
@@ -220,6 +221,9 @@ namespace Repositories.Implement
                     MonthlyInstallmentPayment = request.MonthlyInstallmentPayment,
                     InterestRate = request.InterestRate,
                     DeliveryDate = request.DeliveryDate,
+                    HadSimData = CheckOrderHadSimData(
+                        request.SimInfosInOrders.Select(x => x.SimNumber).ToList()
+                    ),
                 };
                 _context.GoodsDeliveryNoteOfSim.Add(dataNew);
                 _context.SaveChanges();
@@ -472,6 +476,7 @@ namespace Repositories.Implement
                         _context.SaveChanges();
                     }
                 }
+                HandleDebtOfConsignmentAgent(request, debtCode, userId);
 
                 LogAction logAction = new LogAction()
                 {
@@ -776,6 +781,9 @@ namespace Repositories.Implement
                 dataEntity.UpdateBy = new Guid(userId);
                 dataEntity.UpdateTime = DateTime.Now;
                 dataEntity.approvedStatus = ApprovedStatus.Waiting;
+                dataEntity.HadSimData = CheckOrderHadSimData(
+                    request.SimInfosInOrders.Select(x => x.SimNumber).ToList()
+                );
 
                 _context.GoodsDeliveryNoteOfSim.Update(dataEntity);
 
@@ -1077,6 +1085,7 @@ namespace Repositories.Implement
                         _context.SaveChanges();
                     }
                 }
+                HandleDebtOfConsignmentAgent(request, request.Code, userId, true);
                 //Ghi log
                 LogAction logAction = new LogAction()
                 {
@@ -1166,6 +1175,14 @@ namespace Repositories.Implement
             {
                 dataEntity = dataEntity
                     .Where(x => x.Code.Contains(request.code))
+                    .OrderBy(x => x.approvedStatus)
+                    .ToList();
+            }
+
+            if (request.pxSimData)
+            {
+                dataEntity = dataEntity
+                    .Where(x => x.HadSimData == true)
                     .OrderBy(x => x.approvedStatus)
                     .ToList();
             }
@@ -1279,6 +1296,118 @@ namespace Repositories.Implement
                 ),
                 Data = data,
             };
+        }
+
+        private void HandleDebtOfConsignmentAgent(
+            GoodsDeliveryNoteOfSimModel request,
+            string debtCode,
+            string createById,
+            bool isEdit = false
+        )
+        {
+            if (isEdit)
+            {
+                var oldDebtAgents = _context
+                    .DebtAgents.Where(x =>
+                        x.DebtCode == debtCode
+                        && (
+                            x.Description != null
+                            && x.Description.Contains("Công nợ của đại lí kí gửi")
+                        )
+                    )
+                    .ToList();
+                _context.DebtAgents.RemoveRange(oldDebtAgents);
+            }
+            var agentIds = request.SimInfosInOrders.Select(x => x.AgentId).Distinct().ToList();
+            foreach (var agentId in agentIds)
+            {
+                var userAgent = _context.Users.FirstOrDefault(x => x.Id == agentId);
+                var SimInfosOfAgent = request
+                    .SimInfosInOrders.Where(x => x.AgentId == agentId)
+                    .ToList();
+                var simIdsInfo = SimInfosOfAgent.Select(x => x.SimId).ToList();
+                var tongGiaNhap = _context
+                    .SIMDetails.Where(x => simIdsInfo.Contains(x.Id))
+                    .Sum(x => x.SIMPriceOfAgent);
+                var discount = GetDiscountOfUser(agentId ?? new(), (int)tongGiaNhap);
+                var liabilities = tongGiaNhap - (tongGiaNhap * discount / 100);
+                var debtAgent = new DebtAgent()
+                {
+                    CreateBy = new Guid(createById),
+                    CreateTime = DateTime.Now,
+                    approvedStatus = request.approvedStatus,
+                    AgentId = agentId ?? new(),
+                    DebtCode = debtCode,
+                    InvoiceId = request.Id,
+                    Receivables = 0,
+                    Liabilities = liabilities,
+                    FinalDebt = 0 - liabilities,
+                    Description = "Công nợ của đại lí kí gửi cho phiếu xuất sim " + debtCode,
+                    Note = request.Note,
+                    UpdateBy = new Guid(createById),
+                    UpdateTime = DateTime.Now,
+                };
+                _context.DebtAgents.Add(debtAgent);
+            }
+            _context.SaveChanges();
+        }
+
+        private double GetDiscountOfUser(Guid userId, int price)
+        {
+            double discount = 0;
+            var userInfo = _context.Users.FirstOrDefault(x => x.Id == userId);
+            if (userInfo == null || userInfo.IsStaff)
+            {
+                return 0;
+            }
+
+            if (userInfo.IsConsignmentAgent)
+            {
+                var discountData = _context.Discounts.FirstOrDefault(x =>
+                    x.CollaboratorsGroupId == userInfo.DiscountForSimSellersId
+                    && x.PriceFrom <= price
+                    && x.PriceTo >= price
+                );
+
+                discount = discountData?.DiscountPer ?? 0;
+            }
+            else
+            {
+                var agentGroupOfUser = _context.CollaboratorsGroupUsers.FirstOrDefault(x =>
+                    x.UserId == userId
+                );
+                if (agentGroupOfUser != null)
+                {
+                    var discountData = _context.Discounts.FirstOrDefault(x =>
+                        x.CollaboratorsGroupId == agentGroupOfUser.CollaboratorsGroupId
+                        && x.PriceFrom <= price
+                        && x.PriceTo >= price
+                    );
+                    discount = discountData?.DiscountPer ?? 0;
+                }
+            }
+
+            return discount;
+        }
+
+        private bool CheckOrderHadSimData(List<string> simsNumberInOrder)
+        {
+            var result = false;
+            var simDataProductTypeIds = _context
+                .ProductTypes.Where(x => x.IsSimData || x.IsTouristSim)
+                .Select(x => x.Id)
+                .ToList();
+            var simDataInOrder = _context
+                .SIMDetails.Where(x =>
+                    simsNumberInOrder.Contains(x.SIMNumber)
+                    && simDataProductTypeIds.Contains(x.ProductTypeId)
+                )
+                .ToList();
+            if (simDataInOrder.Count > 0)
+            {
+                result = true;
+            }
+            return result;
         }
     }
 }

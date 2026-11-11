@@ -2,8 +2,27 @@ import React, { createContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Config from "../constants/Config";
-import { ToastAndroid } from "react-native";
+import { Alert, Platform, ToastAndroid } from "react-native";
 export const AuthContext = createContext();
+
+export const isEmptyAuthValue = (value) => {
+  if (value == null) return true;
+  if (typeof value === "string") return value.trim().length === 0;
+  if (typeof value === "object") return Object.keys(value).length === 0;
+  return false;
+};
+
+const showMessage = (message, long = false) => {
+  if (Platform.OS === "android") {
+    ToastAndroid.showWithGravity(
+      message,
+      long ? ToastAndroid.LONG : ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+    );
+  } else {
+    Alert.alert("Thông báo", message);
+  }
+};
 
 export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +33,8 @@ export const AuthProvider = ({ children }) => {
   const [spContact, SetSupportContactState] = useState([]);
   const [configData, SetConfigState] = useState(null);
   const [bankInfo, SetBankInfoState] = useState(null);
+  const isAuthenticated =
+    !isEmptyAuthValue(userInfos) && !isEmptyAuthValue(userToken);
 
   const SetUserInfoByStorage = (userInfo) => {
     setUserInfos(userInfo);
@@ -79,7 +100,13 @@ export const AuthProvider = ({ children }) => {
     AsyncStorage.removeItem("UserInfo");
     AsyncStorage.getAllKeys()
       .then((keys) => {
-        return AsyncStorage.multiRemove(keys);
+        const keysToRemove = keys.filter(
+          (key) =>
+            key !== "CommunityTermsVersion" &&
+            key !== "CommunityTermsPromptSeen" &&
+            !key.startsWith("BlockedUserIds:"),
+        );
+        return AsyncStorage.multiRemove(keysToRemove);
       })
       .then(() => {})
       .catch((error) => {});
@@ -250,23 +277,17 @@ export const AuthProvider = ({ children }) => {
           },
         },
       );
-      ToastAndroid.showWithGravity(
-        "Cập nhật thành công!",
-        ToastAndroid.LONG,
-        ToastAndroid.BOTTOM,
-      );
-      var uInfo = response.data.data;
+      showMessage("Cập nhật thành công!", true);
+      const uInfo = response.data?.data || response.data;
 
       setUserInfos(uInfo);
+      await AsyncStorage.setItem("UserInfo", JSON.stringify(uInfo));
       setIsLoading(false);
       return true;
     } catch (error) {
       setIsLoading(false);
-      ToastAndroid.showWithGravity(
-        `Cập nhật thất bại. ${error.response.data.message}`,
-        ToastAndroid.LONG,
-        ToastAndroid.BOTTOM,
-      );
+      const message = error.response?.data?.message || error.message || "Vui lòng thử lại.";
+      showMessage(`Cập nhật thất bại. ${message}`, true);
       return false;
     }
   };
@@ -312,6 +333,7 @@ export const AuthProvider = ({ children }) => {
         },
       )
       .then((response) => {
+        console.log("GetConfigData", response.data);
         SetConfigState(response.data);
         setIsLoading(false);
       })
@@ -361,6 +383,7 @@ export const AuthProvider = ({ children }) => {
         SetRegister,
         GetUserInfo,
         userToken,
+        isAuthenticated,
         isLoading,
         userInfos,
         isRegisterSuccess,

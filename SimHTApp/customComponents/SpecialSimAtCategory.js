@@ -360,7 +360,10 @@ const SpecialSimCard = (prop) => {
         });
         // Trigger search after navigation to keep transition smooth
         InteractionManager.runAfterInteractions(() => {
-          search(null, null, null, prop.itemData.id, { suppressLoading: true });
+          search(null, null, null, prop.itemData.id, {
+            suppressLoading: true,
+            resetFilters: true,
+          });
         });
       }}
     >
@@ -380,7 +383,7 @@ const styles = {
   card: {
     shadowColor: "black",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     margin: 5,
     height: responsiveHeight(5),

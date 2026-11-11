@@ -1,15 +1,25 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  createNavigationContainerRef,
+  NavigationContainer,
+} from "@react-navigation/native";
 import HomeScreen from "../screens/HomeScreen";
+import LoginScreen from "../screens/LoginScreen";
+import RegisterScreen from "../screens/RegisterScreen";
 import SearchScreen from "../screens/SearchScreen";
 import UpdateProfileScreen from "../screens/UpdateProfileScreen";
 import ChangePassword from "../screens/ChangePassword";
 import { argonTheme } from "../constants";
 import { AppConst } from "../constants/AppConst";
-import { Image, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import { Badge } from "react-native-elements";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import {
+  LoginRequiredProvider,
+  useLoginRequired,
+} from "../context/LoginRequiredContext";
 
 import ChatScreen from "../screens/ChatScreen";
 import OrderScreen from "../screens/OrderScreen";
@@ -62,6 +72,7 @@ import { createDrawerNavigator } from "@react-navigation/drawer";
 //Bottom Tab Init
 const BottomTab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const navigationRef = createNavigationContainerRef();
 
 const Drawer = createDrawerNavigator();
 
@@ -151,6 +162,7 @@ const DrawerSimDataFilter = () => {
 const DrawerProfileOverView = () => {
   return (
     <Drawer_Profile_Overview.Navigator
+      initialRouteName={AppConst.ScreenConst.PROFILE_SCREEN}
       screenOptions={{
         drawerPosition: "right",
         headerShown: false,
@@ -162,26 +174,26 @@ const DrawerProfileOverView = () => {
       <Drawer_Profile_Overview.Screen
         options={{
           headerShown: false,
-          title: "Đấu giá2",
+          title: "Hồ sơ",
           headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
           headerTintColor: "white",
           headerBackVisible: false,
           headerTitle: "",
         }}
-        name={AppConst.ScreenConst.HOME_SCREEN}
-        component={DrawerAccount}
+        name={AppConst.ScreenConst.PROFILE_SCREEN}
+        component={ProfileOverViewScreen}
       />
       <Drawer_Profile_Overview.Screen
         options={{
           headerShown: false,
-          title: "Đấu giá2",
+          title: "SIM của tôi",
           headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
           headerTintColor: "white",
           headerBackVisible: false,
           headerTitle: "",
         }}
         name={AppConst.ScreenConst.MY_SIM_SCREEN}
-        component={DrawerMySim}
+        component={MySimScreen}
       />
     </Drawer_Profile_Overview.Navigator>
   );
@@ -582,6 +594,13 @@ const AuctionFilterStack = () => {
 const BottomStack = () => {
   const { GetUnreadMessageCount, unReadMessageCount, RegisterChatReceiver } =
     useContext(SendBirdContext);
+  const { requireLogin } = useLoginRequired();
+
+  const protectedTabListeners = {
+    tabPress: (event) => {
+      if (!requireLogin()) event.preventDefault();
+    },
+  };
 
   return (
     <BottomTab.Navigator
@@ -589,59 +608,85 @@ const BottomStack = () => {
       initialRouteName={AppConst.ScreenConst.HOME_SCREEN}
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { padding: 10, height: 50 },
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          paddingHorizontal: 10,
+          paddingTop: 8,
+          paddingBottom: 10,
+          height: 58,
+        },
         tabBarActiveTintColor: argonTheme.COLORS.ERROR,
         tabBarInactiveTintColor: "grey",
-        tabBarLabelStyle: {
-          paddingBottom: 5,
-          fontSize: 10,
-          fontWeight: "bold",
-        },
 
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused }) => {
           let iconImg;
           let rn = route.name;
           let fillColor;
+          let label = "";
 
           if (rn === AppConst.ScreenConst.HOME_SCREEN) {
             iconImg = AppConst.IconConst.ICON_HOME;
-
             fillColor = focused ? argonTheme.COLORS.ERROR : "#4e5858";
+            label = "Trang chủ";
           } else if (rn === AppConst.ScreenConst.SEARCH_SCREEN) {
             iconImg = AppConst.IconConst.ICON_SEARCH;
-
             fillColor = focused ? argonTheme.COLORS.ERROR : "#4e5858";
+            label = "Tìm kiếm";
           } else if (rn === AppConst.ScreenConst.MARKET_SCREEN) {
             iconImg = AppConst.IconConst.ICON_SIM;
             fillColor = focused ? argonTheme.COLORS.ERROR : "#4e5858";
+            label = "Mua sim";
           } else if (rn === AppConst.ScreenConst.CHAT_SCREEN) {
             iconImg = AppConst.IconConst.ICON_CHAT;
             fillColor = focused ? argonTheme.COLORS.ERROR : "#4e5858";
+            label = "Chat";
           } else if (rn === AppConst.ScreenConst.PROFILE_SCREEN) {
             iconImg = AppConst.IconConst.ICON_PROFILE;
             fillColor = focused ? argonTheme.COLORS.ERROR : "#1d2222";
+            label = "Hồ sơ";
           } else if (rn === AppConst.ScreenConst.ORDER_SCREEN) {
             iconImg = AppConst.IconConst.ICON_MARKET;
             fillColor = focused ? argonTheme.COLORS.ERROR : "#4e5858";
+            label = "Đơn hàng";
           }
 
-          // You can return any component that you like here!
-          // return <Ionicons name={iconName} size={size} color={color} />;
           return (
-            <View>
-              <Image
-                source={iconImg}
-                style={{ width: 17, height: 17 }}
-                tintColor={fillColor}
-                resizeMode="contain"
-              />
-              {iconImg == AppConst.IconConst.ICON_CHAT &&
-              unReadMessageCount > 0 ? (
-                <Badge
-                  status="error"
-                  containerStyle={{ position: "absolute", top: -2, right: -2 }}
+            <View
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: 56,
+              }}
+            >
+              <View style={{ position: "relative" }}>
+                <Image
+                  source={iconImg}
+                  style={{ width: 20, height: 20, marginBottom: 4 }}
+                  tintColor={fillColor}
+                  resizeMode="contain"
                 />
-              ) : null}
+                {iconImg == AppConst.IconConst.ICON_CHAT &&
+                unReadMessageCount > 0 ? (
+                  <Badge
+                    status="error"
+                    containerStyle={{
+                      position: "absolute",
+                      top: -2,
+                      right: -2,
+                    }}
+                  />
+                ) : null}
+              </View>
+              <Text
+                style={{
+                  color: fillColor,
+                  fontSize: 10,
+                  fontWeight: "600",
+                  textAlign: "center",
+                }}
+              >
+                {label}
+              </Text>
             </View>
           );
         },
@@ -659,15 +704,18 @@ const BottomStack = () => {
       <BottomTab.Screen
         name={AppConst.ScreenConst.MARKET_SCREEN}
         component={PostStack}
+        listeners={protectedTabListeners}
       />
       <BottomTab.Screen
         name={AppConst.ScreenConst.CHAT_SCREEN}
         component={ChatScreen}
         initialParams={{ isDrawer: false }}
+        listeners={protectedTabListeners}
       />
       <BottomTab.Screen
         name={AppConst.BottomScreenConst.PROFILE_BOTTOM_SCREEN}
         component={DrawerProfileOverView}
+        listeners={protectedTabListeners}
       />
     </BottomTab.Navigator>
   );
@@ -676,6 +724,66 @@ const BottomStack = () => {
 const NativeStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name={AppConst.ScreenConst.ACCOUNT_SCREEN}
+        component={AccountScreen}
+        options={{
+          headerShown: false,
+          title: "Tài khoản",
+          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name={AppConst.ScreenConst.POLICY_SCREEN}
+        component={PolicyScreeen}
+        options={{
+          headerShown: false,
+          title: "Chính sách & điều khoản",
+          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name={AppConst.ScreenConst.AUCTION_MANUAL_SCREEN}
+        component={AuctionManualScreen}
+        options={{
+          headerShown: false,
+          title: "Hướng dẫn đấu giá",
+          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name={AppConst.ScreenConst.AUCTION_RULE_SCREEN}
+        component={AuctionRuleScreen}
+        options={{
+          headerShown: false,
+          title: "Quy định đấu giá",
+          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name={AppConst.ScreenConst.ESCROW_WALLET_PUSH_SCREEN}
+        component={EscrowWalletPushScreen}
+        options={{
+          headerShown: false,
+          title: "Nạp tiền",
+          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name={AppConst.ScreenConst.ESCROW_WALLET_POP_SCREEN}
+        component={EscrowWalletPopScreen}
+        options={{
+          headerShown: false,
+          title: "Rút tiền",
+          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
+          headerTintColor: "white",
+        }}
+      />
       <Stack.Screen
         name={AppConst.ScreenConst.CHANGE_PASSWORD}
         component={ChangePassword}
@@ -693,12 +801,23 @@ const NativeStack = () => {
       <Stack.Screen
         name={AppConst.ScreenConst.PURCHASE_SIM}
         component={PurchaseSimScreen}
-        options={{
+        options={({ navigation }) => ({
           headerShown: true,
           title: "Chi Tiết Sim",
           headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
           headerTintColor: "white",
-        }}
+          headerLeft: () => (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Trở lại"
+              hitSlop={12}
+              onPress={() => navigation.goBack()}
+              style={{ paddingRight: 12 }}
+            >
+              <Ionicons name="chevron-back-outline" color="white" size={28} />
+            </TouchableOpacity>
+          ),
+        })}
       />
 
       <Stack.Screen
@@ -748,43 +867,23 @@ const NativeStack = () => {
       <Stack.Screen
         name={AppConst.ScreenConst.FORTUNE_SIM_SCREEN}
         component={FortuneSimScreen}
-        options={{
-          headerShown: true,
-          title: "Bói Sim Phong Thủy",
-          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
-          headerTintColor: "white",
-        }} // Đặt headerShown thành true
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name={AppConst.ScreenConst.FORTUNE_SIM_DETAIL_SCREEN}
         component={FortuneSimDetailScreen}
-        options={{
-          headerShown: true,
-          title: "Phong Thủy Sim",
-          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
-          headerTintColor: "white",
-        }} // Đặt headerShown thành true
+        options={{ headerShown: false }}
       />
       {/* Tìm Sim Phong Thủy */}
       <Stack.Screen
         name={AppConst.ScreenConst.SEARCH_FORTUNE_SIM_DETAIL_SCREEN}
         component={SearchFengShuiDetailScreen}
-        options={{
-          headerShown: true,
-          title: "Tìm Sim Phong Thủy",
-          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
-          headerTintColor: "white",
-        }} // Đặt headerShown thành true
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name={AppConst.ScreenConst.SEARCH_FENGSHUI_SCREEN}
         component={SearchFengShuiScreen}
-        options={{
-          headerShown: true,
-          title: "Tìm SIM Phong Thủy",
-          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
-          headerTintColor: "white",
-        }} // Đặt headerShown thành true
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
@@ -795,12 +894,7 @@ const NativeStack = () => {
       <Stack.Screen
         name={AppConst.ScreenConst.SIM_VALUATION_SCREEN}
         component={SimValuationScreen}
-        options={{
-          headerShown: true,
-          title: "Định Giá SIM",
-          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
-          headerTintColor: "white",
-        }} // Đặt headerShown thành true
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name={AppConst.ScreenConst.COLLABORATION_SCREEN}
@@ -835,22 +929,12 @@ const NativeStack = () => {
       <Stack.Screen
         name={AppConst.ScreenConst.INSTALLMENT_SEARCH_SCREEN}
         component={InstallmentSearchScreen}
-        options={{
-          headerShown: true,
-          title: "Dự Toán Trả Góp",
-          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
-          headerTintColor: "white",
-        }} // Đặt headerShown thành true
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name={AppConst.ScreenConst.INSTALLMENT_MANGER_SCREEN}
         component={InstallmentManagerScreen}
-        options={{
-          headerShown: true,
-          title: "Quản Lý Trả Góp",
-          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
-          headerTintColor: "white",
-        }} // Đặt headerShown thành true
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name={AppConst.ScreenConst.AUTION_SCREEN}
@@ -876,12 +960,7 @@ const NativeStack = () => {
       <Stack.Screen
         name={AppConst.ScreenConst.VNPT_PACKAGE_SCREEN}
         component={VNPT_Package_Screen}
-        options={{
-          headerShown: true,
-          title: "Đăng ký gói cước Vinaphone",
-          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
-          headerTintColor: "white",
-        }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name={AppConst.ScreenConst.DATA_PACKAGE_SCREEN}
@@ -906,12 +985,7 @@ const NativeStack = () => {
       <Stack.Screen
         name={AppConst.ScreenConst.TOURIST_PACKAGE_SCREEN}
         component={TouristPackageScreen}
-        options={{
-          headerShown: true,
-          title: "Gói sim du lịch",
-          headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
-          headerTintColor: "white",
-        }} // Đặt headerShown thành true
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name={AppConst.ScreenConst.PACKAGE_DETAIL_SCREEN}
@@ -934,12 +1008,12 @@ const NativeStack = () => {
         }} // Đặt headerShown thành true
       />
       <Stack.Screen
-        name={"EscrowWalletHistoryScreen"}
+        name={AppConst.ScreenConst.ESCROW_WALLET_HISTORY_SCREEN}
         component={EscrowWalletHistoryScreen}
         initialParams={{ isDrawer: false }}
         options={{
-          headerShown: false,
-          title: "",
+          headerShown: true,
+          title: "Lịch sử giao dịch",
           headerStyle: { backgroundColor: argonTheme.COLORS.ERROR },
           headerTintColor: "white",
         }} // Đặt headerShown thành true
@@ -971,14 +1045,30 @@ const MainStack = () => {
         name={AppConst.ScreenConst.GROUP_CHANNEL}
         component={GroupChannelScreen}
       />
+      <Stack.Screen
+        name={AppConst.ScreenConst.LOGIN_SCREEN}
+        component={LoginScreen}
+      />
+      <Stack.Screen
+        name={AppConst.ScreenConst.REGISTER_SCEEN}
+        component={RegisterScreen}
+      />
     </Stack.Navigator>
   );
 };
 
 const AppStack = () => {
+  const openLoginScreen = () => {
+    if (navigationRef.isReady()) {
+      navigationRef.navigate(AppConst.ScreenConst.LOGIN_SCREEN);
+    }
+  };
+
   return (
-    <NavigationContainer>
-      <MainStack />
+    <NavigationContainer ref={navigationRef}>
+      <LoginRequiredProvider onLogin={openLoginScreen}>
+        <MainStack />
+      </LoginRequiredProvider>
     </NavigationContainer>
   );
 };

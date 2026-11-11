@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SendBird from "sendbird";
 // Galio components
-import { Checkbox, Text } from "galio-framework";
+import { Text } from "galio-framework";
 // Argon themed components
 import { argonTheme } from "../constants";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -26,7 +26,6 @@ const { width, height } = Dimensions.get("screen");
 import { FilterContext } from "../context/FilterContext";
 import { StatusBar } from "expo-status-bar";
 import LoadingScreen from "./LoadingScreen";
-import { SetLoadingContext } from "../context/SetLoadingContext";
 import { BottomTabContext } from "../context/BottomTabContext";
 import { Dropdown } from "react-native-element-dropdown";
 import { HomeContext } from "../context/HomeContext";
@@ -44,6 +43,7 @@ import {
   responsiveFontSize,
 } from "react-native-responsive-dimensions";
 import { AuthContext } from "../context/AuthContext";
+import { useLoginRequired } from "../context/LoginRequiredContext";
 
 const ConvertCurrency = (numberString) => {
   const formattedNumber = parseInt(numberString, 10).toLocaleString("vi-VN", {
@@ -69,11 +69,13 @@ const ReverseCurrencyNumber = (formattedNumber) => {
   return number.toString();
 };
 
-export default SearchScreen = ({ navigation, route }) => {
+const SearchScreen = ({ navigation, route }) => {
+  const { requireLogin } = useLoginRequired();
   const { userInfos } = useContext(AuthContext);
   const [currentFrame, SetCurrentFrame] = useState("");
 
   useEffect(() => {
+    console.log("Active Screen  : SearchScreen");
     const unsubscribe = navigation.addListener("focus", () => {
       if (route.params && route.params.screenParam) {
         const { screenParam } = route.params;
@@ -118,8 +120,8 @@ export default SearchScreen = ({ navigation, route }) => {
     simTypes,
     sortType,
     isDeleteAllFilter,
+    isSearching,
   } = useContext(SearchContext);
-  const { isLoading, SetLoading } = useContext(SetLoadingContext);
   const [activeButton, setActiveButton] = useState(null);
   const [selectedNetwork, setSelectedNetwork] = useState(null);
   const [selectedPriceRange, setSelectedPriceRange] = useState(null);
@@ -370,7 +372,9 @@ export default SearchScreen = ({ navigation, route }) => {
     return (
       <View
         className="flex-row justify-center items-center p-2"
-        backgroundColor={argonTheme.COLORS.ERROR}
+        style={{
+          backgroundColor: argonTheme.COLORS.ERROR,
+        }}
       >
         <SearchButton className="flex-start" />
 
@@ -426,7 +430,7 @@ export default SearchScreen = ({ navigation, route }) => {
           handleInputFocus();
         }}
       >
-        <View className="flex-row flex-0 items-center rounded-full bg-white mx-1">
+        <View className="flex-row flex-0 items-center rounded-full bg-white mt-2">
           <View className="bg-transparent rounded-full m-3">
             <Ionicons name="search-outline" color="black" size={20}></Ionicons>
           </View>
@@ -555,11 +559,6 @@ export default SearchScreen = ({ navigation, route }) => {
   const PriceFilter = () => {
     return (
       <View className="flex-row justify-center items-center border-b border-stone-300">
-        <Checkbox
-          className="mx-3"
-          color="warning"
-          style={{ width: 2, height: 5 }}
-        />
         <PriceEmphasis />
         <PriceLow />
         <PriceHigh />
@@ -964,13 +963,13 @@ export default SearchScreen = ({ navigation, route }) => {
     return (
       <View className="">
         {searchResult &&
-          searchResult.map((item) => {
+          searchResult.map((item, index) => {
             return (
-              <View className="flex-row bg-white border-b border-stone-300">
-                <View className="ml-3 items-left justify-center">
-                  <Checkbox color="warning" />
-                </View>
-                <View className="flex-1 ml-5 my-1 items-left justify-center">
+              <View
+                key={`sim-${item.id ?? item.simNumber ?? "unknown"}-${index}`}
+                className="flex-row bg-white border-b border-stone-300"
+              >
+                <View className="flex-1 mx-3 my-1 items-left justify-center">
                   <View className="flex-row">
                     <View style={{ flex: 1 }}>
                       <Text
@@ -1013,7 +1012,7 @@ export default SearchScreen = ({ navigation, route }) => {
                       >
                         <TouchableOpacity
                           onPress={() => {
-                            OrderHandle(item);
+                            requireLogin(() => OrderHandle(item));
                           }}
                         >
                           <Text
@@ -1895,588 +1894,591 @@ export default SearchScreen = ({ navigation, route }) => {
           </View>
         </Animated.View>
       )}
-      <SafeAreaView>
-        {isLoading == true ? <LoadingScreen /> : null}
+      {isSearching ? <LoadingScreen /> : null}
 
-        {/* Filter */}
+      {/* Filter */}
 
-        {/* Search*/}
-        <View className="">
-          {/* Header */}
+      {/* Search*/}
+      <View className="">
+        {/* Header */}
+        <SafeAreaView edges={["top"]} style={styles.headerSafeArea}>
           <SearchHeader />
+        </SafeAreaView>
 
-          {/* Search Result */}
-          <View className="">
-            {currentFrame == AppConst.SearchFrameConst.IS_CATEGORY ? (
-              <SimCateGory />
-            ) : null}
+        {/* Search Result */}
+        <View className="">
+          {currentFrame == AppConst.SearchFrameConst.IS_CATEGORY ? (
+            <SimCateGory />
+          ) : null}
 
-            {currentFrame == AppConst.SearchFrameConst.IS_INSTRUCTION ? (
-              <SearchInstruction />
-            ) : null}
+          {currentFrame == AppConst.SearchFrameConst.IS_INSTRUCTION ? (
+            <SearchInstruction />
+          ) : null}
 
-            {currentFrame == AppConst.SearchFrameConst.IS_RECENT ? (
-              <SearchRecent />
-            ) : null}
+          {currentFrame == AppConst.SearchFrameConst.IS_RECENT ? (
+            <SearchRecent />
+          ) : null}
 
-            {currentFrame == AppConst.SearchFrameConst.IS_RESULT ? (
-              <View className="bg-white">
-                {/*CategoryFilter*/}
-                <PriceFilter />
-                {/*Networks*/}
-                <NetworkFilter navi={navigation} />
+          {currentFrame == AppConst.SearchFrameConst.IS_RESULT ? (
+            <View className="bg-white">
+              {/*CategoryFilter*/}
+              <PriceFilter />
+              {/*Networks*/}
+              <NetworkFilter navi={navigation} />
 
-                <View style={{ height: "100%", position: "relative" }}>
-                  {currentFilterPopUp === FILTER_POPUP_SUBSCRIPTION && (
-                    <View
-                      className="bg-stone-100"
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        alignItems: "center",
-                        padding: 4,
-                        right: 0,
-                        left: 0,
-                        zIndex: 10000,
-                        borderBottomColor: "grey",
-                        borderBottomWidth: 1,
-                      }}
-                    >
-                      <View testID="networks" className="my-5">
-                        <View style={{ width: 200 }}>
-                          <View className="flex-row">
-                            <SubscriptionNumberCard
-                              type={1}
-                              network={subscriptionNumbers[0]}
-                              isActiveFrame={CheckActiveTickScription(1)}
-                              setButtonIndex={handleSetSubscriptionIndex}
-                              resetFrame={resetFrameState}
-                            />
-                            <SubscriptionNumberCard
-                              type={2}
-                              network={subscriptionNumbers[1]}
-                              isActiveFrame={CheckActiveTickScription(2)}
-                              setButtonIndex={handleSetSubscriptionIndex}
-                              resetFrame={resetFrameState}
-                            />
-                          </View>
-                          <View className="flex-row">
-                            <SubscriptionNumberCard
-                              type={3}
-                              network={subscriptionNumbers[2]}
-                              isActiveFrame={CheckActiveTickScription(3)}
-                              setButtonIndex={handleSetSubscriptionIndex}
-                              resetFrame={resetFrameState}
-                            />
-                            <SubscriptionNumberCard
-                              type={4}
-                              network={subscriptionNumbers[3]}
-                              isActiveFrame={CheckActiveTickScription(4)}
-                              setButtonIndex={handleSetSubscriptionIndex}
-                              resetFrame={resetFrameState}
-                            />
-                          </View>
-                        </View>
-                      </View>
-
-                      <TouchableOpacity
-                        onPress={() => {
-                          FilterPopupApply();
-                        }}
-                        style={{ backgroundColor: "#0061b0" }}
-                        className="items-center justify-center flex-1 rounded p-2 mx-1"
-                      >
-                        <Text className="text-white">ÁP DỤNG</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {currentFilterPopUp === FILTER_POPUP_PRICES && (
-                    <View
-                      className="bg-stone-100"
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        alignItems: "center",
-                        padding: 4,
-                        right: 0,
-                        left: 0,
-                        zIndex: 10000,
-                        borderBottomColor: "grey",
-                        borderBottomWidth: 1,
-                      }}
-                    >
-                      <View className="flex-row mt-2">
-                        <TextInput
-                          placeholder="Giá từ"
-                          keyboardType="numeric"
-                          placeholderTextColor={"gray"}
-                          className="text-base mb-1 pl-2 border flex-1 mr-2 text-center rounded"
-                          editable={true}
-                          value={priceFrom.toString()}
-                          onChangeText={handlePriceFromChange}
-                        />
-
-                        <TextInput
-                          placeholder="Giá đến"
-                          keyboardType="numeric"
-                          placeholderTextColor={"gray"}
-                          className="text-base mb-1 pl-2 border flex-1 ml-2 text-center rounded"
-                          editable={true}
-                          value={priceTo.toString()}
-                          onChangeText={handlePriceToChange}
-                        />
-                      </View>
-
-                      <TouchableOpacity
-                        onPress={() => {
-                          FilterPopupApply();
-                        }}
-                        style={{ backgroundColor: "#0061b0" }}
-                        className="items-center justify-center flex-1 rounded p-2 mx-1"
-                      >
-                        <Text className="text-white">ÁP DỤNG</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {currentFilterPopUp === FILTER_POPUP_NETWORK && (
-                    <View
-                      className="bg-stone-100"
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        alignItems: "center",
-                        padding: 4,
-                        right: 0,
-                        left: 0,
-                        zIndex: 10000,
-                        borderBottomColor: "grey",
-                        borderBottomWidth: 1,
-                      }}
-                    >
+              <View style={{ height: "100%", position: "relative" }}>
+                {currentFilterPopUp === FILTER_POPUP_SUBSCRIPTION && (
+                  <View
+                    className="bg-stone-100"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      alignItems: "center",
+                      padding: 4,
+                      right: 0,
+                      left: 0,
+                      zIndex: 10000,
+                      borderBottomColor: "grey",
+                      borderBottomWidth: 1,
+                    }}
+                  >
+                    <View testID="networks" className="my-5">
                       <View style={{ width: 200 }}>
                         <View className="flex-row">
-                          <NetWorkCard
+                          <SubscriptionNumberCard
                             type={1}
-                            network={netWorkNames[0]}
-                            isActiveFrame={CheckActiveTickNetWork(1)}
-                            setButtonIndex={handleSetNetIndex}
+                            network={subscriptionNumbers[0]}
+                            isActiveFrame={CheckActiveTickScription(1)}
+                            setButtonIndex={handleSetSubscriptionIndex}
                             resetFrame={resetFrameState}
                           />
-                          <NetWorkCard
+                          <SubscriptionNumberCard
                             type={2}
-                            network={netWorkNames[1]}
-                            isActiveFrame={CheckActiveTickNetWork(2)}
-                            setButtonIndex={handleSetNetIndex}
+                            network={subscriptionNumbers[1]}
+                            isActiveFrame={CheckActiveTickScription(2)}
+                            setButtonIndex={handleSetSubscriptionIndex}
                             resetFrame={resetFrameState}
                           />
                         </View>
                         <View className="flex-row">
-                          <NetWorkCard
+                          <SubscriptionNumberCard
                             type={3}
-                            network={netWorkNames[2]}
-                            isActiveFrame={CheckActiveTickNetWork(3)}
-                            setButtonIndex={handleSetNetIndex}
+                            network={subscriptionNumbers[2]}
+                            isActiveFrame={CheckActiveTickScription(3)}
+                            setButtonIndex={handleSetSubscriptionIndex}
                             resetFrame={resetFrameState}
                           />
-                          <NetWorkCard
+                          <SubscriptionNumberCard
                             type={4}
-                            network={netWorkNames[3]}
-                            isActiveFrame={CheckActiveTickNetWork(4)}
-                            setButtonIndex={handleSetNetIndex}
-                            resetFrame={resetFrameState}
-                          />
-                        </View>
-                        <View className="flex-row">
-                          <NetWorkCard
-                            type={5}
-                            network={netWorkNames[4]}
-                            isActiveFrame={CheckActiveTickNetWork(5)}
-                            setButtonIndex={handleSetNetIndex}
-                            resetFrame={resetFrameState}
-                          />
-                          <NetWorkCard
-                            type={6}
-                            network={netWorkNames[5]}
-                            isActiveFrame={CheckActiveTickNetWork(6)}
-                            setButtonIndex={handleSetNetIndex}
+                            network={subscriptionNumbers[3]}
+                            isActiveFrame={CheckActiveTickScription(4)}
+                            setButtonIndex={handleSetSubscriptionIndex}
                             resetFrame={resetFrameState}
                           />
                         </View>
                       </View>
-                      <TouchableOpacity
-                        onPress={() => {
-                          FilterPopupApply();
-                        }}
-                        style={{ backgroundColor: "#0061b0" }}
-                        className="items-center justify-center flex-1 rounded p-2 mx-1"
-                      >
-                        <Text className="text-white">ÁP DỤNG</Text>
-                      </TouchableOpacity>
                     </View>
-                  )}
-                  {currentFilterPopUp === FILTER_POPUP_HEADER && (
-                    <View
-                      className="bg-stone-100"
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        alignItems: "center",
-                        padding: 4,
-                        right: 0,
-                        left: 0,
-                        zIndex: 10000,
-                        borderBottomColor: "grey",
-                        borderBottomWidth: 1,
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        FilterPopupApply();
                       }}
+                      style={{ backgroundColor: "#0061b0" }}
+                      className="items-center justify-center flex-1 rounded p-2 mx-1"
                     >
+                      <Text className="text-white">ÁP DỤNG</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {currentFilterPopUp === FILTER_POPUP_PRICES && (
+                  <View
+                    className="bg-stone-100"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      alignItems: "center",
+                      padding: 4,
+                      right: 0,
+                      left: 0,
+                      zIndex: 10000,
+                      borderBottomColor: "grey",
+                      borderBottomWidth: 1,
+                    }}
+                  >
+                    <View className="flex-row mt-2">
+                      <TextInput
+                        placeholder="Giá từ"
+                        keyboardType="numeric"
+                        placeholderTextColor={"gray"}
+                        className="text-base mb-1 pl-2 border flex-1 mr-2 text-center rounded"
+                        editable={true}
+                        value={priceFrom.toString()}
+                        onChangeText={handlePriceFromChange}
+                      />
+
+                      <TextInput
+                        placeholder="Giá đến"
+                        keyboardType="numeric"
+                        placeholderTextColor={"gray"}
+                        className="text-base mb-1 pl-2 border flex-1 ml-2 text-center rounded"
+                        editable={true}
+                        value={priceTo.toString()}
+                        onChangeText={handlePriceToChange}
+                      />
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        FilterPopupApply();
+                      }}
+                      style={{ backgroundColor: "#0061b0" }}
+                      className="items-center justify-center flex-1 rounded p-2 mx-1"
+                    >
+                      <Text className="text-white">ÁP DỤNG</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {currentFilterPopUp === FILTER_POPUP_NETWORK && (
+                  <View
+                    className="bg-stone-100"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      alignItems: "center",
+                      padding: 4,
+                      right: 0,
+                      left: 0,
+                      zIndex: 10000,
+                      borderBottomColor: "grey",
+                      borderBottomWidth: 1,
+                    }}
+                  >
+                    <View style={{ width: 200 }}>
+                      <View className="flex-row">
+                        <NetWorkCard
+                          type={1}
+                          network={netWorkNames[0]}
+                          isActiveFrame={CheckActiveTickNetWork(1)}
+                          setButtonIndex={handleSetNetIndex}
+                          resetFrame={resetFrameState}
+                        />
+                        <NetWorkCard
+                          type={2}
+                          network={netWorkNames[1]}
+                          isActiveFrame={CheckActiveTickNetWork(2)}
+                          setButtonIndex={handleSetNetIndex}
+                          resetFrame={resetFrameState}
+                        />
+                      </View>
+                      <View className="flex-row">
+                        <NetWorkCard
+                          type={3}
+                          network={netWorkNames[2]}
+                          isActiveFrame={CheckActiveTickNetWork(3)}
+                          setButtonIndex={handleSetNetIndex}
+                          resetFrame={resetFrameState}
+                        />
+                        <NetWorkCard
+                          type={4}
+                          network={netWorkNames[3]}
+                          isActiveFrame={CheckActiveTickNetWork(4)}
+                          setButtonIndex={handleSetNetIndex}
+                          resetFrame={resetFrameState}
+                        />
+                      </View>
+                      <View className="flex-row">
+                        <NetWorkCard
+                          type={5}
+                          network={netWorkNames[4]}
+                          isActiveFrame={CheckActiveTickNetWork(5)}
+                          setButtonIndex={handleSetNetIndex}
+                          resetFrame={resetFrameState}
+                        />
+                        <NetWorkCard
+                          type={6}
+                          network={netWorkNames[5]}
+                          isActiveFrame={CheckActiveTickNetWork(6)}
+                          setButtonIndex={handleSetNetIndex}
+                          resetFrame={resetFrameState}
+                        />
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        FilterPopupApply();
+                      }}
+                      style={{ backgroundColor: "#0061b0" }}
+                      className="items-center justify-center flex-1 rounded p-2 mx-1"
+                    >
+                      <Text className="text-white">ÁP DỤNG</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {currentFilterPopUp === FILTER_POPUP_HEADER && (
+                  <View
+                    className="bg-stone-100"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      alignItems: "center",
+                      padding: 4,
+                      right: 0,
+                      left: 0,
+                      zIndex: 10000,
+                      borderBottomColor: "grey",
+                      borderBottomWidth: 1,
+                    }}
+                  >
+                    <View style={{ width: 200 }}>
+                      <View className="flex-row">
+                        <HeaderNumberCard
+                          type={1}
+                          network={headerNumbers[0]}
+                          isActiveFrame={CheckActiveTickHeader(
+                            headerNumbers[0].name,
+                          )}
+                          setButtonIndex={handleSetHeaderIndex}
+                          resetFrame={resetFrameState}
+                        />
+                        <HeaderNumberCard
+                          type={2}
+                          network={headerNumbers[1]}
+                          isActiveFrame={CheckActiveTickHeader(
+                            headerNumbers[1].name,
+                          )}
+                          setButtonIndex={handleSetHeaderIndex}
+                          resetFrame={resetFrameState}
+                        />
+                      </View>
+                      <View className="flex-row">
+                        <HeaderNumberCard
+                          type={3}
+                          network={headerNumbers[2]}
+                          isActiveFrame={CheckActiveTickHeader(
+                            headerNumbers[2].name,
+                          )}
+                          setButtonIndex={handleSetHeaderIndex}
+                          resetFrame={resetFrameState}
+                        />
+                        <HeaderNumberCard
+                          type={4}
+                          network={headerNumbers[3]}
+                          isActiveFrame={CheckActiveTickHeader(
+                            headerNumbers[3].name,
+                          )}
+                          setButtonIndex={handleSetHeaderIndex}
+                          resetFrame={resetFrameState}
+                        />
+                      </View>
+                      <View className="flex-row">
+                        <HeaderNumberCard
+                          type={5}
+                          network={headerNumbers[4]}
+                          isActiveFrame={CheckActiveTickHeader(
+                            headerNumbers[4].name,
+                          )}
+                          setButtonIndex={handleSetHeaderIndex}
+                          resetFrame={resetFrameState}
+                        />
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        FilterPopupApply();
+                      }}
+                      style={{ backgroundColor: "#0061b0" }}
+                      className="items-center justify-center flex-1 rounded p-2 mx-1"
+                    >
+                      <Text className="text-white">ÁP DỤNG</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {currentFilterPopUp === FILTER_POPUP_AVOID && (
+                  <View
+                    className="bg-stone-100"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      alignItems: "center",
+                      padding: 4,
+                      right: 0,
+                      left: 0,
+                      zIndex: 10000,
+                      borderBottomColor: "grey",
+                      borderBottomWidth: 1,
+                    }}
+                  >
+                    <View style={{ width: 200 }}>
+                      <View className="flex-row justify-between">
+                        <TouchableOpacity
+                          onPress={handleCheckboxChange}
+                          style={styles2.container}
+                          className=""
+                        >
+                          <View style={styles2.checkboxContainer}>
+                            <View style={styles2.checkboxWrapper}>
+                              {avoidSixDigits && (
+                                <View
+                                  style={[
+                                    styles2.checkbox,
+                                    { backgroundColor: maleCheckboxColor },
+                                  ]}
+                                />
+                              )}
+                            </View>
+                            <Text style={styles2.label}>Tránh 6 số</Text>
+                          </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={handleCheckboxChange}
+                          style={styles2.container}
+                          className=""
+                        >
+                          <View style={styles2.checkboxContainer}>
+                            <View style={styles2.checkboxWrapper}>
+                              {!avoidSixDigits && (
+                                <View
+                                  style={[
+                                    styles2.checkbox,
+                                    { backgroundColor: femaleCheckboxColor },
+                                  ]}
+                                />
+                              )}
+                            </View>
+                            <Text style={styles2.label}>Tránh tất cả</Text>
+                          </View>
+                        </TouchableOpacity>
+                      </View>
                       <View style={{ width: 200 }}>
                         <View className="flex-row">
-                          <HeaderNumberCard
+                          <AvoidNumberCard
                             type={1}
-                            network={headerNumbers[0]}
-                            isActiveFrame={CheckActiveTickHeader(
-                              headerNumbers[0].name,
+                            network={avoidNumbers[0]}
+                            isActiveFrame={CheckActiveTickAvoid(
+                              avoidNumbers[0].name,
                             )}
-                            setButtonIndex={handleSetHeaderIndex}
+                            setButtonIndex={handleSetAvoidIndex}
                             resetFrame={resetFrameState}
                           />
-                          <HeaderNumberCard
+                          <AvoidNumberCard
                             type={2}
-                            network={headerNumbers[1]}
-                            isActiveFrame={CheckActiveTickHeader(
-                              headerNumbers[1].name,
+                            network={avoidNumbers[1]}
+                            isActiveFrame={CheckActiveTickAvoid(
+                              avoidNumbers[1].name,
                             )}
-                            setButtonIndex={handleSetHeaderIndex}
+                            setButtonIndex={handleSetAvoidIndex}
                             resetFrame={resetFrameState}
                           />
                         </View>
                         <View className="flex-row">
-                          <HeaderNumberCard
+                          <AvoidNumberCard
                             type={3}
-                            network={headerNumbers[2]}
-                            isActiveFrame={CheckActiveTickHeader(
-                              headerNumbers[2].name,
+                            network={avoidNumbers[2]}
+                            isActiveFrame={CheckActiveTickAvoid(
+                              avoidNumbers[2].name,
                             )}
-                            setButtonIndex={handleSetHeaderIndex}
+                            setButtonIndex={handleSetAvoidIndex}
                             resetFrame={resetFrameState}
                           />
-                          <HeaderNumberCard
+                          <AvoidNumberCard
                             type={4}
-                            network={headerNumbers[3]}
-                            isActiveFrame={CheckActiveTickHeader(
-                              headerNumbers[3].name,
+                            network={avoidNumbers[3]}
+                            isActiveFrame={CheckActiveTickAvoid(
+                              avoidNumbers[3].name,
                             )}
-                            setButtonIndex={handleSetHeaderIndex}
+                            setButtonIndex={handleSetAvoidIndex}
                             resetFrame={resetFrameState}
                           />
                         </View>
                         <View className="flex-row">
-                          <HeaderNumberCard
+                          <AvoidNumberCard
                             type={5}
-                            network={headerNumbers[4]}
-                            isActiveFrame={CheckActiveTickHeader(
-                              headerNumbers[4].name,
+                            network={avoidNumbers[4]}
+                            isActiveFrame={CheckActiveTickAvoid(
+                              avoidNumbers[4].name,
                             )}
-                            setButtonIndex={handleSetHeaderIndex}
+                            setButtonIndex={handleSetAvoidIndex}
+                            resetFrame={resetFrameState}
+                          />
+                          <AvoidNumberCard
+                            type={5}
+                            network={avoidNumbers[5]}
+                            isActiveFrame={CheckActiveTickAvoid(
+                              avoidNumbers[5].name,
+                            )}
+                            setButtonIndex={handleSetAvoidIndex}
+                            resetFrame={resetFrameState}
+                          />
+                        </View>
+                        <View className="flex-row">
+                          <AvoidNumberCard
+                            type={5}
+                            network={avoidNumbers[6]}
+                            isActiveFrame={CheckActiveTickAvoid(
+                              avoidNumbers[6].name,
+                            )}
+                            setButtonIndex={handleSetAvoidIndex}
+                            resetFrame={resetFrameState}
+                          />
+                          <AvoidNumberCard
+                            type={5}
+                            network={avoidNumbers[7]}
+                            isActiveFrame={CheckActiveTickAvoid(
+                              avoidNumbers[7].name,
+                            )}
+                            setButtonIndex={handleSetAvoidIndex}
+                            resetFrame={resetFrameState}
+                          />
+                        </View>
+                        <View className="flex-row">
+                          <AvoidNumberCard
+                            type={5}
+                            network={avoidNumbers[8]}
+                            isActiveFrame={CheckActiveTickAvoid(
+                              avoidNumbers[8].name,
+                            )}
+                            setButtonIndex={handleSetAvoidIndex}
+                            resetFrame={resetFrameState}
+                          />
+                          <AvoidNumberCard
+                            type={5}
+                            network={avoidNumbers[9]}
+                            isActiveFrame={CheckActiveTickAvoid(
+                              avoidNumbers[9].name,
+                            )}
+                            setButtonIndex={handleSetAvoidIndex}
                             resetFrame={resetFrameState}
                           />
                         </View>
                       </View>
-                      <TouchableOpacity
-                        onPress={() => {
-                          FilterPopupApply();
-                        }}
-                        style={{ backgroundColor: "#0061b0" }}
-                        className="items-center justify-center flex-1 rounded p-2 mx-1"
-                      >
-                        <Text className="text-white">ÁP DỤNG</Text>
-                      </TouchableOpacity>
                     </View>
-                  )}
-                  {currentFilterPopUp === FILTER_POPUP_AVOID && (
-                    <View
-                      className="bg-stone-100"
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        alignItems: "center",
-                        padding: 4,
-                        right: 0,
-                        left: 0,
-                        zIndex: 10000,
-                        borderBottomColor: "grey",
-                        borderBottomWidth: 1,
+                    <TouchableOpacity
+                      onPress={() => {
+                        FilterPopupApply();
                       }}
+                      style={{ backgroundColor: "#0061b0" }}
+                      className="items-center justify-center flex-1 rounded p-2 mx-1"
                     >
-                      <View style={{ width: 200 }}>
-                        <View className="flex-row justify-between">
-                          <TouchableOpacity
-                            onPress={handleCheckboxChange}
-                            style={styles2.container}
-                            className=""
-                          >
-                            <View style={styles2.checkboxContainer}>
-                              <View style={styles2.checkboxWrapper}>
-                                {avoidSixDigits && (
-                                  <View
-                                    style={[
-                                      styles2.checkbox,
-                                      { backgroundColor: maleCheckboxColor },
-                                    ]}
-                                  />
-                                )}
-                              </View>
-                              <Text style={styles2.label}>Tránh 6 số</Text>
-                            </View>
-                          </TouchableOpacity>
+                      <Text className="text-white">ÁP DỤNG</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
 
-                          <TouchableOpacity
-                            onPress={handleCheckboxChange}
-                            style={styles2.container}
-                            className=""
-                          >
-                            <View style={styles2.checkboxContainer}>
-                              <View style={styles2.checkboxWrapper}>
-                                {!avoidSixDigits && (
-                                  <View
-                                    style={[
-                                      styles2.checkbox,
-                                      { backgroundColor: femaleCheckboxColor },
-                                    ]}
-                                  />
-                                )}
-                              </View>
-                              <Text style={styles2.label}>Tránh tất cả</Text>
-                            </View>
-                          </TouchableOpacity>
-                        </View>
-                        <View style={{ width: 200 }}>
-                          <View className="flex-row">
-                            <AvoidNumberCard
-                              type={1}
-                              network={avoidNumbers[0]}
-                              isActiveFrame={CheckActiveTickAvoid(
-                                avoidNumbers[0].name,
-                              )}
-                              setButtonIndex={handleSetAvoidIndex}
-                              resetFrame={resetFrameState}
-                            />
-                            <AvoidNumberCard
-                              type={2}
-                              network={avoidNumbers[1]}
-                              isActiveFrame={CheckActiveTickAvoid(
-                                avoidNumbers[1].name,
-                              )}
-                              setButtonIndex={handleSetAvoidIndex}
-                              resetFrame={resetFrameState}
-                            />
-                          </View>
-                          <View className="flex-row">
-                            <AvoidNumberCard
-                              type={3}
-                              network={avoidNumbers[2]}
-                              isActiveFrame={CheckActiveTickAvoid(
-                                avoidNumbers[2].name,
-                              )}
-                              setButtonIndex={handleSetAvoidIndex}
-                              resetFrame={resetFrameState}
-                            />
-                            <AvoidNumberCard
-                              type={4}
-                              network={avoidNumbers[3]}
-                              isActiveFrame={CheckActiveTickAvoid(
-                                avoidNumbers[3].name,
-                              )}
-                              setButtonIndex={handleSetAvoidIndex}
-                              resetFrame={resetFrameState}
-                            />
-                          </View>
-                          <View className="flex-row">
-                            <AvoidNumberCard
-                              type={5}
-                              network={avoidNumbers[4]}
-                              isActiveFrame={CheckActiveTickAvoid(
-                                avoidNumbers[4].name,
-                              )}
-                              setButtonIndex={handleSetAvoidIndex}
-                              resetFrame={resetFrameState}
-                            />
-                            <AvoidNumberCard
-                              type={5}
-                              network={avoidNumbers[5]}
-                              isActiveFrame={CheckActiveTickAvoid(
-                                avoidNumbers[5].name,
-                              )}
-                              setButtonIndex={handleSetAvoidIndex}
-                              resetFrame={resetFrameState}
-                            />
-                          </View>
-                          <View className="flex-row">
-                            <AvoidNumberCard
-                              type={5}
-                              network={avoidNumbers[6]}
-                              isActiveFrame={CheckActiveTickAvoid(
-                                avoidNumbers[6].name,
-                              )}
-                              setButtonIndex={handleSetAvoidIndex}
-                              resetFrame={resetFrameState}
-                            />
-                            <AvoidNumberCard
-                              type={5}
-                              network={avoidNumbers[7]}
-                              isActiveFrame={CheckActiveTickAvoid(
-                                avoidNumbers[7].name,
-                              )}
-                              setButtonIndex={handleSetAvoidIndex}
-                              resetFrame={resetFrameState}
-                            />
-                          </View>
-                          <View className="flex-row">
-                            <AvoidNumberCard
-                              type={5}
-                              network={avoidNumbers[8]}
-                              isActiveFrame={CheckActiveTickAvoid(
-                                avoidNumbers[8].name,
-                              )}
-                              setButtonIndex={handleSetAvoidIndex}
-                              resetFrame={resetFrameState}
-                            />
-                            <AvoidNumberCard
-                              type={5}
-                              network={avoidNumbers[9]}
-                              isActiveFrame={CheckActiveTickAvoid(
-                                avoidNumbers[9].name,
-                              )}
-                              setButtonIndex={handleSetAvoidIndex}
-                              resetFrame={resetFrameState}
-                            />
-                          </View>
-                        </View>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => {
-                          FilterPopupApply();
-                        }}
-                        style={{ backgroundColor: "#0061b0" }}
-                        className="items-center justify-center flex-1 rounded p-2 mx-1"
-                      >
-                        <Text className="text-white">ÁP DỤNG</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {currentFilterPopUp === FILTER_POPUP_CATEGORY && (
-                    <View
-                      className="bg-stone-100"
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        alignItems: "center",
-                        padding: 4,
-                        right: 0,
-                        left: 0,
-                        zIndex: 10000,
-                        borderBottomColor: "grey",
-                        borderBottomWidth: 1,
-                      }}
-                    >
-                      {
-                        <ScrollView style={{ height: 300, width: "100%" }}>
-                          {simTypeDatas.map((item) => {
-                            isCheck = item.id == value;
-                            return (
-                              <TouchableOpacity
-                                onPress={() => {
-                                  setValue(item.id);
-                                  FilterPopupApply();
+                {currentFilterPopUp === FILTER_POPUP_CATEGORY && (
+                  <View
+                    className="bg-stone-100"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      alignItems: "center",
+                      padding: 4,
+                      right: 0,
+                      left: 0,
+                      zIndex: 10000,
+                      borderBottomColor: "grey",
+                      borderBottomWidth: 1,
+                    }}
+                  >
+                    {
+                      <ScrollView style={{ height: 300, width: "100%" }}>
+                        {simTypeDatas.map((item) => {
+                          isCheck = item.id == value;
+                          return (
+                            <TouchableOpacity
+                              onPress={() => {
+                                setValue(item.id);
+                                FilterPopupApply();
+                              }}
+                            >
+                              <View
+                                style={{
+                                  borderRadius: 5,
+                                  padding: 5,
+                                  marginTop: 5,
+                                  backgroundColor: "white",
+                                  shadowColor: "black",
+                                  shadowOffset: { width: 1, height: 2 },
+                                  shadowOpacity: 0.3,
+                                  shadowRadius: 8,
+                                  margin: 5,
+                                  elevation: 5,
                                 }}
                               >
                                 <View
                                   style={{
-                                    borderRadius: 5,
-                                    padding: 5,
-                                    marginTop: 5,
-                                    backgroundColor: "white",
-                                    shadowColor: "black",
-                                    shadowOffset: { width: 1, height: 2 },
-                                    shadowOpacity: 1,
-                                    shadowRadius: 8,
-                                    margin: 5,
-                                    elevation: 5,
+                                    flexDirection: "row",
+                                    alignItems: "center",
                                   }}
                                 >
+                                  <Text> {item.name}</Text>
                                   <View
                                     style={{
-                                      flexDirection: "row",
-                                      alignItems: "center",
+                                      flex: 1,
+                                      alignItems: "flex-end",
                                     }}
                                   >
-                                    <Text> {item.name}</Text>
-                                    <View
-                                      style={{
-                                        flex: 1,
-                                        alignItems: "flex-end",
-                                      }}
-                                    >
-                                      {isCheck && (
-                                        <Ionicons
-                                          name="checkmark-outline"
-                                          color="black"
-                                          size={20}
-                                        ></Ionicons>
-                                      )}
-                                    </View>
+                                    {isCheck && (
+                                      <Ionicons
+                                        name="checkmark-outline"
+                                        color="black"
+                                        size={20}
+                                      ></Ionicons>
+                                    )}
                                   </View>
                                 </View>
-                              </TouchableOpacity>
-                            );
-                          })}
-                        </ScrollView>
+                              </View>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    }
+                  </View>
+                )}
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={false}
+                  overScrollMode="never"
+                  keyboardShouldPersistTaps="always"
+                  onScroll={({ nativeEvent }) => {
+                    const { layoutMeasurement, contentOffset, contentSize } =
+                      nativeEvent;
+                    const isEndReached =
+                      layoutMeasurement.height + contentOffset.y >=
+                      contentSize.height - 1;
+                    if (isEndReached) {
+                      console.log("reach end");
+                      if (
+                        searchResult &&
+                        searchResult.length > 0 &&
+                        searchResult[0].nextID != 0
+                      ) {
+                        searchPaging();
                       }
-                    </View>
-                  )}
-                  <ScrollView
-                    showsVerticalScrollIndicator={false}
-                    showsHorizontalScrollIndicator={false}
-                    overScrollMode="never"
-                    keyboardShouldPersistTaps="always"
-                    onScroll={({ nativeEvent }) => {
-                      const { layoutMeasurement, contentOffset, contentSize } =
-                        nativeEvent;
-                      const isEndReached =
-                        layoutMeasurement.height + contentOffset.y >=
-                        contentSize.height - 1;
-                      if (isEndReached) {
-                        console.log("reach end");
-                        if (
-                          searchResult &&
-                          searchResult.length > 0 &&
-                          searchResult[0].nextID != 0
-                        ) {
-                          searchPaging();
-                        }
-                      }
-                    }}
-                  >
-                    {searchResult && searchResult.length == 0 ? (
-                      <NoResultData />
-                    ) : null}
-                    <SearchResult />
-                  </ScrollView>
-                </View>
+                    }
+                  }}
+                >
+                  {searchResult && searchResult.length == 0 ? (
+                    <NoResultData />
+                  ) : null}
+                  <SearchResult />
+                </ScrollView>
               </View>
-            ) : null}
-          </View>
+            </View>
+          ) : null}
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 };
 
 //STYLE
 const styles = StyleSheet.create({
+  headerSafeArea: {
+    backgroundColor: argonTheme.COLORS.ERROR,
+  },
   filterText: {
     fontSize: responsiveFontSize(2),
   },
@@ -2487,7 +2489,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     shadowColor: "black",
     shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     margin: 5,
     height: responsiveHeight(5),
@@ -2566,8 +2568,8 @@ const styles7 = StyleSheet.create({
       width: 0,
       height: 1,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
 
     elevation: 2,
   },
@@ -2609,8 +2611,8 @@ const styles7 = StyleSheet.create({
       width: 0,
       height: 1,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
 
     elevation: 2,
   },
@@ -2627,9 +2629,10 @@ const styles2 = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: "white",
     shadowColor: "black",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
     marginTop: 5,
     marginBottom: 5,
     margin: 2,
@@ -2679,3 +2682,4 @@ const styles8 = StyleSheet.create({
     backgroundColor: "white",
   },
 });
+export default SearchScreen;

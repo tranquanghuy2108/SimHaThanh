@@ -15,5 +15,7 @@ namespace Models.ViewModels
         public double Auction_Deposit { get; set; }
         public int AskSim_AskingTime { get; set; }
         public int AskSim_SimNumber { get; set; }
+        public int ESim_SimPrice { get; set; }
+        public bool IsPublish { get; set; }
     }
 }

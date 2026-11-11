@@ -1,183 +1,191 @@
-import React, { useEffect, useContext } from "react";
-import { TouchableOpacity, View, FlatList } from "react-native";
+import React, { useCallback, useContext, useEffect } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-// Galio components
-import { Text } from "galio-framework";
-// Argon themed components
-
-import { SimDataContext } from "../context/SimDataContext";
-
-import SimDataCard from "../customComponents/SimDataCard";
 import { useDrawerStatus } from "@react-navigation/drawer";
 import { BottomTabContext } from "../context/BottomTabContext";
+import { SimDataContext } from "../context/SimDataContext";
+import SimDataCard from "../customComponents/SimDataCard";
 
-const SimDataFilterScreen = (props) => {
-  const isDrawerOpen = useDrawerStatus();
-
+const SimDataFilterScreen = ({ navigation }) => {
+  const drawerStatus = useDrawerStatus();
   const {
     searchFilter,
+    SetResetFrame,
     SetUpdateSubscriptionArray,
     setUpdateSortBy,
-    SetResetFrame,
-  } = useContext(SimDataContext);
-  const {
-    subscriptionTypes,
     sortType,
+    subscriptionTypes,
     updateSortBy,
     updatedSubscriptionArray,
-    resetFrameState,
   } = useContext(SimDataContext);
-
   const { simGroupDatas } = useContext(BottomTabContext);
 
   useEffect(() => {
-    if (isDrawerOpen === "open") {
-      // Xử lý sự kiện khi Drawer mở
-      console.log("Drawer đã mở");
-      handleShow();
-    } else if (isDrawerOpen === "closed") {
-      // Xử lý sự kiện khi Drawer đóng
-      console.log("Drawer đã đóng");
-      handleHide();
-    }
-  }, [isDrawerOpen]);
+    if (drawerStatus !== "open") return;
 
-  const handleShow = () => {
     setUpdateSortBy(sortType);
-    SetUpdateSubscriptionArray([]);
-    console.log("PRODUCTYPE: " + subscriptionTypes);
     SetUpdateSubscriptionArray([...subscriptionTypes]);
-  };
+  }, [drawerStatus]);
 
-  //handle Hide
-  const handleHide = () => {
-    setUpdateSortBy(sortType);
+  const toggleSubscription = useCallback(
+    (type) => {
+      const nextSubscriptions = updatedSubscriptionArray.includes(type)
+        ? updatedSubscriptionArray.filter((item) => item !== type)
+        : [...updatedSubscriptionArray, type];
 
-    SetUpdateSubscriptionArray([...subscriptionTypes]);
-  };
+      SetUpdateSubscriptionArray(nextSubscriptions);
+    },
+    [SetUpdateSubscriptionArray, updatedSubscriptionArray],
+  );
 
-  const CheckActiveTickScription = (index) => {
-    if (subscriptionTypes.includes(index)) {
-      return true;
-    } else {
-      return false;
-    }
-  };
-
-  const handleSetSubscriptionIndex = (type) => {
-    console.log("typeHandle" + type);
-
-    let currentSubscriptionArray = updatedSubscriptionArray;
-
-    if (currentSubscriptionArray.includes(type)) {
-      // Nếu phần tử _netWorkType có trong mảng, xóa phần tử đó khỏi mảng
-      currentSubscriptionArray.splice(
-        currentSubscriptionArray.indexOf(type),
-        1,
-      );
-    } else {
-      // Nếu phần tử _netWorkType không có trong mảng, thêm phần tử đó vào mảng
-      currentSubscriptionArray.push(type);
-    }
-    SetUpdateSubscriptionArray(currentSubscriptionArray);
-    console.log(
-      "UpdateFilter Subscription:" + JSON.stringify(updatedSubscriptionArray),
-    );
-  };
-  const ApplyFilter = () => {
+  const applyFilter = useCallback(() => {
     searchFilter(updatedSubscriptionArray, updateSortBy);
-  };
-  const ResetFilter = () => {
+    navigation.closeDrawer?.();
+  }, [navigation, searchFilter, updateSortBy, updatedSubscriptionArray]);
+
+  const resetFilter = useCallback(() => {
     SetUpdateSubscriptionArray([]);
     setUpdateSortBy(0);
-  };
+    SetResetFrame(true);
+    setTimeout(() => SetResetFrame(false), 0);
+  }, [SetResetFrame, SetUpdateSubscriptionArray, setUpdateSortBy]);
 
   return (
-    <SafeAreaView>
-      <View
-        style={{
-          height: "100%",
-        }}
+    <SafeAreaView edges={["top", "bottom"]} style={styles.safeArea}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Lọc SIM Data</Text>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Đóng bộ lọc"
+          hitSlop={8}
+          onPress={() => navigation.closeDrawer?.()}
+        >
+          <Text style={styles.closeText}>Đóng</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
       >
-        <View
-          style={{
-            width: 200,
-            margin: 20,
-          }}
+        {Array.isArray(simGroupDatas) && simGroupDatas.length > 0 ? (
+          simGroupDatas.map((packageCategory) => (
+            <View key={packageCategory.packageGroup.packageCategoryID} style={styles.group}>
+              <Text style={styles.groupTitle}>
+                {packageCategory.packageGroup.packageCategoryName}
+              </Text>
+              <View style={styles.grid}>
+                {packageCategory.subPackages.map((item) => (
+                  <SimDataCard
+                    key={String(item.id)}
+                    item={item}
+                    setButtonIndex={toggleSubscription}
+                  />
+                ))}
+              </View>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyText}>Chưa có dữ liệu bộ lọc.</Text>
+        )}
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={applyFilter}
+          style={[styles.footerButton, styles.applyButton]}
         >
-          {simGroupDatas.length > 0 &&
-            simGroupDatas.map((packageCate) => {
-              return (
-                <View testID="networks" className="">
-                  <View testID="header">
-                    <Text className="font-bold">
-                      {packageCate.packageGroup.packageCategoryName}
-                    </Text>
-                  </View>
-                  <View style={{ width: 200 }}>
-                    {
-                      <FlatList
-                        data={packageCate.subPackages}
-                        renderItem={({ item }) => {
-                          return (
-                            <SimDataCard
-                              navi={isDrawerOpen}
-                              item={item}
-                              setButtonIndex={handleSetSubscriptionIndex}
-                              resetFrame={resetFrameState}
-                            />
-                          );
-                        }}
-                        numColumns={2}
-                      />
-                    }
-                  </View>
-                </View>
-              );
-            })}
-        </View>
-
-        <View
-          testID="Prices"
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-
-            backgroundColor: "white",
-            padding: 2,
-          }}
-          className="flex-row items-center justify-between m-2 "
+          <Text style={styles.footerButtonText}>ÁP DỤNG</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={resetFilter}
+          style={[styles.footerButton, styles.resetButton]}
         >
-          <TouchableOpacity
-            onPress={() => {
-              ApplyFilter();
-              props.navigation.closeDrawer();
-            }}
-            style={{ backgroundColor: "#0061b0" }}
-            className="items-center justify-center flex-1 rounded p-2 mx-1"
-          >
-            <Text className="text-white">ÁP DỤNG</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              SetResetFrame(true);
-              ResetFilter();
-              setTimeout(() => {
-                SetResetFrame(false);
-              }, 10);
-            }}
-            style={{ backgroundColor: "#ff6b00" }}
-            className="items-center justify-center rounded p-2 flex-1 mx-1"
-          >
-            <Text className="text-white">ĐẶT LẠI</Text>
-          </TouchableOpacity>
-        </View>
+          <Text style={styles.footerButtonText}>ĐẶT LẠI</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: "#fff",
+    flex: 1,
+  },
+  header: {
+    alignItems: "center",
+    borderBottomColor: "#e7e7e7",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    minHeight: 52,
+    paddingHorizontal: 16,
+  },
+  title: {
+    color: "#222",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  closeText: {
+    color: "#1575b6",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 14,
+    paddingBottom: 24,
+  },
+  group: {
+    marginBottom: 18,
+  },
+  groupTitle: {
+    color: "#333",
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  emptyText: {
+    color: "#777",
+    textAlign: "center",
+  },
+  footer: {
+    backgroundColor: "#fff",
+    borderTopColor: "#e7e7e7",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    flexDirection: "row",
+    padding: 12,
+  },
+  footerButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 44,
+  },
+  applyButton: {
+    backgroundColor: "#0061b0",
+    marginRight: 6,
+  },
+  resetButton: {
+    backgroundColor: "#ff6b00",
+    marginLeft: 6,
+  },
+  footerButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+});
 
 export default SimDataFilterScreen;

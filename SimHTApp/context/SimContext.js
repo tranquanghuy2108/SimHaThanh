@@ -2,7 +2,6 @@
 import React, { createContext, useState, useContext } from "react";
 import axios from "axios";
 import Config from "../constants/Config";
-import { AuthContext } from "./AuthContext";
 import { SetLoadingContext } from "./SetLoadingContext";
 import {
   ToastAndroid
@@ -11,7 +10,6 @@ const SimContext = createContext();
 
 const SimProvider = ({ children }) => {
 
-  const { userToken, userInfos } = useContext(AuthContext)
   const { SetLoading } = useContext(SetLoadingContext);
 
 
@@ -25,7 +23,6 @@ const SimProvider = ({ children }) => {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + userToken
         },
       }).then((response) => {
         SetPackageSimState(response.data);

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {ScrollView, Text, Image, View, SafeAreaView } from 'react-native';
 import MasonryList from '@react-native-seoul/masonry-list';
 import Banner from '../customComponents/Banner';
@@ -12,6 +13,14 @@ const aboutDatas = [
 ];
 
 const AboutScreen = ({ navigation }) => {
+    useFocusEffect(
+        useCallback(() => {
+            console.log("LOG Active Screen : AboutScreen");
+            return () => {
+                // Optional: Add cleanup logic here if needed when the screen loses focus
+            };
+        }, [])
+    );
     return (
         <SafeAreaView>
             <View className="" >

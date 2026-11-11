@@ -1,6 +1,8 @@
 {
   "cli": {
-    "version": ">= 5.9.3"
+    "version": ">= 5.9.3",
+    "promptToConfigurePushNotifications": false,
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -8,18 +10,29 @@
       "distribution": "internal"
     },
     "preview": {
-      "android":{
+      "android": {
         "buildType": "apk"
       },
       "distribution": "internal"
     },
     "production": {
+      "autoIncrement": true,
       "android": {
         "credentialsSource": "local"
+      },
+      "ios": {
+        "image": "latest"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascApiKeyPath": "./AuthKey_ZNMW3Q82V9.p8",
+        "ascApiKeyId": "ZNMW3Q82V9",
+        "ascApiKeyIssuerId": "bc47ef9e-5398-4360-ae4a-12a9721e6d79",
+        "ascAppId": "6793839964"
+      }
+    }
   }
 }

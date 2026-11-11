@@ -6,8 +6,10 @@ import { useEffect } from 'react';
 const SignInScreen = (_userID,_nickName) => {
     const { connect } = useConnection();
     useEffect(()=>{
-        connect(_userID, { nickname:_nickName});
-    },[])
+        if (_userID) {
+            connect(_userID, { nickname:_nickName});
+        }
+    },[_userID, _nickName, connect])
     
 }
 export default SignInScreen;

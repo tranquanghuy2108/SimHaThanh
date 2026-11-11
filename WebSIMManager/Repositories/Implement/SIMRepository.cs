@@ -165,7 +165,7 @@ namespace Repositories.Implement
                             + ","
                             + GetNetworkIdByName(dataRow.network)
                             + ","
-                            + GetNetworkIdByName(dataRow.productType)
+                            + GetGetProductTypeIdByName(dataRow.productType)
                             + ",'"
                             + dataRow.description
                             + "','"
@@ -1255,12 +1255,7 @@ namespace Repositories.Implement
                     {
                         SimOfAgentOnCMSModel dataViewItem = new SimOfAgentOnCMSModel();
                         dataViewItem = item as SimOfAgentOnCMSModel;
-                        dataViewItem.SIMNumber = item.SIMNumber.Replace(
-                            request.keyword.Replace("*", ""),
-                            "<span style=\"color:red\">"
-                                + request.keyword.Replace("*", "")
-                                + "</span>"
-                        );
+                        dataViewItem.SIMNumber = item.SIMNumber;
                         data.Add(dataViewItem);
                     }
 
@@ -1344,12 +1339,7 @@ namespace Repositories.Implement
                     {
                         SimOfAgentOnCMSModel dataViewItem = new SimOfAgentOnCMSModel();
                         dataViewItem = item as SimOfAgentOnCMSModel;
-                        dataViewItem.SIMNumber = item.SIMNumber.Replace(
-                            request.keyword.Replace("*", ""),
-                            "<span style=\"color:red\">"
-                                + request.keyword.Replace("*", "")
-                                + "</span>"
-                        );
+                        dataViewItem.SIMNumber = item.SIMNumber;
                         data.Add(dataViewItem);
                     }
 
@@ -1682,16 +1672,19 @@ namespace Repositories.Implement
             {
                 List<SimOnAppModel> data = new();
                 Guid agentId = new Guid();
-
-                var agentOfUser = (
-                    from collab in _context.CollaboratorsGroupUsers
-                    join collabGroup in _context.CollaboratorsGroups
-                        on collab.CollaboratorsGroupId equals collabGroup.Id
-                    where collab.UserId == request.userId
-                    select collabGroup.OwnerId
-                ).FirstOrDefault();
-                if (agentOfUser != null)
-                    agentId = agentOfUser;
+                Guid agentOfUser = new Guid();
+                if (request.userId != null)
+                {
+                    agentOfUser = (
+                        from collab in _context.CollaboratorsGroupUsers
+                        join collabGroup in _context.CollaboratorsGroups
+                            on collab.CollaboratorsGroupId equals collabGroup.Id
+                        where collab.UserId == request.userId
+                        select collabGroup.OwnerId
+                    ).FirstOrDefault();
+                    if (agentOfUser != null)
+                        agentId = agentOfUser;
+                }
 
                 // Chuẩn bị tên và câu lệnh của stored procedure
                 string storedProcedureName = "GetSIMForApp";

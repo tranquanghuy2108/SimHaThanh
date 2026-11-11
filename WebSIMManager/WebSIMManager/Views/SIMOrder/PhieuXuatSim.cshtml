@@ -161,7 +161,7 @@
         var agent = $('#agentIds').val();
         var staff = $('#staffIds').val();
         var status = $('#status').val();
-        var data = { "debtPrefix": "PXSCN", "simNumber": simNumber, "code": code, "codCode": "", "apprStatus": parseInt(status), "staffIds": staff, "agentIds": agent, "pageIndex": page, "pageSize": 20 };
+        var data = { "debtPrefix": "PXSCN", "simNumber": simNumber, "code": code, "codCode": "", "apprStatus": parseInt(status), "staffIds": staff, "agentIds": agent, "pageIndex": page, "pageSize": 20, "pxSimData": false };
         $.ajax({
             url: '@Url.Action("SearchPhieuXuatSim","SIMOrder")',
             type: "POST",

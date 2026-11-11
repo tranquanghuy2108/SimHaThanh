@@ -82,6 +82,7 @@ namespace EFCoreMySQL.DataContext
         public DbSet<ProductType> ProductTypes { set; get; }
 
         //Posts
+        public DbSet<UserBlock> UserBlocks { set; get; }
         public DbSet<Post> Posts { set; get; }
         public DbSet<PostComment> Comments { set; get; }
         public DbSet<PostLikes> PostLikes { set; get; }

@@ -1,4 +1,5 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   TextInput,
@@ -11,6 +12,7 @@ import {
   ToastAndroid,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { AppConst } from "../constants/AppConst";
 import { argonTheme } from "../constants";
@@ -85,14 +87,14 @@ const SearchButton = (props) => {
           <Ionicons
             name="search-outline"
             color="black"
-            size={responsiveFontSize(2.5)}
+            size={20}
           ></Ionicons>
         </View>
         <TextInput
           placeholder="Tìm Kiếm SIM Data"
           placeholderTextColor={"gray"}
-          className="text-base mb-1 pl-2"
-          keyboardType="phone-pad"
+          className="text-base m-0 pl-2"
+          keyboardType="default"
           returnKeyType="search"
           blurOnSubmit={false}
           editable={false}
@@ -103,6 +105,14 @@ const SearchButton = (props) => {
   );
 };
 const DataPackageScreen = (props) => {
+  useFocusEffect(
+    useCallback(() => {
+      console.log("LOG Active Screen : DataPackageScreen");
+      return () => {
+        // Optional: Add cleanup logic here if needed when the screen loses focus
+      };
+    }, []),
+  );
   const { GetPackageSimData, search } = useContext(SimDataContext);
   const { simGroupDatas, SetSimGroupData } = useContext(BottomTabContext);
   const { simDataPackages } = useContext(DataPackageContext);
@@ -152,13 +162,8 @@ const DataPackageScreen = (props) => {
     return (
       <View
         className="flex-row justify-center items-center p-2"
-        style={{
-          zIndex: 1000,
-          paddingTop: StatusBar.currentHeight || 0,
-          backgroundColor: argonTheme.COLORS.ERROR,
-          height: responsiveHeight(12),
-          marginTop: responsiveHeight(1),
-        }}
+        style={styles.header}
+        backgroundColor={argonTheme.COLORS.ERROR}
       >
         <ExitButton />
         <SearchButton navigation={props.navigation} />
@@ -169,27 +174,27 @@ const DataPackageScreen = (props) => {
     GetSimDataPackage();
   }, []);
   return (
-    <View className="bg-stone-100">
+    <View style={styles.container}>
       {/* <SearchHeader /> */}
       <StatusBar translucent backgroundColor={argonTheme.COLORS.ERROR} />
-      <HomeHeader />
-      <View className="" style={{ backgroundColor: "white" }}>
-        <View style={{ backgroundColor: "yellow" }}>
+      <SafeAreaView edges={["top"]} style={styles.headerSafeArea}>
+        <HomeHeader />
+      </SafeAreaView>
+      <SafeAreaView edges={["bottom"]} style={styles.content}>
+        <View style={styles.banner}>
           <Image
             source={require("../assets/imgs/sim-data.png")}
-            style={{ width: "100%", height: responsiveHeight(23) }}
+            style={styles.bannerImage}
             resizeMode={"stretch"}
           />
         </View>
         {/* <SearchButton /> */}
         {simDataPackages ? (
           <ScrollView
-            style={{
-              marginBottom: responsiveHeight(72),
-              flexDirection: "row",
-              alignContent: "space-between",
-              flexWrap: "wrap",
-            }}
+            style={styles.packageList}
+            contentContainerStyle={styles.packageListContent}
+            showsVerticalScrollIndicator={false}
+            overScrollMode="never"
           >
             {simDataPackages.map((item) => {
               return (
@@ -263,20 +268,50 @@ const DataPackageScreen = (props) => {
             })}
           </ScrollView>
         ) : (
-          <View></View>
+          <View style={styles.emptyContent} />
         )}
-      </View>
+      </SafeAreaView>
     </View>
   );
 };
 export default DataPackageScreen;
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#f8f8f8",
+    flex: 1,
+  },
+  headerSafeArea: {
+    backgroundColor: argonTheme.COLORS.ERROR,
+  },
+  header: {
+    minHeight: 60,
+  },
+  content: {
+    backgroundColor: "white",
+    flex: 1,
+  },
+  banner: {
+    backgroundColor: "yellow",
+  },
+  bannerImage: {
+    height: responsiveHeight(23),
+    width: "100%",
+  },
+  packageList: {
+    flex: 1,
+  },
+  packageListContent: {
+    paddingBottom: 20,
+  },
+  emptyContent: {
+    flex: 1,
+  },
   card: {
     backgroundColor: "#f8f8f8f8",
     shadowColor: "black",
     shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
     margin: 10,

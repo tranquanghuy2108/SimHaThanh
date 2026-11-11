@@ -14,7 +14,6 @@ namespace WebSIMAPI.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly INotificationRepository _notiRepository;
-
         public NotificationController(INotificationRepository notiRepository)
         {
             _notiRepository = notiRepository;
@@ -31,5 +30,6 @@ namespace WebSIMAPI.Controllers
         {
             return _notiRepository.ReadNotification(request);
         }
+
     }
 }

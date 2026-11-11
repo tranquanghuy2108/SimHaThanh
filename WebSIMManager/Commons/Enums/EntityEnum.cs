@@ -151,4 +151,11 @@
         Data,
         Tourist,
     }
+
+    public enum PostStatus
+    {
+        Published = 1,
+        PendingModeration = 2,
+        Removed = 3,
+    }
 }

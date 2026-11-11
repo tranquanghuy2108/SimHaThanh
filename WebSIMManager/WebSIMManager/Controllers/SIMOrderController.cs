@@ -31,6 +31,7 @@ namespace WebSIMManager.Controllers
         private readonly ISystemConfigRepository _systemConfigRepository;
         private readonly IContactRepository _contactConfigRepository;
         private readonly IWebHostEnvironment _environment;
+        int eSimPrice = 30000;
 
         public SIMOrderController(
             ISIMRepository SIMRepository,
@@ -57,6 +58,8 @@ namespace WebSIMManager.Controllers
             _systemConfigRepository = systemConfigRepository;
             _contactConfigRepository = contactConfigRepository;
             _environment = environment;
+            var sysConfig = _systemConfigRepository.GetAppSysConfig();
+            eSimPrice = sysConfig.ESim_SimPrice;
         }
 
         // GET: SIMOrderController
@@ -99,6 +102,35 @@ namespace WebSIMManager.Controllers
         [Route("phieu-xuat-sim")]
         [Authorize(Roles = "Xuất sim")]
         public ActionResult PhieuXuatSim()
+        {
+            ViewBag.Agents = _AccountRepository.GetCusAgentForCombo();
+            ViewBag.Staff = _AccountRepository.GetStaffForCombo();
+            List<SelectListItem> selectListItems = new List<SelectListItem>()
+            {
+                new SelectListItem()
+                {
+                    Value = ((int)ApprovedStatus.Waiting).ToString(),
+                    Text = Enum.GetName(typeof(ApprovedStatus), ApprovedStatus.Waiting),
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)ApprovedStatus.Approved).ToString(),
+                    Text = Enum.GetName(typeof(ApprovedStatus), ApprovedStatus.Approved),
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)ApprovedStatus.Reject).ToString(),
+                    Text = Enum.GetName(typeof(ApprovedStatus), ApprovedStatus.Reject),
+                },
+            };
+            @ViewBag.Status = selectListItems;
+            return View();
+        }
+
+        // GET: SIMOrderController/Details/5
+        [Route("phieu-xuat-sim-data")]
+        [Authorize(Roles = "Xuất sim")]
+        public ActionResult PhieuXuatSimData()
         {
             ViewBag.Agents = _AccountRepository.GetCusAgentForCombo();
             ViewBag.Staff = _AccountRepository.GetStaffForCombo();
@@ -252,6 +284,7 @@ namespace WebSIMManager.Controllers
                     }
                 );
             }
+            @ViewBag.ESim_SimPrice = eSimPrice;
             @ViewBag.SimInOrders = simInOrders;
             @ViewBag.SimIDs = simIds;
             @ViewBag.Agents = _AccountRepository.GetCusAgentForCombo();
@@ -318,6 +351,7 @@ namespace WebSIMManager.Controllers
         {
             try
             {
+                @ViewBag.ESim_SimPrice = eSimPrice;
                 @ViewBag.SimInOrders = request.simInOrders;
                 @ViewBag.SimIDs = string.Join(
                     ',',
@@ -408,7 +442,7 @@ namespace WebSIMManager.Controllers
         public ActionResult Edit(int id)
         {
             @ViewBag.Agents = _AccountRepository.GetCusAgentForCombo();
-
+            @ViewBag.ESim_SimPrice = eSimPrice;
             List<SelectListItem> payOrderSelectedItems = new List<SelectListItem>()
             {
                 new SelectListItem()
@@ -477,6 +511,7 @@ namespace WebSIMManager.Controllers
         {
             try
             {
+                @ViewBag.ESim_SimPrice = eSimPrice;
                 @ViewBag.SimIDs = string.Join(
                     ',',
                     request.simInOrders.Select(x => x.simId).ToList()

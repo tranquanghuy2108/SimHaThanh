@@ -1,7 +1,9 @@
-import React, { useContext } from 'react';
+import React, { useContext, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { Text, Image, View, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { argonTheme } from '../../constants';
 import { FengShuiContext } from '../../context/FengShuiContext';
+import AppBackHeader from "../../components/AppBackHeader";
 
 import {
   responsiveHeight,
@@ -10,6 +12,14 @@ import {
 } from "react-native-responsive-dimensions";
 
 const FortuneSimDetailScreen = ({ navigation }) => {
+  useFocusEffect(
+    useCallback(() => {
+      console.log("LOG Active Screen : FortuneSimDetailScreen");
+      return () => {
+        // Optional: Add cleanup logic here if needed when the screen loses focus
+      };
+    }, [])
+  );
   const { fortuneData } = useContext(FengShuiContext);
   const TakeFortuneCardImg = (id) => {
     var imgURL = null;
@@ -219,9 +229,10 @@ const FortuneSimDetailScreen = ({ navigation }) => {
   }
   return (
 
-    <SafeAreaView>
+    <View style={{ flex: 1 }}>
+      <AppBackHeader navigation={navigation} title="Phong Thủy Sim" />
       {fortuneData ? (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { flex: 1 }]}>
 
 
 
@@ -540,7 +551,7 @@ const FortuneSimDetailScreen = ({ navigation }) => {
       )
       }
 
-    </SafeAreaView>
+    </View>
   )
 }
 const styles = StyleSheet.create({

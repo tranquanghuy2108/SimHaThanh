@@ -25,8 +25,10 @@ namespace WebClient.Controllers
         private readonly INewsRepository _newsRepository;
         private readonly ILogger<HomeController> _logger;
         private readonly IMemoryCache _memoryCache;
+        private readonly ISystemConfigRepository _systemConfigRepository;
         string device_info = string.Empty;
         bool IsMobile = false;
+        int eSimPrice = 30000;
 
         public HomeController(
             ISIMRepository SIMRepository,
@@ -34,7 +36,8 @@ namespace WebClient.Controllers
             IContactRepository contactRepository,
             INewsRepository newsRepository,
             ILogger<HomeController> logger,
-            IMemoryCache memoryCache
+            IMemoryCache memoryCache,
+            ISystemConfigRepository systemConfigRepository
         )
         {
             _SIMRepository = SIMRepository;
@@ -43,6 +46,9 @@ namespace WebClient.Controllers
             _newsRepository = newsRepository;
             _logger = logger;
             _memoryCache = memoryCache;
+            _systemConfigRepository = systemConfigRepository;
+            var sysConfig = _systemConfigRepository.GetAppSysConfig();
+            eSimPrice = sysConfig.ESim_SimPrice;
         }
 
         // GET: SIMController
@@ -511,8 +517,9 @@ namespace WebClient.Controllers
         {
             // Basic Origin/Referer check (if provided)
             var origin =
-                Request.Headers["Origin"].FirstOrDefault()
-                ?? Request.Headers["Referer"].FirstOrDefault();
+                Request.Headers["Origin"].FirstOrDefault() ?? Request
+                    .Headers["Referer"]
+                    .FirstOrDefault();
             if (!string.IsNullOrEmpty(origin) && !origin.Contains(Request.Host.Host))
             {
                 _logger.LogWarning(
@@ -748,6 +755,7 @@ namespace WebClient.Controllers
         public IActionResult Cart()
         {
             GetNavMenuInfo();
+            ViewBag.eSimPrice = eSimPrice;
             return View();
         }
 
@@ -762,7 +770,7 @@ namespace WebClient.Controllers
             {
                 totalPrice += item.Price * item.Qty;
                 if (item.Esim)
-                    totalPrice += 50000 * item.Qty;
+                    totalPrice += eSimPrice * item.Qty;
                 if (item.Type == SIMProductType.Normal)
                 {
                     simIds.Add(
@@ -822,13 +830,13 @@ namespace WebClient.Controllers
             }
 
             resp = _SIMOrderRepository.CreateSIMOrder(model);
-            // if (resp.Code == "1")
-            //     await TelegramHelper.SendMessage(
-            //         -4286160390,
-            //         "Sim số: "
-            //             + string.Join(',', request.ItemInCarts.Select(x => x.Name).ToList())
-            //             + " vừa được đặt qua web simhathanh.vn"
-            //     );
+            if (resp.Code == "1")
+                await TelegramHelper.SendMessage(
+                    -4286160390,
+                    "Sim số: "
+                        + string.Join(',', request.ItemInCarts.Select(x => x.Name).ToList())
+                        + " vừa được đặt qua web simhathanh.vn"
+                );
 
             return Json(resp);
         }

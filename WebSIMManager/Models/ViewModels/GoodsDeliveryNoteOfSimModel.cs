@@ -1,11 +1,11 @@
-﻿using Commons.Enums;
-using Models.Requests;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Commons.Enums;
+using Models.Requests;
 
 namespace Models.ViewModels
 {
@@ -52,6 +52,7 @@ namespace Models.ViewModels
         public string ApprovedBy { get; set; }
         public string DeliveryDate { get; set; }
     }
+
     public class GoodsDeliveryNoteOfSimModel
     {
         public int Id { get; set; }
@@ -94,21 +95,29 @@ namespace Models.ViewModels
         //Handle sim trả góp
         //Thời hạn thanh toán
         public int InstallmentPeriod { get; set; }
+
         //NGày thanh toán hàng tháng
         public int DateOfPayment { get; set; }
+
         //Ngày hoàn thành thanh toán
         public DateTime InstallmentEndDate { get; set; }
+
         //Số tiền thanh toán ban đầu
         public double DownPayment { get; set; }
+
         //Số tiền sẽ trả góp
         public double InstallmentPayment { get; set; }
+
         //Tiền góp hàng tháng
         public double MonthlyInstallmentPayment { get; set; }
+
         //Lãi theo ngày
         public double InterestRate { get; set; }
-        [Required(ErrorMessage ="Bạn chưa nhập ngày lập phiếu")]
+
+        [Required(ErrorMessage = "Bạn chưa nhập ngày lập phiếu")]
         public DateTime? DeliveryDate { get; set; }
     }
+
     public class SimInfosInOrderModel
     {
         public int Id { get; set; }
@@ -130,12 +139,14 @@ namespace Models.ViewModels
         public double PriceOfDiscountAgent { get; set; }
         public double PriceAfterDiscountAgent { get; set; }
     }
+
     public class GoodsDeliveryNoteOfSimFilterRequest : PagingRequestBase
     {
         public string debtPrefix { get; set; } = "";
         public string simNumber { get; set; } = "";
         public string code { get; set; } = "";
         public string codCode { get; set; } = "";
+        public bool pxSimData { get; set; } = false;
         public ApprovedStatus? apprStatus { get; set; }
         public List<string?> agentIds { get; set; }
         public List<string?> staffIds { get; set; }

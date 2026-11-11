@@ -27,7 +27,7 @@ namespace WebSIMAPI.Controllers
         }
 
         [HttpPost("get-all-post")]
-        public ResponseDataViewModel<PostViewModel> GetAllPost([FromBody] PagingRequestBase request)
+        public ResponseDataViewModel<PostViewModel> GetAllPost([FromBody] GetPostRequest request)
         {
             return _postRepository.GetAllPost(request);
         }
@@ -89,5 +89,17 @@ namespace WebSIMAPI.Controllers
         }
 
         //POST_IMAGE_LIKE*/
+
+        [HttpPost("report-post")]
+        public ResponseDataModel<string> ReportPost([FromBody] ReportPostRequestModel request)
+        {
+            return _postRepository.ReportPost(request);
+        }
+
+        [HttpPost("block-user")]
+        public ResponseDataModel<string> BlockUser([FromBody] BlockUserRequestModel request)
+        {
+            return _postRepository.BlockUser(request);
+        }
     }
 }

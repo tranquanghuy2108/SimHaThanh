@@ -17,6 +17,7 @@
                 <div class="col-md-12">
                     <div class="card px-3">
                         <form method="post" onsubmit="Onloading();">
+                            <input type="hidden" id="ESim_SimPrice" value="@ViewBag.ESim_SimPrice"/>
                             <input type="hidden" id="simIds" value="@ViewBag.SimIDs" />
                             @if (@ViewBag.SimInOrders != null && @ViewBag.SimInOrders.Count > 0)
                             {
@@ -184,6 +185,7 @@
         var simPrice = 0;
         var agentSIMPrice = 0;
         var collaboratorsSIMPrice = 0;
+        var eSimPrice = parseInt($('#ESim_SimPrice').val()) || 0;
 
         // Utilities
         const qs = id => document.getElementById(id);
@@ -328,9 +330,9 @@
                                 agentSIMPrice += parseFloat(el.agentSIMPrice) || 0;
                                 collaboratorsSIMPrice += parseFloat(el.collaboratorsSIMPrice) || 0;
                                 if(el.usingEsim) {
-                                    simPrice += 50000;
-                                    agentSIMPrice += 50000;
-                                    collaboratorsSIMPrice += 50000;
+                                    simPrice += eSimPrice;
+                                    agentSIMPrice += eSimPrice;
+                                    collaboratorsSIMPrice += eSimPrice;
                                 }
 
                                 rows += `<tr>
@@ -410,7 +412,7 @@
             setVal('usingEsim_' + id, isChecked);
 
             // Example: adjust total if eSIM adds a surcharge (adjust to your logic)
-            const surcharge = 50000;
+            const surcharge = eSimPrice;
             const current = parseCurrency(qs('PriceOfSim')?.value);
             const newVal = isChecked ? current + surcharge : Math.max(0, current - surcharge);
             setVal('PriceOfSim', newVal);

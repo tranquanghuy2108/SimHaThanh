@@ -1,8 +1,13 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
-import { Image, SafeAreaView, View, Text, Button } from "react-native";
+import { Image, View, Text, Button, Platform } from "react-native";
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import * as Font from "expo-font";
 import { Asset } from "expo-asset";
+import { isRunningInExpoGo } from "expo";
 import { Block, GalioProvider } from "galio-framework";
 // Before rendering any navigation stack
 import { enableScreens } from "react-native-screens";
@@ -31,20 +36,23 @@ import { SimProvider } from "./context/SimContext.js";
 //sendbird
 import Config from "./constants/Config.js";
 import platformServices from "./SendBirdComponents/ExpoNativeModule.js";
-import { SendbirdUIKitContainer } from '@sendbird/uikit-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SendbirdUIKitContainer } from "@sendbird/uikit-react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PostProvider } from "./context/PostContext.js";
 import { InstallmentProvider } from "./context/InstallmentContext.js";
 import { NotificationMailProvider } from "./context/NotificationMailContext.js";
 
 import { EscrowWalletProvider } from "./context/EscrowWalletContext.js";
 
+const isAndroidExpoGo = Platform.OS === "android" && isRunningInExpoGo();
 
+// Giữ splash cho đến khi view gốc layout xong. Đặc biệt trên iOS,
+// modal điều khoản có thể hiển thị phía trên splash nếu splash chưa được ẩn.
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function App() {
-
-
   const [appIsReady, setAppIsReady] = useState(false);
+  const [rootViewIsReady, setRootViewIsReady] = useState(false);
 
   useEffect(() => {
     async function prepare() {
@@ -59,17 +67,20 @@ export default function App() {
         // Tell the application to render
         setAppIsReady(true);
       }
-
     }
     prepare();
   }, []);
 
-
   const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
-      await SplashScreen.hideAsync();
+    if (appIsReady && !rootViewIsReady) {
+      try {
+        await SplashScreen.hideAsync();
+      } finally {
+        // Không để lỗi splash chặn navigation/login vĩnh viễn.
+        setRootViewIsReady(true);
+      }
     }
-  }, [appIsReady]);
+  }, [appIsReady, rootViewIsReady]);
 
   if (!appIsReady) {
     return null;
@@ -81,18 +92,27 @@ export default function App() {
     // Other userProfile properties...
   };
 
-
-
-
-
   return (
-
-    <SendbirdUIKitContainer
-      appId={Config.SEND_BIRD_APP_ID}
-      chatOptions={{ localCacheStorage: AsyncStorage }}
-      platformServices={platformServices}
-      userProfile={userProfile}
+    <SafeAreaProvider
+      initialMetrics={initialWindowMetrics}
+      style={{ flex: 1, backgroundColor: argonTheme.COLORS.ERROR }}
     >
+      <SendbirdUIKitContainer
+        appId={Config.SEND_BIRD_APP_ID}
+        chatOptions={{
+          localCacheStorage: AsyncStorage,
+          // Expo Go on Android cannot provide an FCM device token. Keep this
+          // enabled for development and production builds, where FCM is available.
+          enableAutoPushTokenRegistration: !isAndroidExpoGo,
+        }}
+        platformServices={platformServices}
+        uikitOptions={{
+          groupChannel: {
+            enableVoiceMessage: false,
+          },
+        }}
+        userProfile={userProfile}
+      >
       <AuthProvider>
         <SetLoadingProvider>
           <BarNotificationProvider>
@@ -104,36 +124,37 @@ export default function App() {
                       <EscrowWalletProvider>
                         <VNPTProvider>
                           <DataPackageProvider>
-                          <TouristPackageProvider>
-                            <InstallmentProvider>
-                              <FengShuiProvider>
-                                <PostProvider>
-                                  <OrderProvider>
-                                    <CollaboratorProvider>
-                                      <SimProvider>
-                                        <SearchProvider>
-                                          <SimDataProvider>
-                                            <MySimProvider>
-                                              <FilterProvider>
-
-                                                <SafeAreaView style={{ flex: 1 }}>
-                                                  <GalioProvider alioProvider theme={argonTheme}>
-                                                    <Block flex>
-                                                      <AppNav />
-                                                    </Block>
-                                                  </GalioProvider>
-                                                </SafeAreaView>
-
-                                              </FilterProvider>
-                                            </MySimProvider>
-                                          </SimDataProvider>
-                                        </SearchProvider>
-                                      </SimProvider>
-                                    </CollaboratorProvider>
-                                  </OrderProvider>
-                                </PostProvider>
-                              </FengShuiProvider>
-                            </InstallmentProvider>
+                            <TouristPackageProvider>
+                              <InstallmentProvider>
+                                <FengShuiProvider>
+                                  <PostProvider>
+                                    <OrderProvider>
+                                      <CollaboratorProvider>
+                                        <SimProvider>
+                                          <SearchProvider>
+                                            <SimDataProvider>
+                                              <MySimProvider>
+                                                <FilterProvider>
+                                                  <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+                                                      <GalioProvider
+                                                        alioProvider
+                                                        theme={argonTheme}
+                                                      >
+                                                        <Block flex>
+                                                          {rootViewIsReady ? <AppNav /> : null}
+                                                          </Block>
+                                                        </GalioProvider>
+                                                  </View>
+                                                </FilterProvider>
+                                              </MySimProvider>
+                                            </SimDataProvider>
+                                          </SearchProvider>
+                                        </SimProvider>
+                                      </CollaboratorProvider>
+                                    </OrderProvider>
+                                  </PostProvider>
+                                </FengShuiProvider>
+                              </InstallmentProvider>
                             </TouristPackageProvider>
                           </DataPackageProvider>
                         </VNPTProvider>
@@ -142,11 +163,11 @@ export default function App() {
                   </HomeProvider>
                 </SendBirdProvider>
               </BottomTabProvider>
-
             </NotificationMailProvider>
           </BarNotificationProvider>
         </SetLoadingProvider>
       </AuthProvider>
-    </SendbirdUIKitContainer>
+      </SendbirdUIKitContainer>
+    </SafeAreaProvider>
   );
 }

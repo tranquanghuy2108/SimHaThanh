@@ -1,11 +1,11 @@
-﻿using ClosedXML.Excel;
+﻿using System.Data.SqlTypes;
+using System.Text.RegularExpressions;
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.ViewModels;
 using Repositories.Implement;
 using Repositories.Interface;
-using System.Data.SqlTypes;
-using System.Text.RegularExpressions;
 
 namespace WebSIMManager.Controllers
 {
@@ -20,7 +20,17 @@ namespace WebSIMManager.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly ILogActionRepository _logAction;
         private readonly IWarehouseRepository _warehouseRepository;
-        public ReportController(ISIMRepository simRepository, IHttpContextAccessor httpContextAccessor, ISIMOrderRepository orderRepository, IDebtRepository debtRepository, IWebHostEnvironment environment, IAccountRepository accountRepository, ILogActionRepository logAction, IWarehouseRepository warehouseRepository)
+
+        public ReportController(
+            ISIMRepository simRepository,
+            IHttpContextAccessor httpContextAccessor,
+            ISIMOrderRepository orderRepository,
+            IDebtRepository debtRepository,
+            IWebHostEnvironment environment,
+            IAccountRepository accountRepository,
+            ILogActionRepository logAction,
+            IWarehouseRepository warehouseRepository
+        )
         {
             _simRepository = simRepository;
             _orderRepository = orderRepository;
@@ -31,18 +41,22 @@ namespace WebSIMManager.Controllers
             _logAction = logAction;
             _warehouseRepository = warehouseRepository;
         }
+
         public ActionResult Index()
         {
             return View();
         }
+
         public ActionResult DebtAgents()
         {
             return View();
         }
+
         public ActionResult DebtCustomers()
         {
             return View();
         }
+
         [Route("ton-kho")]
         public ActionResult Inventory()
         {
@@ -149,7 +163,8 @@ namespace WebSIMManager.Controllers
             worksheet.Cell(1, 1).Value = "";
             worksheet.Cell(1, 2).Value = "Thông tin Đại Lý";
             worksheet.Cell(1, 5).Value = "Công Nợ Cuối kỳ";
-            worksheet.Cell(2, 5).Value = data.Data.Sum(t => t.TotalReceivables) - data.Data.Sum(t => t.TotalLiabilities);
+            worksheet.Cell(2, 5).Value =
+                data.Data.Sum(t => t.TotalReceivables) - data.Data.Sum(t => t.TotalLiabilities);
             worksheet.Cell(2, 5).Style.NumberFormat.Format = "#,##0";
             worksheet.Cell(3, 1).Value = "STT";
             worksheet.Cell(3, 2).Value = "Tên đại lý";
@@ -171,11 +186,17 @@ namespace WebSIMManager.Controllers
                 worksheet.Cell(i + 4, 6).Style.NumberFormat.Format = "#,##0";
             }
             worksheet.Cell(data.Data.Count + 4, 2).Value = "Tổng:";
-            worksheet.Cell(data.Data.Count + 4, 5).Value = data.Data.Sum(t => t.TotalReceivables ?? 0);
+            worksheet.Cell(data.Data.Count + 4, 5).Value = data.Data.Sum(t =>
+                t.TotalReceivables ?? 0
+            );
             worksheet.Cell(data.Data.Count + 4, 5).Style.NumberFormat.Format = "#,##0";
-            worksheet.Cell(data.Data.Count + 4, 6).Value = data.Data.Sum(t => t.TotalLiabilities ?? 0);
+            worksheet.Cell(data.Data.Count + 4, 6).Value = data.Data.Sum(t =>
+                t.TotalLiabilities ?? 0
+            );
             worksheet.Cell(data.Data.Count + 4, 6).Style.NumberFormat.Format = "#,##0";
-            worksheet.Cell(data.Data.Count + 4, 7).Value = data.Data.Sum(t => t.TotalFinalDebt ?? 0);
+            worksheet.Cell(data.Data.Count + 4, 7).Value = data.Data.Sum(t =>
+                t.TotalFinalDebt ?? 0
+            );
             worksheet.Cell(data.Data.Count + 4, 7).Style.NumberFormat.Format = "#,##0";
 
             var title1 = worksheet.Range("A1:A2");
@@ -197,7 +218,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -211,13 +236,17 @@ namespace WebSIMManager.Controllers
             return View();
         }
 
-        public ActionResult SearchSimInventoryCompany([FromBody] SimInventoryCompanyReportRequest request)
+        public ActionResult SearchSimInventoryCompany(
+            [FromBody] SimInventoryCompanyReportRequest request
+        )
         {
             var data = _simRepository.GetSimInventoryCompany(request);
             return Json(data);
         }
 
-        public ActionResult ExportSimInventoryCompany([FromBody] SimInventoryCompanyReportRequest request)
+        public ActionResult ExportSimInventoryCompany(
+            [FromBody] SimInventoryCompanyReportRequest request
+        )
         {
             request.isPaged = false;
             var data = _simRepository.GetSimInventoryCompany(request);
@@ -268,7 +297,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -280,13 +313,17 @@ namespace WebSIMManager.Controllers
             return View();
         }
 
-        public ActionResult SearchWarehouseOutbound([FromBody] WarehouseOutboundReportRequest request)
+        public ActionResult SearchWarehouseOutbound(
+            [FromBody] WarehouseOutboundReportRequest request
+        )
         {
             var data = _simRepository.GetWarehouseOutbound(request);
             return Json(data);
         }
 
-        public ActionResult ExportWarehouseOutbound([FromBody] WarehouseOutboundReportRequest request)
+        public ActionResult ExportWarehouseOutbound(
+            [FromBody] WarehouseOutboundReportRequest request
+        )
         {
             request.isPaged = false;
             var data = _simRepository.GetWarehouseOutbound(request);
@@ -315,7 +352,8 @@ namespace WebSIMManager.Controllers
             foreach (var group in groupedProducts)
             {
                 // Group label
-                worksheet.Cell(currentRow, 1).Value = $"Loại sản phẩm: {group.Key}-{group.FirstOrDefault()?.ProductType}";
+                worksheet.Cell(currentRow, 1).Value =
+                    $"Loại sản phẩm: {group.Key}-{group.FirstOrDefault()?.ProductType}";
                 worksheet.Cell(currentRow, 1).Style.Font.Bold = true;
                 currentRow++;
 
@@ -332,7 +370,9 @@ namespace WebSIMManager.Controllers
                     worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
                     worksheet.Cell(currentRow, 6).Value = product.TotalSellingAmount;
                     worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "#,##0";
-                    worksheet.Cell(currentRow, 7).Value = product.ExportDate?.ToString("dd/MM/yyyy HH:mm:ss");
+                    worksheet.Cell(currentRow, 7).Value = product.ExportDate?.ToString(
+                        "dd/MM/yyyy HH:mm:ss"
+                    );
                     worksheet.Cell(currentRow, 8).Value = product.Customer;
                     worksheet.Cell(currentRow, 9).Value = product.Warehouse;
                     worksheet.Cell(currentRow, 10).Value = product.Note;
@@ -354,7 +394,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -371,6 +415,7 @@ namespace WebSIMManager.Controllers
             var data = _simRepository.GetSoldSim(request);
             return Json(data);
         }
+
         public ActionResult ExportSoldSim([FromBody] SoldSimReportRequest request)
         {
             request.isPaged = false;
@@ -409,7 +454,8 @@ namespace WebSIMManager.Controllers
 
             for (int i = 0; i < data.Data.Count; i++)
             {
-                worksheet.Cell(i + 3, 1).Value = data.Data[i].CreateTime.ToString("dd/MM/yyyy HH:mm:ss");
+                worksheet.Cell(i + 3, 1).Value = data.Data[i]
+                    .CreateTime.ToString("dd/MM/yyyy HH:mm:ss");
                 worksheet.Cell(i + 3, 2).Value = data.Data[i].Code;
                 worksheet.Cell(i + 3, 3).Value = data.Data[i].SimNumbers;
                 worksheet.Cell(i + 3, 4).Value = data.Data[i].TotalOrders;
@@ -456,7 +502,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -466,11 +516,13 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
+
         public ActionResult SearchProfitSituation([FromBody] ProfitSituationReportRequest request)
         {
             var data = _simRepository.GetProfitSituation(request);
             return Json(data);
         }
+
         public ActionResult ExportProfitSituation([FromBody] ProfitSituationReportRequest request)
         {
             request.isPaged = false;
@@ -522,7 +574,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -532,11 +588,13 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
+
         public ActionResult SearchCashFundBalance([FromBody] CashFundBalanceReportRequest request)
         {
             var data = _simRepository.GetCashFundBalance(request);
             return Json(data);
         }
+
         public ActionResult ExportCashFundBalance([FromBody] CashFundBalanceReportRequest request)
         {
             request.isPaged = false;
@@ -570,7 +628,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -580,11 +642,13 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
+
         public ActionResult SearchBankBalance([FromBody] BankBalanceReportRequest request)
         {
             var data = _simRepository.GetBankBalance(request);
             return Json(data);
         }
+
         public ActionResult ExportBankBalance([FromBody] BankBalanceReportRequest request)
         {
             request.isPaged = false;
@@ -608,7 +672,8 @@ namespace WebSIMManager.Controllers
             foreach (var group in groupedProducts)
             {
                 // Group label
-                worksheet.Cell(currentRow, 1).Value = $"Ngân hàng: {group.FirstOrDefault()?.BankName}";
+                worksheet.Cell(currentRow, 1).Value =
+                    $"Ngân hàng: {group.FirstOrDefault()?.BankName}";
                 worksheet.Cell(currentRow, 1).Style.Font.Bold = true;
                 currentRow++;
 
@@ -639,7 +704,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -649,11 +718,13 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
+
         public ActionResult SearchProfitStatemente([FromBody] ProfitStatementReportRequest request)
         {
             var data = _simRepository.GetProfitStatement(request);
             return Json(data);
         }
+
         public ActionResult ExportProfitStatemente([FromBody] ProfitStatementReportRequest request)
         {
             request.isPaged = false;
@@ -691,7 +762,8 @@ namespace WebSIMManager.Controllers
 
             for (int i = 0; i < data.Data.Count; i++)
             {
-                worksheet.Cell(i + 3, 1).Value = data.Data[i].ExportDate.ToString("dd/MM/yyyy HH:mm:ss");
+                worksheet.Cell(i + 3, 1).Value = data.Data[i]
+                    .ExportDate.ToString("dd/MM/yyyy HH:mm:ss");
                 worksheet.Cell(i + 3, 2).Value = data.Data[i].InvoiceCode;
                 worksheet.Cell(i + 3, 3).Value = data.Data[i].CustomerCode;
                 worksheet.Cell(i + 3, 4).Value = data.Data[i].CustomerName;
@@ -746,7 +818,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -756,11 +832,13 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
+
         public ActionResult SearchOrderProfit([FromBody] OrderProfitReportRequest request)
         {
             var data = _simRepository.GetOrderProfit(request);
             return Json(data);
         }
+
         public ActionResult ExportOrderProfit([FromBody] OrderProfitReportRequest request)
         {
             request.isPaged = false;
@@ -796,7 +874,8 @@ namespace WebSIMManager.Controllers
 
             for (int i = 0; i < data.Data.Count; i++)
             {
-                worksheet.Cell(i + 3, 1).Value = data.Data[i].ExportDate.ToString("dd/MM/yyyy HH:mm:ss");
+                worksheet.Cell(i + 3, 1).Value = data.Data[i]
+                    .ExportDate.ToString("dd/MM/yyyy HH:mm:ss");
                 worksheet.Cell(i + 3, 2).Value = data.Data[i].InvoiceCode;
                 worksheet.Cell(i + 3, 3).Value = data.Data[i].CustomerName;
                 worksheet.Cell(i + 3, 4).Value = data.Data[i].SIMNumbers;
@@ -838,7 +917,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -848,11 +931,13 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
+
         public ActionResult SearchBankTransaction([FromBody] BankTransactionReportRequest request)
         {
             var data = _simRepository.GetBankTransaction(request);
             return Json(data);
         }
+
         public ActionResult ExportBankTransaction([FromBody] BankTransactionReportRequest request)
         {
             request.isPaged = false;
@@ -873,7 +958,8 @@ namespace WebSIMManager.Controllers
 
             for (int i = 0; i < data.Data.Count; i++)
             {
-                worksheet.Cell(i + 2, 1).Value = data.Data[i].TransactionDate.ToString("dd/MM/yyyy HH:mm:ss");
+                worksheet.Cell(i + 2, 1).Value = data.Data[i]
+                    .TransactionDate.ToString("dd/MM/yyyy HH:mm:ss");
                 worksheet.Cell(i + 2, 2).Value = data.Data[i].InvoiceCode;
                 worksheet.Cell(i + 2, 3).Value = data.Data[i].CustomerName;
                 worksheet.Cell(i + 2, 4).Value = data.Data[i].Increase;
@@ -894,7 +980,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -904,11 +994,13 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
+
         public ActionResult SearchCashFund([FromBody] CashFundReportRequest request)
         {
             var data = _simRepository.GetCashFund(request);
             return Json(data);
         }
+
         public ActionResult ExportCashFund([FromBody] CashFundReportRequest request)
         {
             request.isPaged = false;
@@ -929,7 +1021,8 @@ namespace WebSIMManager.Controllers
 
             for (int i = 0; i < data.Data.Count; i++)
             {
-                worksheet.Cell(i + 2, 1).Value = data.Data[i].DateCreated.ToString("dd/MM/yyyy HH:mm:ss");
+                worksheet.Cell(i + 2, 1).Value = data.Data[i]
+                    .DateCreated.ToString("dd/MM/yyyy HH:mm:ss");
                 worksheet.Cell(i + 2, 2).Value = data.Data[i].InvoiceCode;
                 worksheet.Cell(i + 2, 3).Value = data.Data[i].CustomerName;
                 worksheet.Cell(i + 2, 4).Value = data.Data[i].Income;
@@ -958,7 +1051,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -969,11 +1066,13 @@ namespace WebSIMManager.Controllers
             ViewBag.Materials = _warehouseRepository.GetMaterialForCombo();
             return View();
         }
+
         public ActionResult SearchSimInventory([FromBody] SimInventoryReportRequest request)
         {
             var data = _simRepository.GetSimInventory(request);
             return Json(data);
         }
+
         public ActionResult ExportSimInventory([FromBody] SimInventoryReportRequest request)
         {
             request.isPaged = false;
@@ -1042,7 +1141,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -1052,12 +1155,18 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
-        public ActionResult SearchOrderImportExport([FromBody] OrderImportExportReportRequest request)
+
+        public ActionResult SearchOrderImportExport(
+            [FromBody] OrderImportExportReportRequest request
+        )
         {
             var data = _simRepository.GetOrderImportExport(request);
             return Json(data);
         }
-        public ActionResult ExportOrderImportExport([FromBody] OrderImportExportReportRequest request)
+
+        public ActionResult ExportOrderImportExport(
+            [FromBody] OrderImportExportReportRequest request
+        )
         {
             request.isPaged = false;
             var data = _simRepository.GetOrderImportExport(request);
@@ -1083,7 +1192,8 @@ namespace WebSIMManager.Controllers
             for (int i = 0; i < data.Data.Count; i++)
             {
                 worksheet.Cell(i + 2, 1).Value = data.Data[i].Stt;
-                worksheet.Cell(i + 2, 2).Value = data.Data[i].DateOfOccurrence.ToString("dd/MM/yyyy HH:mm:ss");
+                worksheet.Cell(i + 2, 2).Value = data.Data[i]
+                    .DateOfOccurrence.ToString("dd/MM/yyyy HH:mm:ss");
                 worksheet.Cell(i + 2, 3).Value = data.Data[i].InvoiceCode;
                 worksheet.Cell(i + 2, 4).Value = data.Data[i].Code;
                 worksheet.Cell(i + 2, 5).Value = data.Data[i].Product;
@@ -1092,7 +1202,8 @@ namespace WebSIMManager.Controllers
                 worksheet.Cell(i + 2, 7).Value = data.Data[i].Customer;
                 worksheet.Cell(i + 2, 8).Value = data.Data[i].InvoiceType;
                 worksheet.Cell(i + 2, 9).Value = data.Data[i].Creator;
-                worksheet.Cell(i + 2, 10).Value = data.Data[i].DateCreated.ToString("dd/MM/yyyy HH:mm:ss");
+                worksheet.Cell(i + 2, 10).Value = data.Data[i]
+                    .DateCreated.ToString("dd/MM/yyyy HH:mm:ss");
                 worksheet.Cell(i + 2, 11).Value = data.Data[i].Warehouse;
                 worksheet.Cell(i + 2, 12).Value = data.Data[i].Approved.ToString();
             }
@@ -1107,7 +1218,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -1118,12 +1233,18 @@ namespace WebSIMManager.Controllers
             ViewBag.Materials = _warehouseRepository.GetMaterialForCombo();
             return View();
         }
-        public ActionResult SearchInventoryMovement([FromBody] InventoryMovementReportRequest request)
+
+        public ActionResult SearchInventoryMovement(
+            [FromBody] InventoryMovementReportRequest request
+        )
         {
             var data = _simRepository.GetInventoryMovement(request);
             return Json(data);
         }
-        public ActionResult ExportInventoryMovement([FromBody] InventoryMovementReportRequest request)
+
+        public ActionResult ExportInventoryMovement(
+            [FromBody] InventoryMovementReportRequest request
+        )
         {
             request.isPaged = false;
             var data = _simRepository.GetInventoryMovement(request);
@@ -1152,7 +1273,8 @@ namespace WebSIMManager.Controllers
             foreach (var group in groupedProducts)
             {
                 // Group label
-                worksheet.Cell(currentRow, 1).Value = $"Loại sản phẩm: {group.Key} - {group.First().ProductTypeName}";
+                worksheet.Cell(currentRow, 1).Value =
+                    $"Loại sản phẩm: {group.Key} - {group.First().ProductTypeName}";
                 worksheet.Cell(currentRow, 1).Style.Font.Bold = true;
                 currentRow++;
 
@@ -1169,7 +1291,9 @@ namespace WebSIMManager.Controllers
                     worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
                     worksheet.Cell(currentRow, 6).Value = product.RemainingQuantity;
                     worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "#,##0";
-                    worksheet.Cell(currentRow, 7).Value = product.DateOfEntry.ToString("dd/MM/yyyy HH:mm:ss");
+                    worksheet.Cell(currentRow, 7).Value = product.DateOfEntry.ToString(
+                        "dd/MM/yyyy HH:mm:ss"
+                    );
                     worksheet.Cell(currentRow, 8).Value = product.Supplier;
                     worksheet.Cell(currentRow, 9).Value = product.Warehouse;
                     worksheet.Cell(currentRow, 10).Value = product.Note;
@@ -1191,7 +1315,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -1199,17 +1327,19 @@ namespace WebSIMManager.Controllers
         [Route("chi-tiet-cong-no-khach-hang")]
         public ActionResult CustomerDebt(Guid userId)
         {
-            ViewBag.UserIds = _accountRepository.GetAgentForCombo();
+            ViewBag.UserIds = _accountRepository.GetAgentAndAgentConsigmentForCombo();
             ViewBag.UserId = userId;
             var agent = _accountRepository.GetUserForEdit(userId);
             @ViewBag.TitleReport = $"Báo cáo các giao dịch của đại lý: {agent?.FullName}";
             return View();
         }
+
         public ActionResult SearchCustomerDebt([FromBody] CustomerDebtReportRequest request)
         {
             var data = _simRepository.GetCustomerDebt(request);
             return Json(data);
         }
+
         public ActionResult ExportCustomerDebt([FromBody] CustomerDebtReportRequest request)
         {
             request.isPaged = false;
@@ -1232,12 +1362,14 @@ namespace WebSIMManager.Controllers
 
             var beginningBalance = data?.Data?.FirstOrDefault()?.BeginningBalance ?? 0;
             var incidentalDebt = data?.Data?.Sum(t => t.IncidentalDebt);
-            worksheet.Cell(2, 1).Value = $"Nợ đầu kỳ: {beginningBalance.ToString("N0")} đ. Phát sinh trong kỳ: {incidentalDebt?.ToString("N0")} đ. Công nợ cuối kỳ: {(beginningBalance + incidentalDebt)?.ToString("N0")} đ. (Lưu ý: Số âm là nợ đại lý)";
+            worksheet.Cell(2, 1).Value =
+                $"Nợ đầu kỳ: {beginningBalance.ToString("N0")} đ. Phát sinh trong kỳ: {incidentalDebt?.ToString("N0")} đ. Công nợ cuối kỳ: {(beginningBalance + incidentalDebt)?.ToString("N0")} đ. (Lưu ý: Số âm là nợ đại lý)";
             var row2 = worksheet.Range($"A2:N2");
             row2.Merge();
 
             worksheet.Cell(3, 1).Value = "Thông tin phiếu";
-            worksheet.Cell(3, 5).Value = $"Thông tin phát sinh chi tiết ({data.Data.Count} Sim bán)";
+            worksheet.Cell(3, 5).Value =
+                $"Thông tin phát sinh chi tiết ({data.Data.Count} Sim bán)";
             worksheet.Cell(3, 9).Value = "P/S trong kỳ";
             worksheet.Cell(3, 11).Value = $"{incidentalDebt?.ToString("N0")}đ";
             worksheet.Cell(3, 12).Value = "Thông tin khác";
@@ -1252,7 +1384,6 @@ namespace WebSIMManager.Controllers
             title4.Merge();
             var row3 = worksheet.Range($"A3:N3");
             row3.Style.Font.Bold = true;
-
 
             worksheet.Cell(4, 1).Value = "Ngày phát sinh";
             worksheet.Cell(4, 2).Value = "Mã phiếu";
@@ -1272,7 +1403,8 @@ namespace WebSIMManager.Controllers
 
             for (int i = 0; i < data.Data.Count; i++)
             {
-                worksheet.Cell(i + 5, 1).Value = data.Data[i].TransactionDate.ToString("dd/MM/yyyy HH:mm:ss");
+                worksheet.Cell(i + 5, 1).Value = data.Data[i]
+                    .TransactionDate.ToString("dd/MM/yyyy HH:mm:ss");
                 worksheet.Cell(i + 5, 2).Value = data.Data[i].InvoiceCode;
                 worksheet.Cell(i + 5, 3).Value = data.Data[i].InvoiceType;
                 worksheet.Cell(i + 5, 4).Value = data.Data[i].AgentName;
@@ -1316,7 +1448,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
 
@@ -1327,11 +1463,13 @@ namespace WebSIMManager.Controllers
             ViewBag.Users = _accountRepository.GetListAllUserForCombo();
             return View();
         }
+
         public ActionResult SearchLogSYS([FromBody] LogSYSRequestModel request)
         {
             var data = _logAction.GetLogSys(request);
             return Json(data);
         }
+
         public ActionResult ExportLogSYS([FromBody] LogSYSRequestModel request)
         {
             request.isPaged = false;
@@ -1350,7 +1488,9 @@ namespace WebSIMManager.Controllers
 
             for (int i = 0; i < data.Data.Count; i++)
             {
-                worksheet.Cell(i + 2, 1).Value = data.Data[i].createTime.ToString("dd/MM/yyyy HH:mm:ss"); ;
+                worksheet.Cell(i + 2, 1).Value = data.Data[i]
+                    .createTime.ToString("dd/MM/yyyy HH:mm:ss");
+                ;
                 worksheet.Cell(i + 2, 2).Value = data.Data[i].createBy;
                 worksheet.Cell(i + 2, 3).Value = data.Data[i].ipAddressUser;
                 worksheet.Cell(i + 2, 4).Value = data.Data[i].actionName;
@@ -1368,7 +1508,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
     }

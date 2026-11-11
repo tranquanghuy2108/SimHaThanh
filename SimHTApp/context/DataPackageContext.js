@@ -1,13 +1,11 @@
 import React, { createContext, useState, useContext } from "react";
 import axios from "axios";
 import Config from "../constants/Config";
-import { AuthContext } from "./AuthContext";
 import { SetLoadingContext } from "./SetLoadingContext";
 
 const DataPackageContext = createContext();
 const DataPackageProvider = ({ children }) => {
 
-    const { userToken } = useContext(AuthContext);
     const { SetLoading } = useContext(SetLoadingContext);
     //
     const [simDataPackages, SetSimDataPackageState] = useState(null);
@@ -18,7 +16,6 @@ const DataPackageProvider = ({ children }) => {
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + userToken
                 },
             }).then((response) => {
                 SetSimDataPackageState(response.data);

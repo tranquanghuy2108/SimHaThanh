@@ -1,10 +1,10 @@
-﻿using Commons.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Commons.Enums;
 
 namespace EFCoreMySQL.EntityModels
 {
@@ -13,5 +13,7 @@ namespace EFCoreMySQL.EntityModels
     {
         public int ViewCount { get; set; }
         public string? Content { get; set; }
+        public PostStatus Status { get; set; }
+        public string? ReportReason { get; set; }
     }
 }

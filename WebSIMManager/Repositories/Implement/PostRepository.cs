@@ -1,15 +1,17 @@
-﻿using EFCoreMySQL.DataContext;
-using EFCoreMySQL.EntityModels;
-using Models.Requests;
-using Models.Responses;
-using Models.ViewModels;
-using Repositories.Interface;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Commons.Enums;
+using Commons.Helper;
+using EFCoreMySQL.DataContext;
+using EFCoreMySQL.EntityModels;
+using Models.Requests;
+using Models.Responses;
+using Models.ViewModels;
+using Repositories.Interface;
 
 namespace Repositories.Implement
 {
@@ -17,23 +19,27 @@ namespace Repositories.Implement
     {
         private readonly SIMCenterDbContext _context;
         private readonly LogActionRepository _logAction;
+
         public PostRepository(SIMCenterDbContext context)
         {
             _context = context;
             _logAction = new(context);
         }
 
-
         //POST
         public ResponseDataModel<string> CreatePost(PostCreateRequestModel request)
         {
             try
             {
-                var currentPostID = _context.Posts.OrderByDescending(e => e.Id).Select(e => e.Id).FirstOrDefault();
+                var currentPostID = _context
+                    .Posts.OrderByDescending(e => e.Id)
+                    .Select(e => e.Id)
+                    .FirstOrDefault();
                 var postData = new Post
                 {
                     ViewCount = 0,
                     Content = request.Content,
+                    Status = Commons.Enums.PostStatus.Published,
                     CreateBy = request.UserID,
                     UpdateBy = request.UserID,
                     CreateTime = DateTime.Now,
@@ -52,7 +58,6 @@ namespace Repositories.Implement
                         Description = image.Description,
                         CreateTime = DateTime.Now,
                         UpdateTime = DateTime.Now,
-
                     };
                     _context.PostImages.Add(postImageData);
                 }
@@ -64,7 +69,7 @@ namespace Repositories.Implement
                     return new ResponseDataModel<string>()
                     {
                         Code = "1",
-                        Message = "Tạo Post thành công!"
+                        Message = "Tạo Post thành công!",
                     };
                 }
                 else
@@ -72,10 +77,9 @@ namespace Repositories.Implement
                     return new ResponseDataModel<string>()
                     {
                         Code = "0",
-                        Message = "Tạo Post thất bại!"
+                        Message = "Tạo Post thất bại!",
                     };
                 }
-
             }
             catch (Exception ex)
             {
@@ -85,36 +89,62 @@ namespace Repositories.Implement
                     Message = "Có lỗi trong quá trình tạo Post.",
                 };
             }
-
         }
 
-        public ResponseDataViewModel<PostViewModel> GetAllPost(PagingRequestBase request)
+        public ResponseDataViewModel<PostViewModel> GetAllPost(GetPostRequest request)
         {
-            var dataEntity = _context.Posts;
-            var dataPaging = dataEntity.Skip((request.pageIndex - 1) * request.pageSize).Take(request.pageSize).ToList();
+            var dataEntity = _context
+                .Posts.Where(x =>
+                    x.IsDelete == false && x.Status == Commons.Enums.PostStatus.Published
+                )
+                .ToList();
+
+            var userBlock = _context
+                .UserBlocks.Where(x => x.BlockerUserId == request.UserId)
+                .Select(x => x.BlockedUserId)
+                .ToList();
+            if (userBlock.Count > 0)
+            {
+                dataEntity = dataEntity.Where(x => !userBlock.Contains(x.CreateBy)).ToList();
+            }
+
+            var dataPaging = dataEntity
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
 
             dataPaging.Reverse();
             var data = new List<PostViewModel>();
             foreach (var item in dataPaging)
             {
                 var userInfo = _context.Users.FirstOrDefault(x => x.Id == item.CreateBy);
-                data.Add(new PostViewModel()
-                {
-                    Id = item.Id,
-                    UserID = item.CreateBy,
-                    FullName = userInfo == null ? "" : userInfo.FullName,
-                    AvatarURL = userInfo == null ? "" : userInfo.Avatar,
-                    Content = item.Content,
-                    ViewCount = item.ViewCount,
-                    CreateTime = item.CreateTime,
-                    UpdateDate = item.UpdateTime
-                });
+                data.Add(
+                    new PostViewModel()
+                    {
+                        Id = item.Id,
+                        UserID = item.CreateBy,
+                        FullName = userInfo == null ? "" : userInfo.FullName,
+                        AvatarURL = userInfo == null ? "" : userInfo.Avatar,
+                        Content = item.Content,
+                        ViewCount = item.ViewCount,
+                        CreateTime = item.CreateTime,
+                        UpdateDate = item.UpdateTime,
+                    }
+                );
             }
 
             return new ResponseDataViewModel<PostViewModel>()
             {
-                Pager = new Pager(new PagingRequestBase() { keyword = "", pageIndex = request.pageIndex, pageSize = request.pageSize }, dataEntity.Count()),
-                Data = data
+                Pager = new Pager(
+                    new PagingRequestBase()
+                    {
+                        keyword = "",
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
+                    },
+                    dataEntity.Count()
+                ),
+                Data = data,
             };
         }
 
@@ -126,12 +156,13 @@ namespace Repositories.Implement
                 var postData = new PostComment
                 {
                     PostId = request.PostID,
-                    ParentCommentID = request.ParentCommentID == null ? null : request.ParentCommentID,
+                    ParentCommentID =
+                        request.ParentCommentID == null ? null : request.ParentCommentID,
                     Content = request.Content,
                     CreateBy = request.UserID,
                     UpdateBy = request.UserID,
                     CreateTime = DateTime.Now,
-                    UpdateTime = DateTime.Now
+                    UpdateTime = DateTime.Now,
                 };
                 _context.Comments.Add(postData);
                 var result = _context.SaveChanges();
@@ -140,7 +171,7 @@ namespace Repositories.Implement
                     return new ResponseDataModel<string>()
                     {
                         Code = "1",
-                        Message = "Tạo Post thành công!"
+                        Message = "Tạo Post thành công!",
                     };
                 }
                 else
@@ -148,10 +179,9 @@ namespace Repositories.Implement
                     return new ResponseDataModel<string>()
                     {
                         Code = "0",
-                        Message = "Tạo Post thất bại!"
+                        Message = "Tạo Post thất bại!",
                     };
                 }
-
             }
             catch (Exception ex)
             {
@@ -161,64 +191,90 @@ namespace Repositories.Implement
                     Message = "Có lỗi trong quá trình tạo Post.",
                 };
             }
-
         }
+
         public ResponseDataViewModel<PostCommentViewModel> GetPostComment(GetCommentRequest request)
         {
-
             var dataEntity = _context.Comments.Where(x => x.PostId == request.PostID);
-            var dataPaging = _context.Comments.Where(x => x.PostId == request.PostID).Skip((request.pageIndex - 1) * request.pageSize).Take(request.pageSize).ToList();
+            var dataPaging = _context
+                .Comments.Where(x => x.PostId == request.PostID)
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
             dataPaging.Reverse();
             var data = new List<PostCommentViewModel>();
             foreach (var item in dataPaging)
             {
                 var userInfo = _context.Users.FirstOrDefault(x => x.Id == item.CreateBy);
-                data.Add(new PostCommentViewModel()
-                {
-                    Id = item.Id,
-                    ParentCommentID = item.ParentCommentID,
-                    PostID = item.PostId,
-                    UserID = item.CreateBy,
-                    FullName = userInfo == null ? "" : userInfo.FullName,
-                    AvatarURL = userInfo == null ? "" : userInfo.Avatar,
-                    Content = item.Content,
-                    CreateDate = item.CreateTime,
-                    UpdateDate = item.UpdateTime,
-
-                });
+                data.Add(
+                    new PostCommentViewModel()
+                    {
+                        Id = item.Id,
+                        ParentCommentID = item.ParentCommentID,
+                        PostID = item.PostId,
+                        UserID = item.CreateBy,
+                        FullName = userInfo == null ? "" : userInfo.FullName,
+                        AvatarURL = userInfo == null ? "" : userInfo.Avatar,
+                        Content = item.Content,
+                        CreateDate = item.CreateTime,
+                        UpdateDate = item.UpdateTime,
+                    }
+                );
             }
             return new ResponseDataViewModel<PostCommentViewModel>()
             {
-                Pager = new Pager(new PagingRequestBase() { keyword = "", pageIndex = request.pageIndex, pageSize = request.pageSize }, dataEntity.Count()),
-                Data = data
+                Pager = new Pager(
+                    new PagingRequestBase()
+                    {
+                        keyword = "",
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
+                    },
+                    dataEntity.Count()
+                ),
+                Data = data,
             };
 
-
             //
-
         }
+
         //POST_IMAGE
         public ResponseDataViewModel<PostImageViewModel> GetPostImage(GetImageRequest request)
         {
-            var dataEntity = _context.PostImages.Where(x => x.PostID == request.PostID && x.PostID == request.PostID);
-            var dataPaging = _context.PostImages.Where(x => x.PostID == request.PostID && x.PostID == request.PostID).Skip((request.pageIndex - 1) * request.pageSize).Take(request.pageSize).ToList();
+            var dataEntity = _context.PostImages.Where(x =>
+                x.PostID == request.PostID && x.PostID == request.PostID
+            );
+            var dataPaging = _context
+                .PostImages.Where(x => x.PostID == request.PostID && x.PostID == request.PostID)
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
             var data = new List<PostImageViewModel>();
             foreach (var item in dataPaging)
             {
-                data.Add(new PostImageViewModel()
-                {
-                    Id = item.Id,
-                    PostId = item.PostID,
-                    ImageUrl = item.ImageUrl,
-                    ImageDescription = item.Description,
-                    TotalLike = 0
-
-                });
+                data.Add(
+                    new PostImageViewModel()
+                    {
+                        Id = item.Id,
+                        PostId = item.PostID,
+                        ImageUrl = item.ImageUrl,
+                        ImageDescription = item.Description,
+                        TotalLike = 0,
+                    }
+                );
             }
             return new ResponseDataViewModel<PostImageViewModel>()
             {
-                Pager = new Pager(new PagingRequestBase() { keyword = "", pageIndex = request.pageIndex, pageSize = request.pageSize }, dataEntity.Count()),
-                Data = data
+                Pager = new Pager(
+                    new PagingRequestBase()
+                    {
+                        keyword = "",
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
+                    },
+                    dataEntity.Count()
+                ),
+                Data = data,
             };
         }
 
@@ -229,7 +285,11 @@ namespace Repositories.Implement
         {
             try
             {
-                var dataEntity = _context.PostLikes.Where(x => x.PostId == request.PostID && x.CreateBy == request.UserID).FirstOrDefault();
+                var dataEntity = _context
+                    .PostLikes.Where(x =>
+                        x.PostId == request.PostID && x.CreateBy == request.UserID
+                    )
+                    .FirstOrDefault();
                 _context.PostLikes.Remove(dataEntity);
                 var result = _context.SaveChanges();
                 if (result > 0)
@@ -237,7 +297,7 @@ namespace Repositories.Implement
                     return new ResponseDataModel<string>()
                     {
                         Code = "1",
-                        Message = "UnLike Post thành công!"
+                        Message = "UnLike Post thành công!",
                     };
                 }
                 else
@@ -245,10 +305,9 @@ namespace Repositories.Implement
                     return new ResponseDataModel<string>()
                     {
                         Code = "0",
-                        Message = "UnLike Post thất bại!"
+                        Message = "UnLike Post thất bại!",
                     };
                 }
-
             }
             catch (Exception ex)
             {
@@ -260,8 +319,6 @@ namespace Repositories.Implement
             }
         }
 
-
-
         public ResponseDataModel<string> Like(PostLikeRequestModel request)
         {
             try
@@ -272,7 +329,7 @@ namespace Repositories.Implement
                     CreateBy = request.UserID,
                     UpdateBy = request.UserID,
                     CreateTime = DateTime.Now,
-                    UpdateTime = DateTime.Now
+                    UpdateTime = DateTime.Now,
                 };
                 _context.PostLikes.Add(postLikeData);
 
@@ -282,7 +339,7 @@ namespace Repositories.Implement
                     return new ResponseDataModel<string>()
                     {
                         Code = "1",
-                        Message = "Like Post thành công!"
+                        Message = "Like Post thành công!",
                     };
                 }
                 else
@@ -290,10 +347,9 @@ namespace Repositories.Implement
                     return new ResponseDataModel<string>()
                     {
                         Code = "0",
-                        Message = "Like Post thất bại!"
+                        Message = "Like Post thất bại!",
                     };
                 }
-
             }
             catch (Exception ex)
             {
@@ -303,16 +359,17 @@ namespace Repositories.Implement
                     Message = "Có lỗi trong quá trình Like Post.",
                 };
             }
-
         }
 
-
-
-        public ResponseDataModel<CommentCountViewModel> GetTotalComment(PostLikeRequestModel request)
+        public ResponseDataModel<CommentCountViewModel> GetTotalComment(
+            PostLikeRequestModel request
+        )
         {
             try
             {
-                var totalComment = _context.Comments.Count(x => x.PostId == request.PostID && x.ParentCommentID == null);
+                var totalComment = _context.Comments.Count(x =>
+                    x.PostId == request.PostID && x.ParentCommentID == null
+                );
 
                 return new ResponseDataModel<CommentCountViewModel>()
                 {
@@ -321,10 +378,9 @@ namespace Repositories.Implement
                     Data = new CommentCountViewModel()
                     {
                         TotalComment = totalComment,
-                        PostID = request.PostID
-                    }
+                        PostID = request.PostID,
+                    },
                 };
-
             }
             catch (Exception ex)
             {
@@ -341,8 +397,11 @@ namespace Repositories.Implement
         {
             var dataEntity = _context.PostLikes.Where(x => x.PostId == request.PostID);
 
-
-            var dataPaging = _context.PostLikes.Where(x => x.PostId == request.PostID).Skip((request.pageIndex - 1) * request.pageSize).Take(request.pageSize).ToList();
+            var dataPaging = _context
+                .PostLikes.Where(x => x.PostId == request.PostID)
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
 
             dataPaging.Reverse();
 
@@ -350,25 +409,215 @@ namespace Repositories.Implement
             foreach (var item in dataPaging)
             {
                 var userInfo = _context.Users.FirstOrDefault(x => x.Id == item.CreateBy);
-                data.Add(new PostLikeViewModel()
-                {
-                    Id = item.Id,
-                    PostID = item.PostId,
-                    UserID = item.CreateBy,
-                    FullName = userInfo == null ? "" : userInfo.FullName,
-                    AvatarURL = userInfo == null ? "" : userInfo.Avatar,
-                    CreateDate = item.CreateTime,
-                    UpdateDate = item.UpdateTime,
-
-                });
+                data.Add(
+                    new PostLikeViewModel()
+                    {
+                        Id = item.Id,
+                        PostID = item.PostId,
+                        UserID = item.CreateBy,
+                        FullName = userInfo == null ? "" : userInfo.FullName,
+                        AvatarURL = userInfo == null ? "" : userInfo.Avatar,
+                        CreateDate = item.CreateTime,
+                        UpdateDate = item.UpdateTime,
+                    }
+                );
             }
             return new ResponseDataViewModel<PostLikeViewModel>()
             {
-                Pager = new Pager(new PagingRequestBase() { keyword = "", pageIndex = request.pageIndex, pageSize = request.pageSize }, dataEntity.Count()),
-                Data = data
+                Pager = new Pager(
+                    new PagingRequestBase()
+                    {
+                        keyword = "",
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
+                    },
+                    dataEntity.Count()
+                ),
+                Data = data,
             };
         }
 
-  
+        public ResponseDataModel<string> ReportPost(ReportPostRequestModel request)
+        {
+            try
+            {
+                var post = _context.Posts.FirstOrDefault(x => x.Id == request.PostID);
+                if (post == null)
+                {
+                    return new ResponseDataModel<string>()
+                    {
+                        Code = "0",
+                        Message = "Bài viết không tồn tại!",
+                    };
+                }
+                post.Status = Commons.Enums.PostStatus.PendingModeration;
+                post.ReportReason = request.Reason;
+                _context.Posts.Update(post);
+
+                var result = _context.SaveChanges();
+                if (result > 0)
+                {
+                    _ = TelegramHelper.SendMessage(
+                        -4286160390,
+                        "Có tin bài vừa được báo cáo bởi người dùng, vui lòng kiểm tra và xử lý: "
+                            + request.Reason
+                    );
+                    return new ResponseDataModel<string>()
+                    {
+                        Code = "1",
+                        Message = "Report Post thành công!",
+                    };
+                }
+                else
+                {
+                    return new ResponseDataModel<string>()
+                    {
+                        Code = "0",
+                        Message = "Report Post thất bại!",
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDataModel<string>()
+                {
+                    Code = "-1",
+                    Message = "Có lỗi trong quá trình Report Post.",
+                };
+            }
+        }
+
+        public ResponseDataModel<string> BlockUser(BlockUserRequestModel request)
+        {
+            try
+            {
+                var blockUserData = new UserBlock
+                {
+                    BlockerUserId = request.UserID,
+                    BlockedUserId = request.BlockedUserID,
+                    CreateBy = request.UserID,
+                    CreateTime = DateTime.Now,
+                };
+                _context.UserBlocks.Add(blockUserData);
+
+                var result = _context.SaveChanges();
+                if (result > 0)
+                {
+                    return new ResponseDataModel<string>()
+                    {
+                        Code = "1",
+                        Message = "Block User thành công!",
+                    };
+                }
+                else
+                {
+                    return new ResponseDataModel<string>()
+                    {
+                        Code = "0",
+                        Message = "Block User thất bại!",
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDataModel<string>()
+                {
+                    Code = "-1",
+                    Message = "Có lỗi trong quá trình Block User.",
+                };
+            }
+        }
+
+        public ResponseDataViewModel<PostViewModel> GetAllPostReport(GetPostRequest request)
+        {
+            var dataEntity = _context
+                .Posts.Where(x =>
+                    x.IsDelete == false && x.Status != Commons.Enums.PostStatus.Published
+                )
+                .ToList();
+
+            var dataPaging = dataEntity
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
+
+            dataPaging.Reverse();
+            var data = new List<PostViewModel>();
+            foreach (var item in dataPaging)
+            {
+                var userInfo = _context.Users.FirstOrDefault(x => x.Id == item.CreateBy);
+                data.Add(
+                    new PostViewModel()
+                    {
+                        Id = item.Id,
+                        UserID = item.CreateBy,
+                        FullName = userInfo == null ? "" : userInfo.FullName,
+                        AvatarURL = userInfo == null ? "" : userInfo.Avatar,
+                        Content = item.Content,
+                        ViewCount = item.ViewCount,
+                        CreateTime = item.CreateTime,
+                        UpdateDate = item.UpdateTime,
+                    }
+                );
+            }
+
+            return new ResponseDataViewModel<PostViewModel>()
+            {
+                Pager = new Pager(
+                    new PagingRequestBase()
+                    {
+                        keyword = "",
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
+                    },
+                    dataEntity.Count()
+                ),
+                Data = data,
+            };
+        }
+
+        public ResponseDataModel<string> ReviewReportPost(PostStatus status, int postID)
+        {
+            try
+            {
+                var post = _context.Posts.FirstOrDefault(x => x.Id == postID);
+                if (post == null)
+                {
+                    return new ResponseDataModel<string>()
+                    {
+                        Code = "0",
+                        Message = "Bài viết không tồn tại!",
+                    };
+                }
+                post.Status = status;
+                _context.Posts.Update(post);
+
+                var result = _context.SaveChanges();
+                if (result > 0)
+                {
+                    return new ResponseDataModel<string>()
+                    {
+                        Code = "1",
+                        Message = "Report Post thành công!",
+                    };
+                }
+                else
+                {
+                    return new ResponseDataModel<string>()
+                    {
+                        Code = "0",
+                        Message = "Report Post thất bại!",
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDataModel<string>()
+                {
+                    Code = "-1",
+                    Message = "Có lỗi trong quá trình Report Post.",
+                };
+            }
+        }
     }
 }

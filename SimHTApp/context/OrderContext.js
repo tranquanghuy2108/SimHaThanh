@@ -16,7 +16,25 @@ const OrderProvider = ({children})=>
     const [orderSimDatas,GetOrderSimDatas] = useState(null);
     const {SetLoading} = useContext(SetLoadingContext);
 
-    const CreateOrder = (payMode,simID,simPrice,discount,name,phoneNumber,address,note, orderPrice, installmentPeriod,dateOfPayment, endDateInstallment,downPayment,totalInstallPayment,monthlyInstallmentPayment, interestRate) => { 
+    const CreateOrder = (
+      payMode,
+      simID,
+      simPrice,
+      discount,
+      name,
+      phoneNumber,
+      address,
+      note,
+      orderPrice,
+      buyEsim = false,
+      installmentPeriod,
+      dateOfPayment,
+      endDateInstallment,
+      downPayment,
+      totalInstallPayment,
+      monthlyInstallmentPayment,
+      interestRate,
+    ) => {
         axios.post(Config.BASE_URL+'/api/sim/create-order', 
         {
               "id": 0,
@@ -24,6 +42,7 @@ const OrderProvider = ({children})=>
               "simIds": simID,
               "priceOrder": orderPrice,
               "priceOfSim": simPrice,
+              "buyEsim": buyEsim,
               "discount": discount,
               "simEmbryoFee": 0,
               "simServiceFee": 0,

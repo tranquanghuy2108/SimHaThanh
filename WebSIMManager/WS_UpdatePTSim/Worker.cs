@@ -32,23 +32,22 @@ namespace WS_UpdateSimVNPT
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            //Open connection DB
+            using var scope = _provider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<SIMCenterDbContext>();
+            //await UpdatePTSimAsync(db);
+            CheckOrderHadSimData(db);
+        }
+
+        private async Task UpdatePTSimAsync(SIMCenterDbContext _context)
+        {
             _logger.LogInformation("Checking sim in VNPT running at: {time}", DateTimeOffset.Now);
             try
             {
-                //Open connection DB
-                using var scope = _provider.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<SIMCenterDbContext>();
-
+                var db = _context;
                 var sims = db.SIMDetails.ToList();
                 foreach (var s in sims)
                 {
-                    //var diemSim = SimPhongThuy.TinhDiemPhongThuy(s.SIMNumber);
-                    //s.amDuongTuongSinh = diemSim.amDuongTuongSinh;
-                    //s.nguHanhSim = diemSim.nguHanhSim;
-                    //s.nguHanhTuongSinh = diemSim.nguHanhTuongSinh;
-                    //s.point = diemSim.point;
-                    //Console.WriteLine("sim {0} có ngu hanh {1}, tuong sinh ngu hanh {2}, am duong tuong sinh {3}, diem {4}", s.SIMNumber, diemSim.nguHanhSim, diemSim.nguHanhTuongSinh, diemSim.amDuongTuongSinh, diemSim.point);
-                    //db.SIMDetails.Update(s);
                     List<string> dataInsertSimTypes = new();
                     var simHadFormat = "";
                     var listFormatTypeOfSim = FileHelper.CheckFormatTypeOfSim(
@@ -111,6 +110,52 @@ namespace WS_UpdateSimVNPT
             finally
             {
                 _logger.LogInformation("Checking sim in VNPT is stopped..");
+                _hostApplicationLifetime.StopApplication();
+            }
+        }
+
+        private void CheckOrderHadSimData(SIMCenterDbContext _context)
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "CheckOrderHadSimData running at: {time}",
+                    DateTimeOffset.Now
+                );
+                var simDataProductTypeIds = _context
+                    .ProductTypes.Where(x => x.IsSimData || x.IsTouristSim)
+                    .Select(x => x.Id)
+                    .ToList();
+                var pxs = _context.GoodsDeliveryNoteOfSim.Where(x => x.IsDelete == false).ToList();
+                foreach (var item in pxs)
+                {
+                    var hadSimData = false;
+                    var simsNumberIds = _context
+                        .SimInfosInOrders.Where(x => x.GDNId == item.Id)
+                        .Select(x => x.SimId)
+                        .ToList();
+                    var simsNumberInOrder = _context
+                        .SIMDetails.Where(x =>
+                            simDataProductTypeIds.Contains(x.ProductTypeId)
+                            && simsNumberIds.Contains(x.Id)
+                        )
+                        .ToList();
+                    if (simsNumberInOrder.Count > 0)
+                    {
+                        hadSimData = true;
+                    }
+                    item.HadSimData = hadSimData;
+                    _context.GoodsDeliveryNoteOfSim.Update(item);
+                }
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+            finally
+            {
+                _logger.LogInformation("CheckOrderHadSimData is stopped.");
                 _hostApplicationLifetime.StopApplication();
             }
         }

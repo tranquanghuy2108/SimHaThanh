@@ -5,44 +5,75 @@ import { PostContext } from "../../context/PostContext";
 import { AuthContext } from "../../context/AuthContext";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
+import { validateUserGeneratedText } from "../../utils/contentModeration";
 const numColumns = 2; // Số cột trong lưới
 
 
 const CreatePostScreen = ({ route }) => {
     const [selectedImages, setSelectedImages] = useState([]);
     const [imgBase64s, setImgBase64s] = useState([]);
-    const { CreatePost, isHitPost, ReloadPost } = useContext(PostContext);
+    const { CreatePost, isHitPost, ReloadPost, SetHitPost } = useContext(PostContext);
     const { userInfos } = useContext(AuthContext);
 
     const [postContent, SetPostContent] = useState('');
+    const [isSubmitting, setSubmitting] = useState(false);
 
     const handleInputChange = (text) => {
         SetPostContent(text)
     };
     useEffect(() => {
-        if (isHitPost) {
+        if (!isHitPost || isSubmitting) return;
 
-            var postData = {
-                content: postContent,
-                imgs: imgBase64s
+        const submitPost = async () => {
+            setSubmitting(true);
+            const contentValidation = validateUserGeneratedText(postContent, {
+                required: true,
+            });
+            if (!contentValidation.isAllowed) {
+                alert(contentValidation.message);
+                ReloadPost(false);
+                SetHitPost(false);
+                setSubmitting(false);
+                return;
             }
 
-            CreatePost(postData);
-            ReloadPost(true);
-        }
-    }, [isHitPost])
+            const postData = {
+                content: postContent,
+                imgs: imgBase64s
+            };
+
+            const isCreated = await CreatePost(postData);
+            SetHitPost(false);
+
+            if (isCreated) {
+                SetPostContent('');
+                setSelectedImages([]);
+                setImgBase64s([]);
+                ReloadPost(true);
+            } else {
+                ReloadPost(false);
+            }
+            setSubmitting(false);
+        };
+
+        submitPost();
+    }, [
+        CreatePost,
+        ReloadPost,
+        SetHitPost,
+        imgBase64s,
+        isHitPost,
+        isSubmitting,
+        postContent,
+    ]);
 
 
     const handleChooseImages = async () => {
-        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (permissionResult.granted === false) {
-            alert('Permission to access camera roll is required!');
-            return;
-        }
-
         const pickerResult = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            // Dùng trình chọn ảnh hệ thống (PHPicker/Android Photo Picker),
+            // không yêu cầu quyền truy cập toàn bộ thư viện ảnh.
+            mediaTypes: ['images'],
             allowsMultipleSelection: true,
             allowsEditing: false,
         });
@@ -51,16 +82,15 @@ const CreatePostScreen = ({ route }) => {
             const selectedUris = pickerResult.assets.map((item) => item.uri);
             setSelectedImages(selectedUris);
 
-            const img64Tmps = [];
-            pickerResult.assets.map(async (item) => {
-                var img64 = await await FileSystem.readAsStringAsync(item.uri, { encoding: 'base64' });
-                var img = {
+            const img64Tmps = await Promise.all(
+              pickerResult.assets.map(async (item) => {
+                const img64 = await FileSystem.readAsStringAsync(item.uri, { encoding: 'base64' });
+                return {
                     imageUrl: img64,
                     description: "none"
-                }
-                img64Tmps.push(img);
-
-            });
+                };
+              })
+            );
             setImgBase64s(img64Tmps);
 
         }
@@ -125,6 +155,7 @@ const CreatePostScreen = ({ route }) => {
 
                         className="flex-1 text-base pl-2 tracking-wider"
                         editable={true}
+                        value={postContent}
                         onChangeText={handleInputChange}
                         multiline
                     />
@@ -137,7 +168,7 @@ const CreatePostScreen = ({ route }) => {
                     <FlatList
                         data={imgBase64s}
 
-                        keyExtractor={(item) => item}
+                        keyExtractor={(_, index) => String(index)}
                         numColumns={numColumns}
                         renderItem={({ item }) =>
                             // <Image source={{ uri: item }} style={styles.image} />

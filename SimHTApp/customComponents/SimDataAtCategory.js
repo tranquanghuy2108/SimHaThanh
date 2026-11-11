@@ -1,88 +1,89 @@
-import React, { useContext } from "react";
-import { InteractionManager } from "react-native";
-import MasonryList from "@react-native-seoul/masonry-list";
-import { TouchableOpacity, View, Text } from "react-native";
-import TitleCategory from "./TitleCategory";
+import React, { memo, useCallback, useContext } from "react";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { AppConst } from "../constants/AppConst";
 import { SimDataContext } from "../context/SimDataContext";
-import {
-  responsiveHeight,
-  responsiveWidth,
-  responsiveFontSize,
-} from "react-native-responsive-dimensions";
+import TitleCategory from "./TitleCategory";
 
-const SimDataAtCategory = (props) => {
+const SimDataAtCategory = ({ data, navi }) => {
+  const { search } = useContext(SimDataContext);
+
+  const handleSelectPackage = useCallback(
+    (packageId) => {
+      search(null, [packageId]);
+      navi.navigate(AppConst.StackConst.BOTTOM_STACK, {
+        screen: AppConst.BottomScreenConst.HOME_BOTTOM_SCREEN,
+        params: { screen: AppConst.ScreenConst.SIM_DATA_SEARCH_SCREEN },
+      });
+    },
+    [navi, search],
+  );
+
+  if (!data?.subPackages?.length) return null;
+
   return (
-    <View className="">
-      <View className="bg-white px-2 py-1">
-        <TitleCategory title={props.data.packageGroup.packageCategoryName} />
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <TitleCategory title={data.packageGroup.packageCategoryName} />
       </View>
-
-      <View style={{ flex: 1 }} className="px-1">
-        <MasonryList
-          data={props.data.subPackages}
-          numColumns={3}
-          renderItem={({ item }) => (
-            <SimPackageCard
-              pathProp={props.navi}
-              itemProp={item}
-              routeProp={props.route}
-            />
-          )}
-          columnWrapperStyle={{ justifyContent: "space-between" }}
-          contentContainerStyle={{ padding: 3 }}
-        />
+      <View style={styles.grid}>
+        {data.subPackages.map((packageItem) => (
+          <TouchableOpacity
+            key={String(packageItem.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`Tìm gói ${packageItem.name}`}
+            activeOpacity={0.8}
+            onPress={() => handleSelectPackage(packageItem.id)}
+            style={styles.card}
+          >
+            <Text numberOfLines={2} style={styles.cardText}>
+              {packageItem.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   );
 };
 
-export default SimDataAtCategory;
-
-const SimPackageCard = (prop) => {
-  const { search } = useContext(SimDataContext);
-  return (
-    <TouchableOpacity
-      className="p-2 bg-slate-100 rounded-xl justify-center items-items"
-      style={styles.card}
-      onPress={() => {
-        // Navigate first to keep animation smooth, then trigger search shortly after
-        prop.pathProp.navigate(AppConst.StackConst.BOTTOM_STACK, {
-          screen: AppConst.BottomScreenConst.HOME_BOTTOM_SCREEN,
-          params: { screen: AppConst.ScreenConst.SIM_DATA_SEARCH_SCREEN },
-        });
-        InteractionManager.runAfterInteractions(() => {
-          search(null, [prop.itemProp.id], { suppressLoading: true });
-        });
-      }}
-    >
-      <Text
-        className="font-bold text-center"
-        style={{ fontSize: responsiveFontSize(1.8), color: "#1575b6" }}
-      >
-        {prop.itemProp.name}
-      </Text>
-    </TouchableOpacity>
-  );
-};
-const styles = {
+const styles = StyleSheet.create({
+  section: {
+    backgroundColor: "#fff",
+    marginBottom: 9,
+    paddingBottom: 8,
+  },
+  sectionHeader: {
+    paddingHorizontal: 12,
+    paddingTop: 9,
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 8,
+  },
   card: {
-    backgroundColor: "white",
-    shadowColor: "black",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    margin: 5,
-    height: responsiveHeight(5),
-    width: responsiveWidth(30),
-    elevation: 5,
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderColor: "#e4e4e4",
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: "center",
+    margin: "0.75%",
+    minHeight: 52,
+    paddingHorizontal: 6,
+    paddingVertical: 7,
+    width: "31.83%",
   },
-  price: {
-    textDecorationLine: "line-through",
-    color: "red",
+  cardText: {
+    color: "#1575b6",
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
   },
-  promotionPrice: {
-    color: "red",
-    fontWeight: "bold",
-  },
-};
+});
+
+export default memo(SimDataAtCategory);

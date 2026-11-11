@@ -1,12 +1,17 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { ActivityIndicator, View } from 'react-native';
-import AuthStack from './AuthStack ';
 import AppStack from './AppStack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CommunityGuidelinesModal, {
+  COMMUNITY_TERMS_PROMPT_SEEN_KEY,
+  COMMUNITY_TERMS_VERSION,
+} from '../components/CommunityGuidelinesModal';
 export default function AppNav() {
-  const { userInfos,SetUserInfoByStorage ,SetUserTokenByStorage } = useContext(AuthContext);
+  const { SetUserInfoByStorage, SetUserTokenByStorage } = useContext(AuthContext);
   const [isCheckComplete, SetCheckComplete] = useState(false);
+  const [isTermsChecked, setTermsChecked] = useState(false);
+  const [isTermsVisible, setTermsVisible] = useState(false);
 
   const checkLoginStatus = async () => {
     try {
@@ -29,9 +34,50 @@ export default function AppNav() {
     checkLoginStatus();
   },[])
 
+  useEffect(() => {
+    AsyncStorage.multiGet([
+      "CommunityTermsVersion",
+      COMMUNITY_TERMS_PROMPT_SEEN_KEY,
+    ])
+      .then((entries) => {
+        const acceptedVersion = entries[0][1];
+        const hasSeenPrompt = entries[1][1] === "true";
+        setTermsVisible(
+          acceptedVersion !== COMMUNITY_TERMS_VERSION && !hasSeenPrompt,
+        );
+        setTermsChecked(true);
+      })
+      .catch(() => setTermsChecked(true));
+  }, []);
+
+  const acceptTerms = async () => {
+    await AsyncStorage.multiSet([
+      ["CommunityTermsVersion", COMMUNITY_TERMS_VERSION],
+      [COMMUNITY_TERMS_PROMPT_SEEN_KEY, "true"],
+    ]);
+    setTermsVisible(false);
+  };
+
+  const closeTerms = () => {
+    AsyncStorage.setItem(COMMUNITY_TERMS_PROMPT_SEEN_KEY, "true").catch(
+      () => undefined,
+    );
+    setTermsVisible(false);
+  };
+
   return (
-    isCheckComplete ? 
-      (userInfos !== null ? <AppStack /> : <AuthStack />) :
+    isCheckComplete && isTermsChecked ?
+      (
+        <>
+          <AppStack />
+          <CommunityGuidelinesModal
+            visible={isTermsVisible}
+            onAccept={acceptTerms}
+            onClose={closeTerms}
+            acceptLabel="Đồng ý để tiếp tục"
+          />
+        </>
+      ) :
       
       (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

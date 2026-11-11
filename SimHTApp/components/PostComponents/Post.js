@@ -24,10 +24,15 @@ import SendBird from "sendbird";
 import Config from "../../constants/Config";
 import { AuthContext } from "../../context/AuthContext";
 import { argonTheme } from "../../constants";
+import ModerationActions from "../ModerationActions";
+import {
+    blockUser,
+    reportPost as reportPostRequest,
+} from "../../utils/moderationService";
 const Post = ({ post, images, preview, likeCount, isMeLike, commentCount }) => {
-    const { GetPostComments, ResetComment, Like, UnLike } = useContext(PostContext);
+    const { GetPostComments, GetPosts, ResetComment, Like, UnLike, HideBlockedUserContent } = useContext(PostContext);
     const [isLike, SetLikeState] = useState(false);
-    const { userInfos } = useContext(AuthContext);
+    const { userInfos, userToken } = useContext(AuthContext);
     const [isPopupVisible, setPopupVisible] = useState(false);
 
     // const { reactions, comments, shares } = post
@@ -73,6 +78,32 @@ const Post = ({ post, images, preview, likeCount, isMeLike, commentCount }) => {
         GetPostComments(post.id, null, 1, 50);
     }
 
+    const refreshPostFeed = async (blockedUserId) => {
+        setPopupVisible(false);
+        ResetComment();
+        await GetPosts(1, 50, blockedUserId ? [blockedUserId] : []);
+    };
+
+    const reportPost = async () => {
+        await reportPostRequest({
+            userId: userInfos.id,
+            postId: post.id,
+            reason: "Nội dung bài viết không phù hợp",
+            userToken,
+        });
+        await refreshPostFeed();
+    };
+
+    const blockPostAuthor = async () => {
+        await blockUser({
+            userId: userInfos.id,
+            blockedUserId: post.userID,
+            userToken,
+        });
+        HideBlockedUserContent(post.userID);
+        await refreshPostFeed(post.userID);
+    };
+
 
 
     const onPressChat = () => {
@@ -110,7 +141,13 @@ const Post = ({ post, images, preview, likeCount, isMeLike, commentCount }) => {
 
                 {
                     isPopupVisible && (
-                        <PostComment postID={post.id} visible={isPopupVisible} onClickClose={onClickClose} onRefreshDatas={RefreshCommentDatas} />
+                        <PostComment
+                            postID={post.id}
+                            visible={isPopupVisible}
+                            onClickClose={onClickClose}
+                            onRefreshDatas={RefreshCommentDatas}
+                            onModerationComplete={refreshPostFeed}
+                        />
 
                     )
                 }
@@ -138,6 +175,13 @@ const Post = ({ post, images, preview, likeCount, isMeLike, commentCount }) => {
                                     <View style={styles.row}>
                                         <Text numberOfLines={1} style={styles.lightText} >{moment(post.createTime).format('MMMM DD')} at {moment(post.createTime).format('h:mm a')}</Text>
                                     </View>
+                                    {String(post.userID) !== String(userInfos.id) ? (
+                                        <ModerationActions
+                                            compact
+                                            onReport={reportPost}
+                                            onBlock={blockPostAuthor}
+                                        />
+                                    ) : null}
                                 </View>
                             </TouchableOpacity>
 

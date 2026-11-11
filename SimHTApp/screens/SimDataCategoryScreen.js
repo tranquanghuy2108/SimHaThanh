@@ -1,395 +1,321 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
-import { InteractionManager } from "react-native";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
-  TouchableOpacity,
   ScrollView,
-  View,
+  StatusBar,
+  StyleSheet,
   Text,
   TextInput,
-  StyleSheet,
-  SafeAreaView,
-  StatusBar,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { AppConst } from "../constants/AppConst";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { AppConst } from "../constants/AppConst";
 import { argonTheme } from "../constants";
 import { BottomTabContext } from "../context/BottomTabContext";
-import SimDataAtCategory from "../customComponents/SimDataAtCategory";
-import {
-  responsiveScreenHeight,
-  responsiveScreenWidth,
-  responsiveScreenFontSize,
-  responsiveFontSize,
-} from "react-native-responsive-dimensions";
 import { SimDataContext } from "../context/SimDataContext";
+import SimDataAtCategory from "../customComponents/SimDataAtCategory";
 
-const PACKAGE_GROUP_DATAS = [
-  {
-    packageCategoryID: "1",
-    packageCategoryName: "SIM BM",
-    packageKey: "BM",
-  },
-
-  {
-    packageCategoryID: "2",
-    packageCategoryName: "SIM VD",
-    packageKey: "VD",
-  },
-  {
-    packageCategoryID: "3",
-    packageCategoryName: "SIM YOLO",
-    packageKey: "YOLO",
-  },
+const PACKAGE_GROUPS = [
+  { packageCategoryID: "1", packageCategoryName: "SIM BM", packageKey: "BM" },
+  { packageCategoryID: "2", packageCategoryName: "SIM VD", packageKey: "VD" },
+  { packageCategoryID: "3", packageCategoryName: "SIM YOLO", packageKey: "YOLO" },
   {
     packageCategoryID: "4",
     packageCategoryName: "GÓI CƯỚC DATA",
     packageKey: "SIMKHAC",
   },
 ];
-const headerOffset = (StatusBar.currentHeight || 0) + responsiveScreenHeight(8);
-const SearchInstruction = () => {
-  return (
-    <View style={{ marginTop: headerOffset }}>
-      <Text
-        className="font-semibold text-neutral-1000 p-1 mx-2"
-        style={{ fontSize: 17 }}
-      >
-        TÌM KIẾM SIM
-      </Text>
-      <View className="mx-1">
-        <View className="flex-row mx-1">
-          <Text style={{ fontSize: 10 }} className="p-1">
-            🔵
-          </Text>
-          <Text
-            className="font-semibold text-neutral-500"
-            style={{ fontSize: 16 }}
-          >
-            Tìm sim có số 6789 bạn hãy gõ 6789
-          </Text>
-        </View>
-        <View className="flex-row mx-1">
-          <Text style={{ fontSize: 10 }} className="p-1">
-            🔵
-          </Text>
-          <Text
-            className="font-semibold text-neutral-500 "
-            style={{ fontSize: 16 }}
-          >
-            Tìm sim có đầu 090 đuôi 8888 hãy gõ 090*8888
-          </Text>
-        </View>
-        <View className="flex-row mx-1">
-          <Text style={{ fontSize: 10 }} className="p-1">
-            🔵
-          </Text>
-          <Text
-            className="font-semibold text-neutral-500"
-            style={{ fontSize: 16 }}
-          >
-            Tìm sim bắt đầu bằng 0914 đuôi bất kì, hãy gõ: 0914*
-          </Text>
-        </View>
-      </View>
-    </View>
+
+const groupPackages = (packages) => {
+  if (!Array.isArray(packages) || packages.length === 0) return [];
+
+  const assignedPackages = new Set();
+  const groups = PACKAGE_GROUPS.reduce((result, packageGroup) => {
+    const subPackages = packages.filter((packageItem) => {
+      const packageName = String(packageItem?.name || "").toUpperCase();
+      const belongsToGroup = packageName.includes(packageGroup.packageKey);
+
+      if (belongsToGroup) assignedPackages.add(packageItem);
+      return belongsToGroup;
+    });
+
+    if (subPackages.length > 0) result.push({ packageGroup, subPackages });
+    return result;
+  }, []);
+
+  const remainingPackages = packages.filter(
+    (packageItem) => !assignedPackages.has(packageItem),
   );
+
+  if (remainingPackages.length > 0) {
+    groups.push({
+      packageGroup: PACKAGE_GROUPS[PACKAGE_GROUPS.length - 1],
+      subPackages: remainingPackages,
+    });
+  }
+
+  return groups;
 };
-const SimDataCategoryScreen = (props) => {
-  const { packageSimDatas } = useContext(SimDataContext);
 
-  const { GetPackageSimData, search } = useContext(SimDataContext);
-
+const SimDataCategoryScreen = ({ navigation, route }) => {
+  const { GetPackageSimData, packageSimDatas, search } = useContext(SimDataContext);
+  const {
+    searchDataKey,
+    searchHistory,
+    SetDataKeySearch,
+    SetSimGroupData,
+  } = useContext(BottomTabContext);
   const [isSearching, setIsSearching] = useState(false);
-
+  const [localSearch, setLocalSearch] = useState(searchDataKey || "");
   const inputRef = useRef(null);
 
-  const { simGroupDatas, SetSimGroupData } = useContext(BottomTabContext);
+  const simGroups = useMemo(() => groupPackages(packageSimDatas), [packageSimDatas]);
 
   useEffect(() => {
+    console.log("Active Screen : SimDataCategoryScreen");
     GetPackageSimData();
   }, []);
 
   useEffect(() => {
-    if (packageSimDatas != null && packageSimDatas.length > 0) {
-      FilterSimPackage(PACKAGE_GROUP_DATAS, packageSimDatas);
-    }
-  }, [packageSimDatas]);
+    SetSimGroupData(simGroups);
+  }, [simGroups]);
 
   useEffect(() => {
-    if (isSearching && inputRef.current) {
-      try {
-        inputRef.current.focus();
-        const t = setTimeout(() => {
-          try {
-            inputRef.current && inputRef.current.focus();
-          } catch (e) {}
-        }, 50);
-        return () => clearTimeout(t);
-      } catch (e) {}
-    }
+    setLocalSearch(searchDataKey || "");
+  }, [searchDataKey]);
+
+  useEffect(() => {
+    if (!isSearching) return undefined;
+
+    const focusTimer = setTimeout(() => inputRef.current?.focus(), 0);
+    return () => clearTimeout(focusTimer);
   }, [isSearching]);
 
-  const handleExit = () => {
-    props.navigation.navigate(AppConst.StackConst.BOTTOM_STACK, {
-      screen: AppConst.BottomScreenConst.HOME_BOTTOM_SCREEN,
-      params: { screen: AppConst.ScreenConst.HOME_SCREEN },
-    });
-  };
-
-  const SearchButton = () => {
-    const { searchDataKey, SetDataKeySearch } = useContext(BottomTabContext);
-    const [localSearch, setLocalSearch] = useState(searchDataKey || "");
-
-    const handleInputChange = (text) => {
-      setLocalSearch(text);
-    };
-    const handleInputSubmit = async () => {
-      SetDataKeySearch(localSearch);
-      search(localSearch, null);
-
-      props.navigation.navigate(AppConst.StackConst.BOTTOM_STACK, {
+  const navigateToSearch = useCallback(
+    (keyword) => {
+      const normalizedKeyword = keyword.trim();
+      SetDataKeySearch(normalizedKeyword);
+      search(normalizedKeyword, null);
+      navigation.navigate(AppConst.StackConst.BOTTOM_STACK, {
         screen: AppConst.BottomScreenConst.HOME_BOTTOM_SCREEN,
         params: { screen: AppConst.ScreenConst.SIM_DATA_SEARCH_SCREEN },
       });
-    };
-    const handleBlur = () => {
-      SetDataKeySearch(localSearch);
-      if (!localSearch || localSearch.trim() === "") {
-        setIsSearching(false);
-      }
-    };
+    },
+    [SetDataKeySearch, navigation, search],
+  );
 
-    return (
-      <TouchableOpacity
-        className="flex-1"
-        activeOpacity={0.9}
-        onPress={() => inputRef.current && inputRef.current.focus()}
-      >
-        <View className="flex-row flex-1 items-center rounded-full bg-white mx-1">
-          <View className="bg-transparent rounded-full m-3">
-            <Ionicons
-              name="search-outline"
-              color="black"
-              size={responsiveFontSize(2.5)}
-            ></Ionicons>
-          </View>
-          <TextInput
-            placeholder="Tìm Kiếm SIM Data"
-            placeholderTextColor={"gray"}
-            className="text-base mb-1 pl-2"
-            returnKeyType="search"
-            keyboardType="phone-pad"
-            editable={true}
-            value={localSearch}
-            ref={inputRef}
-            onSubmitEditing={handleInputSubmit}
-            onChangeText={handleInputChange}
-            onBlur={handleBlur}
-            onFocus={() => setIsSearching(true)}
-          />
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  const handleSearchSubmit = useCallback(() => {
+    navigateToSearch(localSearch);
+  }, [localSearch, navigateToSearch]);
 
-  const SearchHistory = () => {
-    const { searchHistory, SetDataKeySearch } = useContext(BottomTabContext);
-    if (!searchHistory || searchHistory.length === 0) return null;
-    return (
-      <View
-        style={{
-          paddingHorizontal: 12,
-          paddingTop: 12,
-          marginTop: headerOffset,
-        }}
-      >
-        <Text
-          className="font-semibold text-neutral-1000 p-1"
-          style={{ fontSize: 16 }}
-        >
-          LỊCH SỬ TÌM KIẾM
-        </Text>
-        {searchHistory.map((h, idx) => (
-          <TouchableOpacity
-            key={idx}
-            onPress={() => {
-              SetDataKeySearch(h);
-              props.navigation.navigate(AppConst.StackConst.BOTTOM_STACK, {
-                screen: AppConst.BottomScreenConst.HOME_BOTTOM_SCREEN,
-                params: { screen: AppConst.ScreenConst.SIM_DATA_SEARCH_SCREEN },
-              });
-              InteractionManager.runAfterInteractions(() => {
-                search(h, null, { suppressLoading: true });
-              });
-            }}
-          >
-            <Text style={{ fontSize: 16, paddingVertical: 6 }}>{h}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
-  const ExitButton = () => {
-    return (
-      // Nút Thoát
-      <TouchableOpacity
-        className="p-1 rounded-full bg-white mx-1"
-        onPress={() => {
-          handleExit();
-        }}
-      >
-        <Ionicons
-          name="chevron-back-outline"
-          color="black"
-          size={26}
-        ></Ionicons>
-      </TouchableOpacity>
-    );
-  };
-  const HomeHeader = () => {
-    return (
-      <View
-        className="flex-row justify-center items-center p-2"
-        style={{
-          position: "absolute",
-          zIndex: 1000,
-          marginTop: StatusBar.currentHeight,
-        }}
-        backgroundColor={argonTheme.COLORS.ERROR}
-      >
-        <ExitButton />
-        <SearchButton />
-      </View>
-    );
-  };
+  const handleExit = useCallback(() => {
+    navigation.navigate(AppConst.StackConst.BOTTOM_STACK, {
+      screen: AppConst.BottomScreenConst.HOME_BOTTOM_SCREEN,
+      params: { screen: AppConst.ScreenConst.HOME_SCREEN },
+    });
+  }, [navigation]);
 
-  const FilterSimPackage = (packagesGroupDatas, packageSimDatas) => {
-    const SimDatas = [];
-    const unprocessedPackages = [];
-
-    if (packageSimDatas != null && packageSimDatas.length > 0) {
-      packagesGroupDatas.map((packageGroup) => {
-        var subPackages = packageSimDatas.filter((x) =>
-          x.name.includes(packageGroup.packageKey),
-        );
-
-        if (subPackages.length > 0) {
-          SimDatas.push({ packageGroup, subPackages });
-        }
-      });
-
-      // Kiểm tra xem packageSimDatas còn phần tử nào chưa được thêm vào SimDatas hay không
-      unprocessedPackages.push(
-        ...packageSimDatas.filter(
-          (x) => !SimDatas.some((s) => s.subPackages.includes(x)),
-        ),
-      );
-    }
-
-    if (unprocessedPackages != null && unprocessedPackages.length > 0) {
-      SimDatas.push({
-        packageGroup: packagesGroupDatas[packagesGroupDatas.length - 1],
-        subPackages: unprocessedPackages,
-      });
-    }
-
-    if (SimDatas.length > 0) {
-      SetSimGroupData(SimDatas);
-    }
-  };
-
-  const SimCateGory = () => {
-    return (
-      <ScrollView
-        contentContainerStyle={{ paddingTop: headerOffset }}
-        keyboardShouldPersistTaps="always"
-      >
-        <View
-          style={{
-            marginTop: responsiveScreenHeight(2),
-          }}
-        >
-          {simGroupDatas != null && simGroupDatas.length > 0
-            ? simGroupDatas.map((packageGroup) => {
-                return (
-                  <SimDataAtCategory
-                    data={packageGroup}
-                    navi={props.navigation}
-                    route={props.route}
-                  />
-                );
-              })
-            : null}
-        </View>
-      </ScrollView>
-    );
-  };
+  const handleHistoryPress = useCallback(
+    (keyword) => {
+      setLocalSearch(keyword);
+      navigateToSearch(keyword);
+    },
+    [navigateToSearch],
+  );
 
   return (
-    <View>
-      <SafeAreaView>
-        <StatusBar translucent backgroundColor={argonTheme.COLORS.ERROR} />
-        {/* Header */}
-        <HomeHeader />
-        {!isSearching ? (
-          <SearchInstruction />
-        ) : (
-          <>
-            <SearchHistory />
-            <SimCateGory />
-          </>
-        )}
+    <View style={styles.container}>
+      <StatusBar
+        translucent
+        backgroundColor={argonTheme.COLORS.ERROR}
+        barStyle="light-content"
+      />
+      <SafeAreaView edges={["top"]} style={styles.headerSafeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Trở về trang chủ"
+            hitSlop={8}
+            onPress={handleExit}
+            style={styles.backButton}
+          >
+            <Ionicons name="chevron-back-outline" color="#111" size={26} />
+          </TouchableOpacity>
+
+          <View style={styles.searchBox}>
+            <Ionicons name="search-outline" color="#222" size={21} />
+            <TextInput
+              ref={inputRef}
+              value={localSearch}
+              onChangeText={setLocalSearch}
+              onFocus={() => setIsSearching(true)}
+              onSubmitEditing={handleSearchSubmit}
+              placeholder="Tìm kiếm SIM Data"
+              placeholderTextColor="#777"
+              returnKeyType="search"
+              keyboardType="default"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.searchInput}
+              accessibilityLabel="Tìm kiếm SIM Data"
+            />
+          </View>
+        </View>
       </SafeAreaView>
+
+      {!isSearching ? (
+        <View style={styles.instruction}>
+          <Text style={styles.instructionTitle}>TÌM KIẾM SIM</Text>
+          <Text style={styles.instructionItem}>• Tìm sim có số 6789: nhập 6789</Text>
+          <Text style={styles.instructionItem}>• Tìm đầu 090, đuôi 8888: nhập 090*8888</Text>
+          <Text style={styles.instructionItem}>• Tìm số bắt đầu 0914: nhập 0914*</Text>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          overScrollMode="never"
+        >
+          {Array.isArray(searchHistory) && searchHistory.length > 0 && (
+            <View style={styles.historySection}>
+              <Text style={styles.sectionTitle}>LỊCH SỬ TÌM KIẾM</Text>
+              {searchHistory.map((keyword, index) => (
+                <TouchableOpacity
+                  key={`${keyword}-${index}`}
+                  accessibilityRole="button"
+                  onPress={() => handleHistoryPress(keyword)}
+                  style={styles.historyItem}
+                >
+                  <Ionicons name="time-outline" color="#777" size={17} />
+                  <Text style={styles.historyText}>{keyword}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {simGroups.map((packageGroup) => (
+            <SimDataAtCategory
+              key={packageGroup.packageGroup.packageCategoryID}
+              data={packageGroup}
+              navi={navigation}
+              route={route}
+            />
+          ))}
+
+          {simGroups.length === 0 && (
+            <Text style={styles.emptyText}>Chưa có gói SIM Data để hiển thị.</Text>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "white",
-  },
-  cardContainer: {
-    position: "relative",
-    width: "auto",
-    marginTop: 10,
-    height: responsiveScreenHeight(22),
-    marginLeft: responsiveScreenWidth(4),
-    marginRight: responsiveScreenWidth(4),
-  },
-  cardImage: {
-    borderRadius: 15,
-    width: "100%",
-    height: "100%",
-    position: "absolute",
-  },
-  cardContent: {
-    padding: 15,
-    height: "100%",
-  },
-  input: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    color: "#333",
-    height: 35,
+    backgroundColor: "#f8f8f8",
   },
-  button: {
+  headerSafeArea: {
     backgroundColor: argonTheme.COLORS.ERROR,
-    borderTopRightRadius: 5,
-    borderBottomRightRadius: 5,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginLeft: "auto",
-    height: 35,
-    alignItems: "flex-end",
   },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
+  header: {
+    alignItems: "center",
+    flexDirection: "row",
+    minHeight: 60,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  backButton: {
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    height: 44,
+    justifyContent: "center",
+    marginRight: 8,
+    width: 44,
+  },
+  searchBox: {
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    flex: 1,
+    flexDirection: "row",
+    height: 44,
+    paddingHorizontal: 14,
+  },
+  searchInput: {
+    color: "#222",
+    flex: 1,
+    fontSize: 16,
+    height: "100%",
+    marginLeft: 10,
+    paddingVertical: 0,
+  },
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 24,
+    paddingTop: 12,
+  },
+  instruction: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+  },
+  instructionTitle: {
+    color: "#111",
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 12,
+  },
+  instructionItem: {
+    color: "#5a5a5a",
+    fontSize: 15,
+    lineHeight: 24,
+  },
+  historySection: {
+    backgroundColor: "#fff",
+    borderBottomColor: "#e7e7e7",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  sectionTitle: {
+    color: "#111",
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  historyItem: {
+    alignItems: "center",
+    flexDirection: "row",
+    minHeight: 38,
+  },
+  historyText: {
+    color: "#333",
+    fontSize: 16,
+    marginLeft: 9,
+  },
+  emptyText: {
+    color: "#666",
+    fontSize: 15,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    textAlign: "center",
   },
 });
+
 export default SimDataCategoryScreen;

@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     shadowColor: argonTheme.COLORS.BLACK,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.3,
     elevation: 2,
   },
 });

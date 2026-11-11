@@ -12,12 +12,12 @@ namespace Repositories.Implement
     {
         private readonly SIMCenterDbContext _context;
         private readonly LogActionRepository _logAction;
+
         public SystemConfigRepository(SIMCenterDbContext context)
         {
             _context = context;
             _logAction = new(context);
         }
-
 
         public InstallmentSimConfigModel GetInstallmentSimConfig()
         {
@@ -46,6 +46,7 @@ namespace Repositories.Implement
                         Auction_Deposit = request.Auction_Deposit,
                         AskSim_AskingTime = request.AskSim_AskingTime,
                         AskSim_SimNumber = request.AskSim_SimNumber,
+                        eSim_SimPrice = request.ESim_SimPrice,
                         CreateBy = userId,
                         CreateTime = DateTime.Now,
                         UpdateBy = userId,
@@ -55,12 +56,15 @@ namespace Repositories.Implement
                 }
                 else
                 {
-                    dataEntity.Installment_DailyInterestRate = request.Installment_DailyInterestRate;
-                    dataEntity.Installment_MinimumPaymentRate = request.Installment_MinimumPaymentRate;
+                    dataEntity.Installment_DailyInterestRate =
+                        request.Installment_DailyInterestRate;
+                    dataEntity.Installment_MinimumPaymentRate =
+                        request.Installment_MinimumPaymentRate;
                     dataEntity.Auction_WaitingTime = request.Auction_WaitingTime;
                     dataEntity.Auction_Deposit = request.Auction_Deposit;
                     dataEntity.AskSim_AskingTime = request.AskSim_AskingTime;
                     dataEntity.AskSim_SimNumber = request.AskSim_SimNumber;
+                    dataEntity.eSim_SimPrice = request.ESim_SimPrice;
                     dataEntity.UpdateBy = userId;
                     dataEntity.UpdateTime = DateTime.Now;
 
@@ -93,6 +97,7 @@ namespace Repositories.Implement
                 };
             }
         }
+
         public AppSysConfigModel GetAppSysConfig()
         {
             AppSysConfigModel result = new AppSysConfigModel();
@@ -106,6 +111,8 @@ namespace Repositories.Implement
                 result.Auction_Deposit = dataEntity.Auction_Deposit;
                 result.AskSim_AskingTime = dataEntity.AskSim_AskingTime;
                 result.AskSim_SimNumber = dataEntity.AskSim_SimNumber;
+                result.ESim_SimPrice = dataEntity.eSim_SimPrice;
+                result.IsPublish = dataEntity.IsPublish;
             }
             return result;
         }
@@ -180,11 +187,7 @@ namespace Repositories.Implement
                 _context.Countries.Remove(dataEntity);
                 _context.SaveChanges();
 
-                return new ResponseDataModel<string>()
-                {
-                    Code = "1",
-                    Message = "Xóa thành công.",
-                };
+                return new ResponseDataModel<string>() { Code = "1", Message = "Xóa thành công." };
             }
             catch (Exception ex)
             {
@@ -217,18 +220,28 @@ namespace Repositories.Implement
             foreach (var item in dataEntity)
             {
                 idx++;
-                data.Add(new CountryModels()
-                {
-                    Id = item.Id,
-                    Name = item.Name,
-                    Note = item.Note
-                });
+                data.Add(
+                    new CountryModels()
+                    {
+                        Id = item.Id,
+                        Name = item.Name,
+                        Note = item.Note,
+                    }
+                );
             }
             //
             return new ResponseDataViewModel<CountryModels>()
             {
-                Pager = new Pager(new PagingRequestBase() { keyword = "", pageIndex = 1, pageSize = 100 }, dataEntity.Count()),
-                Data = data
+                Pager = new Pager(
+                    new PagingRequestBase()
+                    {
+                        keyword = "",
+                        pageIndex = 1,
+                        pageSize = 100,
+                    },
+                    dataEntity.Count()
+                ),
+                Data = data,
             };
         }
 
@@ -279,17 +292,16 @@ namespace Repositories.Implement
                 };
             }
         }
+
         public List<SelectListItem> GetCountryForCombo()
         {
             List<SelectListItem> selectListItems = new List<SelectListItem>();
             var data = _context.Countries.ToList();
             foreach (var item in data)
             {
-                selectListItems.Add(new SelectListItem
-                {
-                    Text = item.Name,
-                    Value = item.Id.ToString(),
-                });
+                selectListItems.Add(
+                    new SelectListItem { Text = item.Name, Value = item.Id.ToString() }
+                );
             }
             return selectListItems;
         }

@@ -52,7 +52,7 @@ const Home = ({ }) => {
             data={postDatas} //use data from state instead
             showsVerticalScrollIndicator={false}
             style={{ flex: 1 }}
-            keyExtractor={(data) => data.id}
+            keyExtractor={(item, index) => `post-${String(item.id ?? index)}`}
             ItemSeparatorComponent={ItemSeperator}
             ListFooterComponent={renderFooter}
             onEndReachedThreshold={0.5}
@@ -63,12 +63,10 @@ const Home = ({ }) => {
                 showFullLines={false}
                 post={item}
                 likeCount={postLikeDatas !=null ? postLikeDatas.filter(x =>x.postID ==item.id).length:0}
-                commentCount = {commentCountDatas != null ? (foundData = commentCountDatas.find(x => x.postID === item.id)) ? foundData.totalComment : 0 : 0}
+                commentCount={commentCountDatas?.find((x) => x.postID === item.id)?.totalComment ?? 0}
                 isMeLike = {postLikeDatas !=null ? postLikeDatas.some(x => x.postID === item.id && x.userID === userInfos.id):false}
-                images={imageDatas !=null ? imageDatas.filter(x =>x.postId ==item.id).map(x=>x.imageUrl):null}
-                key={item.id} />}
+                images={imageDatas !=null ? imageDatas.filter(x =>x.postId ==item.id).map(x=>x.imageUrl):null} />}
         />
     ): null;
 };
 export default observer(Home);
-

@@ -1242,6 +1242,9 @@ namespace EFCoreMySQL.Migrations
                     b.Property<int?>("FormOfDeliveryId")
                         .HasColumnType("int");
 
+                    b.Property<bool?>("HadSimData")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<DateTime>("InstallmentEndDate")
                         .HasColumnType("datetime(6)");
 
@@ -1843,6 +1846,12 @@ namespace EFCoreMySQL.Migrations
 
                     b.Property<bool>("IsDelete")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("ReportReason")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("UpdateBy")
                         .HasColumnType("char(36)");
@@ -2769,11 +2778,17 @@ namespace EFCoreMySQL.Migrations
                     b.Property<bool>("IsDelete")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsPublish")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<Guid>("UpdateBy")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTime>("UpdateTime")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<int>("eSim_SimPrice")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -2918,6 +2933,38 @@ namespace EFCoreMySQL.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TypesOfSIM");
+                });
+
+            modelBuilder.Entity("EFCoreMySQL.EntityModels.UserBlock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("BlockedUserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("BlockerUserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("CreateBy")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid>("UpdateBy")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserBlocks");
                 });
 
             modelBuilder.Entity("EFCoreMySQL.EntityModels.Warehouse", b =>

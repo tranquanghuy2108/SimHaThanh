@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { argonTheme } from '../constants';
 
 
@@ -50,12 +51,20 @@ const paragraph = [
 ];
 
 const AuctionManualScreen = (props) => {
+    useFocusEffect(
+        useCallback(() => {
+            console.log("LOG Active Screen : AuctionManualScreen");
+            return () => {
+                // Optional: Add cleanup logic here if needed when the screen loses focus
+            };
+        }, [])
+    );
     const ExitButton = () => {
         return (
             // Nút Thoát
             <TouchableOpacity className="p-1 rounded-full bg-white mx-1 "
                 onPress={() => {
-                    props.navigation.closeDrawer();
+                    props.navigation.goBack();
                 }}>
                 <Ionicons name="chevron-back-outline" color="black" size={26}></Ionicons>
             </TouchableOpacity>
@@ -70,14 +79,15 @@ const AuctionManualScreen = (props) => {
         );
     }
     return (
-        <SafeAreaView>
+        <SafeAreaView style={{ flex: 1, backgroundColor: argonTheme.COLORS.ERROR }}>
 
             <View className="flex-row p-2" style={{ zIndex: 1000, marginTop: StatusBar.currentHeight }} backgroundColor={argonTheme.COLORS.ERROR}>
                 <ExitButton />
                 <Title />
             </View>
 
-            <ScrollView className="mx-2" style={{ marginBottom: responsiveHeight(10) }}>
+            <View style={{ flex: 1, backgroundColor: "white" }}>
+              <ScrollView className="mx-2" style={{ marginBottom: responsiveHeight(10) }}>
                 <Text style={styles.textHeader}>
                     HƯỚNG DẪN ĐẤU GIÁ XUÔI
                 </Text>
@@ -104,7 +114,8 @@ const AuctionManualScreen = (props) => {
                 }
 
 
-            </ScrollView>
+              </ScrollView>
+            </View>
 
         </SafeAreaView>
     )

@@ -1,11 +1,10 @@
-import React, { createContext, useEffect, useContext, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useContext, useState } from "react";
 import axios from "axios";
 import Config from "../constants/Config";
-import { AuthContext } from "./AuthContext";
 
 import { SetLoadingContext } from "./SetLoadingContext";
 const HomeContext = createContext();
+const HOME_REQUEST_TIMEOUT = 15000;
 
 const SimTypeInit = [
   {
@@ -163,8 +162,6 @@ const HomeProvider = ({ children }) => {
   const [simTypeDatas, SetSimTypes] = useState(null);
   const [netWorkDatas, SetNetWorks] = useState(null);
 
-  const { userToken } = useContext(AuthContext);
-
   const [popUpData, SetPopUpDataState] = useState(null);
   const [isPopupVisible, setPopupVisibleState] = useState(false);
   const { SetLoading } = useContext(SetLoadingContext);
@@ -176,45 +173,47 @@ const HomeProvider = ({ children }) => {
     SetPopUpDataState(data);
   };
 
-  const GetNetWorkTypes = () => {
-    SetLoading(true);
-    axios
+  const GetNetWorkTypes = (options = {}) => {
+    const shouldShowLoading = !options.suppressLoading;
+    if (shouldShowLoading) SetLoading(true);
+    return axios
       .get(Config.BASE_URL + "/api/sim/all-network-infos", {
+        timeout: HOME_REQUEST_TIMEOUT,
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: "Bearer " + userToken,
         },
       })
       .then((response) => {
         SetNetWorks(response.data);
-        SetLoading(false);
+        if (shouldShowLoading) SetLoading(false);
         return true;
       })
       .catch((error) => {
-        SetLoading(false);
+        if (shouldShowLoading) SetLoading(false);
         return false;
       });
   };
 
-  const GetSimTypes = async () => {
-    SetLoading(true);
+  const GetSimTypes = async (options = {}) => {
+    const shouldShowLoading = !options.suppressLoading;
+    if (shouldShowLoading) SetLoading(true);
     try {
       const response = await axios.get(
         Config.BASE_URL + "/api/sim/all-simtype-infos",
         {
+          timeout: HOME_REQUEST_TIMEOUT,
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       );
       SetSimTypes(response.data);
-      SetLoading(false);
+      if (shouldShowLoading) SetLoading(false);
       return true;
     } catch (error) {
-      SetLoading(false);
+      if (shouldShowLoading) SetLoading(false);
       return false;
     }
   };
@@ -222,66 +221,69 @@ const HomeProvider = ({ children }) => {
     SetSimTypes(SimTypeInit);
   };
 
-  const GetFlashSale = async () => {
-    SetLoading(true);
+  const GetFlashSale = async (options = {}) => {
+    const shouldShowLoading = !options.suppressLoading;
+    if (shouldShowLoading) SetLoading(true);
     try {
       const response = await axios.get(
         Config.BASE_URL + "/api/sim/sim-flash-sale",
         {
+          timeout: HOME_REQUEST_TIMEOUT,
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       );
       SetFlashSaleData(response.data);
-      SetLoading(false);
+      if (shouldShowLoading) SetLoading(false);
       return true;
     } catch (error) {
-      SetLoading(false);
+      if (shouldShowLoading) SetLoading(false);
       return false;
     }
   };
-  const GetDayPromotion = async () => {
-    SetLoading(true);
+  const GetDayPromotion = async (options = {}) => {
+    const shouldShowLoading = !options.suppressLoading;
+    if (shouldShowLoading) SetLoading(true);
     try {
       const response = await axios.get(
         Config.BASE_URL + "/api/sim/sim-sale-on-day",
         {
+          timeout: HOME_REQUEST_TIMEOUT,
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       );
       SetDayPromotion(response.data);
-      SetLoading(false);
+      if (shouldShowLoading) SetLoading(false);
       return true;
     } catch (error) {
-      SetLoading(false);
+      if (shouldShowLoading) SetLoading(false);
       return false;
     }
   };
-  const GetSimLastUpdate = async () => {
-    SetLoading(true);
+  const GetSimLastUpdate = async (options = {}) => {
+    const shouldShowLoading = !options.suppressLoading;
+    if (shouldShowLoading) SetLoading(true);
     try {
       const response = await axios.get(
         Config.BASE_URL + "/api/sim/sim-last-update",
         {
+          timeout: HOME_REQUEST_TIMEOUT,
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       );
       SetLastUpdateSim(response.data);
-      SetLoading(false);
+      if (shouldShowLoading) SetLoading(false);
       return true;
     } catch (error) {
-      SetLoading(false);
+      if (shouldShowLoading) SetLoading(false);
       return false;
     }
   };

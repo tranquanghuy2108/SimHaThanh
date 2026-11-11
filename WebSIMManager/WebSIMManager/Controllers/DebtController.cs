@@ -1,4 +1,5 @@
-﻿using ClosedXML.Excel;
+﻿using System.Security.Claims;
+using ClosedXML.Excel;
 using Commons.Enums;
 using DocumentFormat.OpenXml.Office2016.Excel;
 using EFCoreMySQL.EntityModels;
@@ -11,7 +12,6 @@ using Models.Requests;
 using Models.ViewModels;
 using Repositories.Implement;
 using Repositories.Interface;
-using System.Security.Claims;
 
 namespace WebSIMManager.Controllers
 {
@@ -23,7 +23,15 @@ namespace WebSIMManager.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly ISIMRepository _simRepository;
         private readonly IBankRepository _bankRepository;
-        public DebtController(IDebtRepository debtRepository, IAccountRepository accountRepository, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment environment, ISIMRepository simRepository, IBankRepository bankRepository)
+
+        public DebtController(
+            IDebtRepository debtRepository,
+            IAccountRepository accountRepository,
+            IHttpContextAccessor httpContextAccessor,
+            IWebHostEnvironment environment,
+            ISIMRepository simRepository,
+            IBankRepository bankRepository
+        )
         {
             _debtRepository = debtRepository;
             _AccountRepository = accountRepository;
@@ -32,6 +40,7 @@ namespace WebSIMManager.Controllers
             _simRepository = simRepository;
             _bankRepository = bankRepository;
         }
+
         // GET: DebtController
         [Authorize(Roles = "Xem công nợ phát sinh")]
         public ActionResult Index()
@@ -40,13 +49,26 @@ namespace WebSIMManager.Controllers
             ViewBag.Staff = _AccountRepository.GetStaffForCombo();
             List<SelectListItem> selectListItems = new List<SelectListItem>()
             {
-                new SelectListItem() { Value = ((int)ApprovedStatus.Waiting).ToString(), Text= Enum.GetName(typeof(ApprovedStatus),ApprovedStatus.Waiting)},
-                new SelectListItem() { Value = ((int)ApprovedStatus.Approved).ToString(), Text= Enum.GetName(typeof(ApprovedStatus),ApprovedStatus.Approved)},
-                new SelectListItem() { Value = ((int)ApprovedStatus.Reject).ToString(), Text= Enum.GetName(typeof(ApprovedStatus),ApprovedStatus.Reject)},
+                new SelectListItem()
+                {
+                    Value = ((int)ApprovedStatus.Waiting).ToString(),
+                    Text = Enum.GetName(typeof(ApprovedStatus), ApprovedStatus.Waiting),
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)ApprovedStatus.Approved).ToString(),
+                    Text = Enum.GetName(typeof(ApprovedStatus), ApprovedStatus.Approved),
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)ApprovedStatus.Reject).ToString(),
+                    Text = Enum.GetName(typeof(ApprovedStatus), ApprovedStatus.Reject),
+                },
             };
             @ViewBag.Status = selectListItems;
             return View();
         }
+
         // GET: DebtController
         public ActionResult SearchDebt([FromBody] DebtFilterRequest request)
         {
@@ -54,6 +76,7 @@ namespace WebSIMManager.Controllers
             var data = _debtRepository.GetDebtForFilter(request);
             return Json(data);
         }
+
         [Route("my-debt")]
         [Authorize(Roles = "Xem công nợ của mình")]
         // GET: DebtController
@@ -62,24 +85,42 @@ namespace WebSIMManager.Controllers
             ViewBag.Agents = _AccountRepository.GetCusAgentForCombo();
             List<SelectListItem> selectListItems = new List<SelectListItem>()
             {
-                new SelectListItem() { Value = ((int)ApprovedStatus.Waiting).ToString(), Text= Enum.GetName(typeof(ApprovedStatus),ApprovedStatus.Waiting)},
-                new SelectListItem() { Value = ((int)ApprovedStatus.Approved).ToString(), Text= Enum.GetName(typeof(ApprovedStatus),ApprovedStatus.Approved)},
-                new SelectListItem() { Value = ((int)ApprovedStatus.Reject).ToString(), Text= Enum.GetName(typeof(ApprovedStatus),ApprovedStatus.Reject)},
+                new SelectListItem()
+                {
+                    Value = ((int)ApprovedStatus.Waiting).ToString(),
+                    Text = Enum.GetName(typeof(ApprovedStatus), ApprovedStatus.Waiting),
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)ApprovedStatus.Approved).ToString(),
+                    Text = Enum.GetName(typeof(ApprovedStatus), ApprovedStatus.Approved),
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)ApprovedStatus.Reject).ToString(),
+                    Text = Enum.GetName(typeof(ApprovedStatus), ApprovedStatus.Reject),
+                },
             };
             @ViewBag.Status = selectListItems;
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             ViewBag.UserIds = _AccountRepository.GetStaffForCombo();
             ViewBag.UserId = userId;
             ViewBag.debtType = (int)DebtCategory.Staff;
             return View();
         }
+
         // GET: DebtController
         public ActionResult SearchMyDebt([FromBody] DebtFilterRequest request)
         {
-            request.userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            request.userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             var data = _debtRepository.GetDebtForFilter(request);
             return Json(data);
         }
+
         [Route("waiting-appr-debt")]
         [Authorize(Roles = "Xóa đơn hỏi mua")]
         // GET: DebtController
@@ -100,12 +141,12 @@ namespace WebSIMManager.Controllers
             var data = _debtRepository.GetDebt(request);
             return Json(data);
         }
+
         // GET: DebtController/Details/5
         public ActionResult Details(int id)
         {
             return View();
         }
-
 
         #region Công nợ phát sinh
         [Route("create-debt")]
@@ -133,7 +174,9 @@ namespace WebSIMManager.Controllers
                 {
                     return View(request);
                 }
-                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                    ClaimTypes.NameIdentifier
+                );
                 var result = _debtRepository.Create(request, userId);
                 if (result.Code == "1")
                 {
@@ -179,7 +222,9 @@ namespace WebSIMManager.Controllers
                 {
                     return View(request);
                 }
-                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                    ClaimTypes.NameIdentifier
+                );
                 var result = _debtRepository.Update(request, userId);
                 if (result.Code == "1")
                 {
@@ -202,12 +247,15 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
+
         //
 
         [Authorize(Roles = "Duyệt công nợ")]
         public ActionResult OnApprovedCNPS([FromBody] ApprovedDebtRequest request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             var data = _debtRepository.Approved(request.debtIds, request.status, userId);
             return Json(data);
         }
@@ -234,6 +282,7 @@ namespace WebSIMManager.Controllers
 
             return View();
         }
+
         [Route("create-debt-type")]
         [Authorize(Roles = "Tạo mới loại công nợ")]
         // GET: DebtController/Create
@@ -241,9 +290,21 @@ namespace WebSIMManager.Controllers
         {
             List<SelectListItem> selectListItems = new List<SelectListItem>()
             {
-                new SelectListItem() { Value = ((int)DebtReceiveType.All).ToString(), Text= "Phát sinh thu/chi"},
-                new SelectListItem() { Value = ((int)DebtReceiveType.Receivables).ToString(), Text= "Phát sinh thu"},
-                new SelectListItem() { Value = ((int)DebtReceiveType.Liabilities).ToString(), Text= "Phát sinh chi"},
+                new SelectListItem()
+                {
+                    Value = ((int)DebtReceiveType.All).ToString(),
+                    Text = "Phát sinh thu/chi",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)DebtReceiveType.Receivables).ToString(),
+                    Text = "Phát sinh thu",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)DebtReceiveType.Liabilities).ToString(),
+                    Text = "Phát sinh chi",
+                },
             };
             @ViewBag.DebtReceiveTypes = selectListItems;
             return View();
@@ -260,16 +321,30 @@ namespace WebSIMManager.Controllers
             {
                 List<SelectListItem> selectListItems = new List<SelectListItem>()
                 {
-                    new SelectListItem() { Value = ((int)DebtReceiveType.All).ToString(), Text= "Phát sinh thu/chi"},
-                    new SelectListItem() { Value = ((int)DebtReceiveType.Receivables).ToString(), Text= "Phát sinh thu"},
-                    new SelectListItem() { Value = ((int)DebtReceiveType.Liabilities).ToString(), Text= "Phát sinh chi"},
+                    new SelectListItem()
+                    {
+                        Value = ((int)DebtReceiveType.All).ToString(),
+                        Text = "Phát sinh thu/chi",
+                    },
+                    new SelectListItem()
+                    {
+                        Value = ((int)DebtReceiveType.Receivables).ToString(),
+                        Text = "Phát sinh thu",
+                    },
+                    new SelectListItem()
+                    {
+                        Value = ((int)DebtReceiveType.Liabilities).ToString(),
+                        Text = "Phát sinh chi",
+                    },
                 };
                 @ViewBag.DebtReceiveTypes = selectListItems;
                 if (!ModelState.IsValid)
                 {
                     return View(request);
                 }
-                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                    ClaimTypes.NameIdentifier
+                );
                 var result = _debtRepository.CreateDebtType(request, userId);
                 if (result.Code == "1")
                 {
@@ -294,9 +369,21 @@ namespace WebSIMManager.Controllers
         {
             List<SelectListItem> selectListItems = new List<SelectListItem>()
             {
-                new SelectListItem() { Value = ((int)DebtReceiveType.All).ToString(), Text= "Phát sinh thu/chi"},
-                new SelectListItem() { Value = ((int)DebtReceiveType.Receivables).ToString(), Text= "Phát sinh thu"},
-                new SelectListItem() { Value = ((int)DebtReceiveType.Liabilities).ToString(), Text= "Phát sinh chi"},
+                new SelectListItem()
+                {
+                    Value = ((int)DebtReceiveType.All).ToString(),
+                    Text = "Phát sinh thu/chi",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)DebtReceiveType.Receivables).ToString(),
+                    Text = "Phát sinh thu",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)DebtReceiveType.Liabilities).ToString(),
+                    Text = "Phát sinh chi",
+                },
             };
             @ViewBag.DebtReceiveTypes = selectListItems;
             var debt = _debtRepository.DetailDebtType(id);
@@ -314,16 +401,30 @@ namespace WebSIMManager.Controllers
             {
                 List<SelectListItem> selectListItems = new List<SelectListItem>()
                 {
-                    new SelectListItem() { Value = ((int)DebtReceiveType.All).ToString(), Text= "Phát sinh thu/chi"},
-                    new SelectListItem() { Value = ((int)DebtReceiveType.Receivables).ToString(), Text= "Phát sinh thu"},
-                    new SelectListItem() { Value = ((int)DebtReceiveType.Liabilities).ToString(), Text= "Phát sinh chi"},
+                    new SelectListItem()
+                    {
+                        Value = ((int)DebtReceiveType.All).ToString(),
+                        Text = "Phát sinh thu/chi",
+                    },
+                    new SelectListItem()
+                    {
+                        Value = ((int)DebtReceiveType.Receivables).ToString(),
+                        Text = "Phát sinh thu",
+                    },
+                    new SelectListItem()
+                    {
+                        Value = ((int)DebtReceiveType.Liabilities).ToString(),
+                        Text = "Phát sinh chi",
+                    },
                 };
                 @ViewBag.DebtReceiveTypes = selectListItems;
                 if (!ModelState.IsValid)
                 {
                     return View(request);
                 }
-                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                    ClaimTypes.NameIdentifier
+                );
                 var result = _debtRepository.UpdateDebtType(request, userId);
                 if (result.Code == "1")
                 {
@@ -347,7 +448,9 @@ namespace WebSIMManager.Controllers
         {
             try
             {
-                var userActionId = new Guid(_httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var userActionId = new Guid(
+                    _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                );
                 var result = _debtRepository.DeleteDebtType(id, userActionId);
 
                 if (result.Code == "1")
@@ -372,7 +475,9 @@ namespace WebSIMManager.Controllers
         [Authorize(Roles = "Xem phiếu chuyển tiền")]
         public ActionResult TransferMoney(TransferMoneyFilterModel request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             if (request.keyword == null)
                 request.keyword = "";
             if (request.pageIndex == 0)
@@ -388,13 +493,16 @@ namespace WebSIMManager.Controllers
 
             return View();
         }
+
         // POST: DebtController/Create
         [HttpPost]
         [Route("create-transfer-money")]
         [Authorize(Roles = "Tạo mới phiếu chuyển tiền")]
         public ActionResult CreateTransferMoney([FromBody] CreateTransferMoneyModel request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             TransferMoneyModel transferMoneyModel = new TransferMoneyModel()
             {
                 Amount = request.Amount,
@@ -402,7 +510,7 @@ namespace WebSIMManager.Controllers
                 Description = request.Description,
                 Note = request.Note,
                 RemittersId = new Guid(userId),
-                ReceiverId = new Guid(request.ReceiverId)
+                ReceiverId = new Guid(request.ReceiverId),
             };
             var result = _debtRepository.CreateTransferMoney(transferMoneyModel, userId);
             return Json(result);
@@ -415,9 +523,21 @@ namespace WebSIMManager.Controllers
         {
             List<SelectListItem> selectListItems = new List<SelectListItem>()
             {
-                new SelectListItem() { Value = ((int)DebtReceiveType.All).ToString(), Text= "Phát sinh thu/chi"},
-                new SelectListItem() { Value = ((int)DebtReceiveType.Receivables).ToString(), Text= "Phát sinh thu"},
-                new SelectListItem() { Value = ((int)DebtReceiveType.Liabilities).ToString(), Text= "Phát sinh chi"},
+                new SelectListItem()
+                {
+                    Value = ((int)DebtReceiveType.All).ToString(),
+                    Text = "Phát sinh thu/chi",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)DebtReceiveType.Receivables).ToString(),
+                    Text = "Phát sinh thu",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)DebtReceiveType.Liabilities).ToString(),
+                    Text = "Phát sinh chi",
+                },
             };
             @ViewBag.DebtReceiveTypes = selectListItems;
             var debt = _debtRepository.DetailTransferMoney(id);
@@ -435,16 +555,30 @@ namespace WebSIMManager.Controllers
             {
                 List<SelectListItem> selectListItems = new List<SelectListItem>()
                 {
-                    new SelectListItem() { Value = ((int)DebtReceiveType.All).ToString(), Text= "Phát sinh thu/chi"},
-                    new SelectListItem() { Value = ((int)DebtReceiveType.Receivables).ToString(), Text= "Phát sinh thu"},
-                    new SelectListItem() { Value = ((int)DebtReceiveType.Liabilities).ToString(), Text= "Phát sinh chi"},
+                    new SelectListItem()
+                    {
+                        Value = ((int)DebtReceiveType.All).ToString(),
+                        Text = "Phát sinh thu/chi",
+                    },
+                    new SelectListItem()
+                    {
+                        Value = ((int)DebtReceiveType.Receivables).ToString(),
+                        Text = "Phát sinh thu",
+                    },
+                    new SelectListItem()
+                    {
+                        Value = ((int)DebtReceiveType.Liabilities).ToString(),
+                        Text = "Phát sinh chi",
+                    },
                 };
                 @ViewBag.DebtReceiveTypes = selectListItems;
                 if (!ModelState.IsValid)
                 {
                     return View(request);
                 }
-                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                    ClaimTypes.NameIdentifier
+                );
                 var result = _debtRepository.UpdateTransferMoney(request, userId);
                 if (result.Code == "1")
                 {
@@ -466,7 +600,9 @@ namespace WebSIMManager.Controllers
         [Authorize(Roles = "Xóa phiếu chuyển tiền")]
         public ActionResult DeleteTransferMoney(int id)
         {
-            var userActionId = new Guid(_httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userActionId = new Guid(
+                _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            );
             var result = _debtRepository.DeleteTransferMoney(id, userActionId);
             return Json(result);
         }
@@ -474,13 +610,18 @@ namespace WebSIMManager.Controllers
         [Authorize(Roles = "Duyệt phiếu chuyển tiền")]
         public ActionResult OnApprovedTransferMoney([FromBody] TransferMoneApprovedModel request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             var data = _debtRepository.ApprovedTransferMoney(request, userId);
             return Json(data);
         }
+
         public ActionResult CheckTransferMoneyLst([FromBody] CheckTransferMoneyRequestModel request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             var data = _debtRepository.CheckTransferMoneyLst(request.DebtStaffIds);
             return Json(data);
         }
@@ -492,7 +633,9 @@ namespace WebSIMManager.Controllers
         [Authorize(Roles = "Xem phiếu thu tiền")]
         public ActionResult Receipt(ReceiptFilterModel request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             if (request.keyword == null)
                 request.keyword = "";
             if (request.pageIndex == 0)
@@ -507,6 +650,7 @@ namespace WebSIMManager.Controllers
 
             return View();
         }
+
         // POST: DebtController/Create
         [Route("create-receipt")]
         [Authorize(Roles = "Tạo mới phiếu thu tiền")]
@@ -517,17 +661,33 @@ namespace WebSIMManager.Controllers
             ViewBag.UserInfo = userInfo;
             List<SelectListItem> selectListItems = new List<SelectListItem>()
             {
-                new SelectListItem() { Value = ((int)FormOfPayment.Direct).ToString(), Text= "Thanh toán trực tiếp"},
-                new SelectListItem() { Value = ((int)FormOfPayment.Banking).ToString(), Text= "Chuyển khoản"},
+                new SelectListItem()
+                {
+                    Value = ((int)FormOfPayment.Direct).ToString(),
+                    Text = "Thanh toán trực tiếp",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)FormOfPayment.Banking).ToString(),
+                    Text = "Chuyển khoản",
+                },
             };
             @ViewBag.FormOfPayment = selectListItems;
             List<SelectListItem> selectListItems1 = new List<SelectListItem>()
             {
-                new SelectListItem() { Value = ((int)TypeOfReceived.Thu).ToString(), Text= "Phiếu thu"},
-                new SelectListItem() { Value = ((int)TypeOfReceived.Chi).ToString(), Text= "Phiếu chi"},
+                new SelectListItem()
+                {
+                    Value = ((int)TypeOfReceived.Thu).ToString(),
+                    Text = "Phiếu thu",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)TypeOfReceived.Chi).ToString(),
+                    Text = "Phiếu chi",
+                },
             };
             @ViewBag.TypeOfReceived = selectListItems1;
-            ViewBag.Agents = _AccountRepository.GetAgentForCombo();
+            ViewBag.Agents = _AccountRepository.GetAgentAndAgentConsigmentForCombo();
             ViewBag.Banks = _bankRepository.GetBankForCombo();
             return View();
         }
@@ -540,27 +700,45 @@ namespace WebSIMManager.Controllers
         {
             try
             {
-				var userInfo = _AccountRepository.GetUserForEdit(request.AgentId);
-				ViewBag.UserInfo = userInfo;
-				List<SelectListItem> selectListItems = new List<SelectListItem>()
-			{
-				new SelectListItem() { Value = ((int)FormOfPayment.Direct).ToString(), Text= "Thanh toán trực tiếp"},
-				new SelectListItem() { Value = ((int)FormOfPayment.Banking).ToString(), Text= "Chuyển khoản"},
-			};
-				@ViewBag.FormOfPayment = selectListItems;
-				List<SelectListItem> selectListItems1 = new List<SelectListItem>()
-			{
-				new SelectListItem() { Value = ((int)TypeOfReceived.Thu).ToString(), Text= "Phiếu thu"},
-				new SelectListItem() { Value = ((int)TypeOfReceived.Chi).ToString(), Text= "Phiếu chi"},
-			};
-				@ViewBag.TypeOfReceived = selectListItems1;
-				ViewBag.Agents = _AccountRepository.GetAgentForCombo();
-				ViewBag.Banks = _bankRepository.GetBankForCombo();
-				if (!ModelState.IsValid)
+                var userInfo = _AccountRepository.GetUserForEdit(request.AgentId);
+                ViewBag.UserInfo = userInfo;
+                List<SelectListItem> selectListItems = new List<SelectListItem>()
+                {
+                    new SelectListItem()
+                    {
+                        Value = ((int)FormOfPayment.Direct).ToString(),
+                        Text = "Thanh toán trực tiếp",
+                    },
+                    new SelectListItem()
+                    {
+                        Value = ((int)FormOfPayment.Banking).ToString(),
+                        Text = "Chuyển khoản",
+                    },
+                };
+                @ViewBag.FormOfPayment = selectListItems;
+                List<SelectListItem> selectListItems1 = new List<SelectListItem>()
+                {
+                    new SelectListItem()
+                    {
+                        Value = ((int)TypeOfReceived.Thu).ToString(),
+                        Text = "Phiếu thu",
+                    },
+                    new SelectListItem()
+                    {
+                        Value = ((int)TypeOfReceived.Chi).ToString(),
+                        Text = "Phiếu chi",
+                    },
+                };
+                @ViewBag.TypeOfReceived = selectListItems1;
+                ViewBag.Agents = _AccountRepository.GetAgentAndAgentConsigmentForCombo();
+                ViewBag.Banks = _bankRepository.GetBankForCombo();
+                if (!ModelState.IsValid)
                 {
                     return View(request);
                 }
-                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                    ClaimTypes.NameIdentifier
+                );
                 var result = _debtRepository.CreateReceipt(request, userId);
                 if (result.Code == "1")
                 {
@@ -583,22 +761,38 @@ namespace WebSIMManager.Controllers
         // GET: DebtController/Edit/5
         public ActionResult ReceiptDetail(int id)
         {
-			List<SelectListItem> selectListItems = new List<SelectListItem>()
-			{
-				new SelectListItem() { Value = ((int)FormOfPayment.Direct).ToString(), Text= "Thanh toán trực tiếp"},
-				new SelectListItem() { Value = ((int)FormOfPayment.Banking).ToString(), Text= "Chuyển khoản"},
-			};
-			@ViewBag.FormOfPayment = selectListItems;
+            List<SelectListItem> selectListItems = new List<SelectListItem>()
+            {
+                new SelectListItem()
+                {
+                    Value = ((int)FormOfPayment.Direct).ToString(),
+                    Text = "Thanh toán trực tiếp",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)FormOfPayment.Banking).ToString(),
+                    Text = "Chuyển khoản",
+                },
+            };
+            @ViewBag.FormOfPayment = selectListItems;
             List<SelectListItem> selectListItems1 = new List<SelectListItem>()
             {
-                new SelectListItem() { Value = ((int)TypeOfReceived.Thu).ToString(), Text= "Phiếu thu"},
-                new SelectListItem() { Value = ((int)TypeOfReceived.Chi).ToString(), Text= "Phiếu chi"},
+                new SelectListItem()
+                {
+                    Value = ((int)TypeOfReceived.Thu).ToString(),
+                    Text = "Phiếu thu",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)TypeOfReceived.Chi).ToString(),
+                    Text = "Phiếu chi",
+                },
             };
             @ViewBag.TypeOfReceived = selectListItems1;
             ViewBag.Agents = _AccountRepository.GetAgentForCombo();
             ViewBag.Staffs = _AccountRepository.GetStaffForCombo();
-			ViewBag.Banks = _bankRepository.GetBankForCombo();
-			var debt = _debtRepository.DetailReceipt(id);
+            ViewBag.Banks = _bankRepository.GetBankForCombo();
+            var debt = _debtRepository.DetailReceipt(id);
             return View(debt);
         }
 
@@ -607,22 +801,38 @@ namespace WebSIMManager.Controllers
         // GET: DebtController/Edit/5
         public ActionResult EditReceipt(int id)
         {
-			List<SelectListItem> selectListItems = new List<SelectListItem>()
-			{
-				new SelectListItem() { Value = ((int)FormOfPayment.Direct).ToString(), Text= "Thanh toán trực tiếp"},
-				new SelectListItem() { Value = ((int)FormOfPayment.Banking).ToString(), Text= "Chuyển khoản"},
-			};
-			@ViewBag.FormOfPayment = selectListItems;
+            List<SelectListItem> selectListItems = new List<SelectListItem>()
+            {
+                new SelectListItem()
+                {
+                    Value = ((int)FormOfPayment.Direct).ToString(),
+                    Text = "Thanh toán trực tiếp",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)FormOfPayment.Banking).ToString(),
+                    Text = "Chuyển khoản",
+                },
+            };
+            @ViewBag.FormOfPayment = selectListItems;
             List<SelectListItem> selectListItems1 = new List<SelectListItem>()
             {
-                new SelectListItem() { Value = ((int)TypeOfReceived.Thu).ToString(), Text= "Phiếu thu"},
-                new SelectListItem() { Value = ((int)TypeOfReceived.Chi).ToString(), Text= "Phiếu chi"},
+                new SelectListItem()
+                {
+                    Value = ((int)TypeOfReceived.Thu).ToString(),
+                    Text = "Phiếu thu",
+                },
+                new SelectListItem()
+                {
+                    Value = ((int)TypeOfReceived.Chi).ToString(),
+                    Text = "Phiếu chi",
+                },
             };
             @ViewBag.TypeOfReceived = selectListItems1;
             ViewBag.Agents = _AccountRepository.GetAgentForCombo();
             ViewBag.Staffs = _AccountRepository.GetStaffForCombo();
-			ViewBag.Banks = _bankRepository.GetBankForCombo();
-			var debt = _debtRepository.DetailReceipt(id);
+            ViewBag.Banks = _bankRepository.GetBankForCombo();
+            var debt = _debtRepository.DetailReceipt(id);
             return View(debt);
         }
 
@@ -635,26 +845,44 @@ namespace WebSIMManager.Controllers
         {
             try
             {
-				List<SelectListItem> selectListItems = new List<SelectListItem>()
-			{
-				new SelectListItem() { Value = ((int)FormOfPayment.Direct).ToString(), Text= "Thanh toán trực tiếp"},
-				new SelectListItem() { Value = ((int)FormOfPayment.Banking).ToString(), Text= "Chuyển khoản"},
-			};
-				@ViewBag.FormOfPayment = selectListItems;
+                List<SelectListItem> selectListItems = new List<SelectListItem>()
+                {
+                    new SelectListItem()
+                    {
+                        Value = ((int)FormOfPayment.Direct).ToString(),
+                        Text = "Thanh toán trực tiếp",
+                    },
+                    new SelectListItem()
+                    {
+                        Value = ((int)FormOfPayment.Banking).ToString(),
+                        Text = "Chuyển khoản",
+                    },
+                };
+                @ViewBag.FormOfPayment = selectListItems;
                 List<SelectListItem> selectListItems1 = new List<SelectListItem>()
-            {
-                new SelectListItem() { Value = ((int)TypeOfReceived.Thu).ToString(), Text= "Phiếu thu"},
-                new SelectListItem() { Value = ((int)TypeOfReceived.Chi).ToString(), Text= "Phiếu chi"},
-            };
+                {
+                    new SelectListItem()
+                    {
+                        Value = ((int)TypeOfReceived.Thu).ToString(),
+                        Text = "Phiếu thu",
+                    },
+                    new SelectListItem()
+                    {
+                        Value = ((int)TypeOfReceived.Chi).ToString(),
+                        Text = "Phiếu chi",
+                    },
+                };
                 @ViewBag.TypeOfReceived = selectListItems1;
                 ViewBag.Agents = _AccountRepository.GetAgentForCombo();
-				ViewBag.Staffs = _AccountRepository.GetStaffForCombo();
-				ViewBag.Banks = _bankRepository.GetBankForCombo();
-				if (!ModelState.IsValid)
+                ViewBag.Staffs = _AccountRepository.GetStaffForCombo();
+                ViewBag.Banks = _bankRepository.GetBankForCombo();
+                if (!ModelState.IsValid)
                 {
                     return View(request);
                 }
-                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                    ClaimTypes.NameIdentifier
+                );
                 var result = _debtRepository.UpdateReceipt(request, userId);
                 if (result.Code == "1")
                 {
@@ -676,7 +904,9 @@ namespace WebSIMManager.Controllers
         [Authorize(Roles = "Xóa phiếu thu tiền")]
         public ActionResult DeleteReceipt(int id)
         {
-            var userActionId = new Guid(_httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userActionId = new Guid(
+                _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            );
             var result = _debtRepository.DeleteReceipt(id, userActionId);
             return Json(result);
         }
@@ -684,10 +914,13 @@ namespace WebSIMManager.Controllers
         [Authorize(Roles = "Duyệt phiếu thu tiền")]
         public ActionResult OnApprovedReceipt([FromBody] ReceiptApprovedModel request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             var data = _debtRepository.ApprovedReceipt(request, userId);
             return Json(data);
         }
+
         //public ActionResult CheckReceiptLst([FromBody] CheckReceiptRequestModel request)
         //{
         //    var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -696,25 +929,27 @@ namespace WebSIMManager.Controllers
         //}
 
         public ActionResult CheckOldDebtOfAgent([FromBody] DebtOfAgentRequest request)
-		{
-			var data = _debtRepository.CheckOldDebtOfAgent(request);
-			return Json(data);
-		}
-		#endregion
+        {
+            var data = _debtRepository.CheckOldDebtOfAgent(request);
+            return Json(data);
+        }
+        #endregion
 
-		#region Report
+        #region Report
 
-		#region Tiền tồn trong quỹ
-		[Route("tien-ton-trong-quy1")]
+        #region Tiền tồn trong quỹ
+        [Route("tien-ton-trong-quy1")]
         public ActionResult CashFundBalance()
         {
             return View();
         }
+
         public ActionResult SearchCashFundBalance([FromBody] CashFundBalanceReportRequest request)
         {
             var data = _debtRepository.GetCashFundBalance(request);
             return Json(data);
         }
+
         [Route("chi-tiet-tien-ton-trong-quy")]
         public ActionResult CashFundBalanceDetail(string userId, DebtCategory debtType)
         {
@@ -723,11 +958,13 @@ namespace WebSIMManager.Controllers
             ViewBag.debtType = (int)debtType;
             return View();
         }
+
         public ActionResult SearchCashFundBalanceDetail([FromBody] DebtDetailFilterModel request)
         {
             var data = _debtRepository.GetDebtDetail(request);
             return Json(data);
         }
+
         public ActionResult ExportCashFundBalance([FromBody] CashFundBalanceReportRequest request)
         {
             request.isPaged = false;
@@ -761,12 +998,18 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
 
         public ActionResult ConfirmDebtSettlementOfStaff([FromBody] ApprovedDebtRequest request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             var data = _debtRepository.ConfirmDebtSettlementOfStaff(request.debtIds, true, userId);
             return Json(data);
         }
@@ -778,11 +1021,13 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
+
         public ActionResult SearchBankFundBalance([FromBody] CashFundBalanceReportRequest request)
         {
             var data = _debtRepository.GetBankFundBalance(request);
             return Json(data);
         }
+
         [Route("chi-tiet-tien-ton-trong-bank")]
         public ActionResult BankFundBalanceDetail(string id, DebtCategory debtType)
         {
@@ -790,11 +1035,13 @@ namespace WebSIMManager.Controllers
             ViewBag.debtType = (int)debtType;
             return View();
         }
+
         public ActionResult SearchDebtBankDetail([FromBody] DebtDetailFilterModel request)
         {
             var data = _debtRepository.GetDebtBankDetail(request);
             return Json(data);
         }
+
         public ActionResult ExportBankFundBalance([FromBody] CashFundBalanceReportRequest request)
         {
             request.isPaged = false;
@@ -825,12 +1072,18 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
 
         public ActionResult ConfirmDebtSettlementOfBank([FromBody] ApprovedDebtRequest request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
             var data = _debtRepository.ConfirmDebtSettlementOfBank(request.debtIds, true, userId);
             return Json(data);
         }
@@ -842,11 +1095,15 @@ namespace WebSIMManager.Controllers
         {
             return View();
         }
-        public ActionResult SearchShippingFundBalance([FromBody] CashFundBalanceReportRequest request)
+
+        public ActionResult SearchShippingFundBalance(
+            [FromBody] CashFundBalanceReportRequest request
+        )
         {
             var data = _debtRepository.GetShippingFundBalance(request);
             return Json(data);
         }
+
         [Route("chi-tiet-tien-ton-trong-shipping")]
         public ActionResult ShippingFundBalanceDetail(string userId, DebtCategory debtType)
         {
@@ -854,12 +1111,18 @@ namespace WebSIMManager.Controllers
             ViewBag.debtType = (int)debtType;
             return View();
         }
-        public ActionResult SearchShippingFundBalanceDetail([FromBody] DebtDetailFilterModel request)
+
+        public ActionResult SearchShippingFundBalanceDetail(
+            [FromBody] DebtDetailFilterModel request
+        )
         {
             var data = _debtRepository.GetDebtShippingDetail(request);
             return Json(data);
         }
-        public ActionResult ExportShippingFundBalance([FromBody] CashFundBalanceReportRequest request)
+
+        public ActionResult ExportShippingFundBalance(
+            [FromBody] CashFundBalanceReportRequest request
+        )
         {
             var data = _debtRepository.GetShippingFundBalance(request);
 
@@ -891,13 +1154,23 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
 
         public ActionResult ConfirmDebtSettlementOfShipping([FromBody] ApprovedDebtRequest request)
         {
-            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var data = _debtRepository.ConfirmDebtSettlementOfShipping(request.debtIds, true, userId);
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
+            var data = _debtRepository.ConfirmDebtSettlementOfShipping(
+                request.debtIds,
+                true,
+                userId
+            );
             return Json(data);
         }
 
@@ -941,8 +1214,13 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
+
         public ActionResult ExportCashFundBalanceDetail([FromBody] DebtDetailFilterModel request)
         {
             var data = _debtRepository.GetDebtDetail(request);
@@ -991,9 +1269,16 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
-        public ActionResult ExportShippingFundBalanceDetail([FromBody] DebtDetailFilterModel request)
+
+        public ActionResult ExportShippingFundBalanceDetail(
+            [FromBody] DebtDetailFilterModel request
+        )
         {
             var data = _debtRepository.GetDebtShippingDetail(request);
 
@@ -1041,7 +1326,11 @@ namespace WebSIMManager.Controllers
             stream.Seek(0, System.IO.SeekOrigin.Begin);
 
             // Trả về một FileResult
-            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "export.xlsx"
+            );
         }
         #endregion
         #endregion

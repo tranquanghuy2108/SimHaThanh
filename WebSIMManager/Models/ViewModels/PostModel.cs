@@ -11,6 +11,7 @@ namespace Models.ViewModels
         public string? ImageUrl { get; set; }
         public string? Description { get; set; }
     }
+
     //
     public class PostCreateRequestModel
     {
@@ -19,20 +20,21 @@ namespace Models.ViewModels
 
         public List<PostImageRequestModel> imageUrls { get; set; }
     }
+
     public class PostCmtCreateRequestModel //Post Commnet Create Request Model
     {
         public Guid UserID { get; set; }
         public int PostID { get; set; }
         public string Content { get; set; }
         public int? ParentCommentID { get; set; }
-     
     }
-    public class PostLikeRequestModel 
+
+    public class PostLikeRequestModel
     {
         public Guid UserID { get; set; }
         public int PostID { get; set; }
-
     }
+
     public class PostLikeViewModel
     {
         public int Id { get; set; }
@@ -43,15 +45,26 @@ namespace Models.ViewModels
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
     }
+
     public class CommentCountViewModel
     {
         public int TotalComment { get; set; }
         public int PostID { get; set; }
     }
-    public class PostEditRequestModel
-    {
 
+    public class ReportPostRequestModel
+    {
+        public Guid UserID { get; set; }
+        public int PostID { get; set; }
+        public string Reason { get; set; }
     }
+
+    public class BlockUserRequestModel
+    {
+        public Guid UserID { get; set; }
+        public Guid BlockedUserID { get; set; }
+    }
+
     //
     public class PostViewModel
     {
@@ -65,6 +78,7 @@ namespace Models.ViewModels
         public DateTime CreateTime { get; set; }
         public DateTime UpdateDate { get; set; }
     }
+
     public class PostCommentViewModel
     {
         public int Id { get; set; }
@@ -85,7 +99,5 @@ namespace Models.ViewModels
         public string ImageUrl { get; set; }
         public int TotalLike { get; set; }
         public string ImageDescription { get; set; }
-
     }
-
 }

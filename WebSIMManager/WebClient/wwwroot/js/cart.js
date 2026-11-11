@@ -84,9 +84,9 @@ function renderCartList(containerId) {
     <table class="table table-striped" cellspacing="0" cellpadding="8" width="100%">
       <thead>
         <tr>
-        <th style="width: 35%;">SIM</th>
+        <th style="width: 30%;">SIM</th>
         <th style="width: 20%;">Giá</th>
-        <th style="width: 15%;">SL</th>
+        <th style="width: 25%;">SL</th>
         <th style="width: 20%;">Tổng</th>
         <th style="width: 5%;">ESim</th>
         <th style="width: 5%;">Xóa</th>
@@ -99,8 +99,9 @@ function renderCartList(containerId) {
   for (const item of cart) {
     const itemTotal = item.price * item.qty;
     total += itemTotal;
-    if (item.esim) total += 50000 * item.qty;
-    var inputStr = `<input class="form-control" type="number" value="${item.qty}" onchange="changeQty(${item.id}, ${item.type}, this.value )"/>`;
+    var eSimPrice = parseInt($('#eSimPrice').val()) || 0;
+    if (item.esim) total += eSimPrice * item.qty;
+      var inputStr = `<input class="form-control" type="number"  oninput="if (this.value.length > 4) this.value = this.value.slice(0, 4);" value="${item.qty}" onchange="changeQty(${item.id}, ${item.type}, this.value )"/>`;
     var quantity = item.type != 0 ? inputStr : item.qty.toString();
     html += `
       <tr>

@@ -11,7 +11,7 @@ namespace WebSIMAPI.Controllers
 {
     [Route("api/sim-phong-thuy")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class SimPhongThuyController : Controller
     {
         private readonly ISIMRepository _simRepository;

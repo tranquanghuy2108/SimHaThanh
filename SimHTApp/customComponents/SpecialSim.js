@@ -10,7 +10,6 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import {
   responsiveHeight,
   responsiveWidth,
-  responsiveFontSize,
 } from "react-native-responsive-dimensions";
 
 const SpecialSim = (props) => {
@@ -328,11 +327,11 @@ const SpecialSimCard = (prop) => {
         name="ellipsis-horizontal-outline"
         className="text-center"
         color="#1575b6"
-        size={responsiveWidth(6.5)}
+        size={24}
       ></Ionicons>
       <Text
         className="font-bold text-center"
-        style={{ fontSize: responsiveFontSize(2), color: "#1575b6" }}
+        style={{ fontSize: 14, lineHeight: 18, color: "#1575b6" }}
       >
         Xem tất cả
       </Text>
@@ -345,7 +344,7 @@ const SpecialSimCard = (prop) => {
         ...styles.card,
       }}
       onPress={() => {
-        search(null, null, null, prop.itemData.id);
+        search(null, null, null, prop.itemData.id, { resetFilters: true });
         prop.pathProp.navigate(AppConst.ScreenConst.SEARCH_SCREEN, {
           screenParam: AppConst.SearchFrameConst.IS_RESULT,
         });
@@ -354,7 +353,8 @@ const SpecialSimCard = (prop) => {
       <Text
         className="font-bold text-center"
         style={{
-          fontSize: responsiveFontSize(2),
+          fontSize: 14,
+          lineHeight: 18,
           color: prop.itemData.color ? "white" : "#1575b6",
           fontWeight: "bold",
           textShadowColor: "black", // Màu đổ bóng
@@ -371,11 +371,11 @@ const styles = {
   card: {
     shadowColor: "black",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     margin: 5,
-    height: responsiveWidth(20),
-    width: responsiveWidth(20),
+    height: 76,
+    width: 76,
     elevation: 5,
   },
   price: {

@@ -14,7 +14,6 @@ namespace WebSIMAPI.Controllers
     public class AuctionController : Controller
     {
         private readonly IAuctionRepository _auctionRepository;
-
         public AuctionController(IAuctionRepository auctionRepository)
         {
             _auctionRepository = auctionRepository;
@@ -25,21 +24,16 @@ namespace WebSIMAPI.Controllers
         {
             return _auctionRepository.GetCurentAuction();
         }
-
         [HttpPost("get-my-auction")]
         public ResponseDataViewModel<AuctionViewModel> GetMyAuction([FromBody] Guid userId)
         {
             return _auctionRepository.GetMyAuction(userId);
         }
-
         [HttpPost("get-all-auction")]
-        public ResponseDataViewModel<AuctionViewModel> GetAuction(
-            [FromBody] GetPagingRequest request
-        )
+        public ResponseDataViewModel<AuctionViewModel> GetAuction([FromBody] GetPagingRequest request)
         {
             return _auctionRepository.GetAuction(request);
         }
-
         [HttpPost("bidding-auction")]
         public ResponseDataModel<string> BiddingAuction([FromBody] AuctionUserBiddingModel request)
         {

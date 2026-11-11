@@ -1,14 +1,11 @@
 import React, { createContext, useState, useContext } from "react";
 import axios from "axios";
 import Config from "../constants/Config";
-import { AuthContext } from "./AuthContext";
 import { SetLoadingContext } from "./SetLoadingContext";
 
 const FengShuiContext = createContext();
 
 const FengShuiProvider = ({ children }) => {
-
-  const { userToken } = useContext(AuthContext);
 
   const { SetLoading } = useContext(SetLoadingContext);
 
@@ -89,7 +86,6 @@ const FengShuiProvider = ({ children }) => {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + userToken
         },
       }).then((response) => {
         SetFortuneDataState(response.data);
@@ -118,7 +114,6 @@ const FengShuiProvider = ({ children }) => {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + userToken
         },
       }).then((response) => {
         SetPageIndexState(pageIndex + 1);
@@ -151,7 +146,6 @@ const FengShuiProvider = ({ children }) => {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + userToken
         },
       }).then((response) => {
 
@@ -179,7 +173,6 @@ const FengShuiProvider = ({ children }) => {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + userToken
         },
       }).then((response) => {
         var simResult = {

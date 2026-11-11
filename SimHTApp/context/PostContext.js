@@ -1,10 +1,13 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useEffect, useState, useContext } from "react";
 import axios from "axios";
 import Config from "../constants/Config";
 import { AuthContext } from "./AuthContext";
 import { SetLoadingContext } from "./SetLoadingContext";
+import { validateUserGeneratedText } from "../utils/contentModeration";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  ToastAndroid
+  Alert,
+  ToastAndroid,
 } from "react-native";
 const PostContext = createContext();
 
@@ -23,6 +26,25 @@ const PostProvider = ({ children }) => {
   const [postLikeDatas, SetPostLikeDatasState] = useState([]);
 
   const [isLoadComment, SetLoadCommentState] = useState(false);
+  const [blockedUserIds, setBlockedUserIds] = useState([]);
+
+  const blockedUserStorageKey = userInfos?.id
+    ? `BlockedUserIds:${userInfos.id}`
+    : null;
+
+  useEffect(() => {
+    if (!blockedUserStorageKey) {
+      setBlockedUserIds([]);
+      return;
+    }
+
+    AsyncStorage.getItem(blockedUserStorageKey)
+      .then((storedUserIds) => {
+        if (storedUserIds) setBlockedUserIds(JSON.parse(storedUserIds));
+        else setBlockedUserIds([]);
+      })
+      .catch(() => {});
+  }, [blockedUserStorageKey]);
 
   const SetReplyComment = (replyCommentData) => {
     SetReplyCommentData(replyCommentData);
@@ -36,41 +58,53 @@ const PostProvider = ({ children }) => {
     SetReloadPost(reload);
   }
   //POST_CONTENT
-  const CreatePost = (postData) => {
-    SetHit(false);
+  const CreatePost = async (postData) => {
+    const contentValidation = validateUserGeneratedText(postData.content, {
+      required: true,
+    });
+    if (!contentValidation.isAllowed) {
+      Alert.alert("Không thể đăng bài", contentValidation.message);
+      return false;
+    }
+
     SetLoading(true);
-    axios.post(Config.BASE_URL + '/api/post/create-post',
-      {
-
-        "userID": userInfos.id,
-        "content": postData.content,
-        "imageUrls": postData.imgs
-
-      },
-      {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + userToken
+    try {
+      await axios.post(Config.BASE_URL + '/api/post/create-post',
+        {
+          "userID": userInfos.id,
+          "content": postData.content,
+          "imageUrls": postData.imgs,
         },
-      }).then((response) => {
-        GetPosts(1, 50);
-        SetLoading(false);
-        ToastAndroid.showWithGravity(
-          'Bài Post đang được đăng!',
-          ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
-        );
-        return true;
-      }).catch((error) => {
-        SetLoading(false);
-        return false;
-      });
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + userToken,
+          },
+        });
+
+      await GetPosts(1, 50);
+      ToastAndroid.showWithGravity(
+        'Bài Post đang được đăng!',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+      );
+      return true;
+    } catch (error) {
+      return false;
+    } finally {
+      SetLoading(false);
+    }
   }
   //
-  const GetPosts = (pageIndex, pageSize) => {
+  const GetPosts = (pageIndex, pageSize, additionalBlockedUserIds = []) => {
     SetLoading(true);
-    axios.post(Config.BASE_URL + '/api/post/get-all-post',
+    const hiddenUserIds = new Set(
+      [...blockedUserIds, ...additionalBlockedUserIds].map((userId) =>
+        String(userId),
+      ),
+    );
+    return axios.post(Config.BASE_URL + '/api/post/get-all-post',
       {
         "isPaged": true,
         "pageIndex": pageIndex,
@@ -84,7 +118,10 @@ const PostProvider = ({ children }) => {
           'Authorization': 'Bearer ' + userToken
         },
       }).then((response) => {
-        SetPostDatas(response.data.data);
+        const visiblePosts = response.data.data.filter(
+          (post) => !hiddenUserIds.has(String(post.userID)),
+        );
+        SetPostDatas(visiblePosts);
         SetLoading(false);
         return true;
       }).catch((error) => {
@@ -130,6 +167,14 @@ const PostProvider = ({ children }) => {
 
   //POST_COMMENT
   const CreatePostComment = (postID, parentCommentID, content) => {
+    const contentValidation = validateUserGeneratedText(content, {
+      required: true,
+    });
+    if (!contentValidation.isAllowed) {
+      Alert.alert("Không thể gửi bình luận", contentValidation.message);
+      return false;
+    }
+
     SetLoading(true);
 
     axios.post(Config.BASE_URL + '/api/post/create-post-comment',
@@ -228,7 +273,9 @@ const PostProvider = ({ children }) => {
         },
       }).then((response) => {
         var currentPostComment = commentDatas;
-        response.data.data.map(comment => {
+        response.data.data.filter(
+          (comment) => !blockedUserIds.includes(String(comment.userID)),
+        ).map(comment => {
 
           var isExist = currentPostComment.find(x => x.id == comment.id)
           if (!isExist) {
@@ -256,6 +303,35 @@ const PostProvider = ({ children }) => {
   const ResetComment = () => {
     SetCommentData([]);
   }
+
+  const HideBlockedUserContent = (userId) => {
+    if (userId == null) return;
+
+    const normalizedUserId = String(userId);
+
+    setBlockedUserIds((currentUserIds) => {
+      const nextUserIds = currentUserIds.includes(normalizedUserId)
+        ? currentUserIds
+        : [...currentUserIds, normalizedUserId];
+      if (blockedUserStorageKey) {
+        AsyncStorage.setItem(
+          blockedUserStorageKey,
+          JSON.stringify(nextUserIds),
+        ).catch(() => {});
+      }
+      return nextUserIds;
+    });
+    SetPostDatas((currentPosts) =>
+      currentPosts
+        ? currentPosts.filter((post) => String(post.userID) !== normalizedUserId)
+        : currentPosts,
+    );
+    SetCommentData((currentComments) =>
+      currentComments.filter(
+        (comment) => String(comment.userID) !== normalizedUserId,
+      ),
+    );
+  };
   //GetPostLike
   const Like = (postID) => {
     // SetLoading(true);
@@ -352,8 +428,9 @@ const PostProvider = ({ children }) => {
     <PostContext.Provider value={{
       GetPosts, GetImageOfPosts, GetPostComments, ResetComment, CreatePostComment, CreatePost, SetHitPost, SetReplyComment, ReloadPost,
       GetPostLikes, Like, UnLike, GetPostCommentCount, SetLoadCommentState,
+      HideBlockedUserContent,
 
-      postDatas, imageDatas, commentDatas, isHitPost, replyComment, isReloadPost, postLikeDatas, commentCountDatas, isLoadComment
+      postDatas, imageDatas, commentDatas, isHitPost, replyComment, isReloadPost, postLikeDatas, commentCountDatas, isLoadComment, blockedUserIds
     }}>
       {children}
     </PostContext.Provider>

@@ -14,7 +14,6 @@ namespace WebSIMAPI.Controllers
     public class CashBookController : ControllerBase
     {
         private readonly ICashBookRepository _cashBookRepository;
-
         public CashBookController(ICashBookRepository cashBookRepository)
         {
             _cashBookRepository = cashBookRepository;

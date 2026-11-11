@@ -1,37 +1,37 @@
-﻿using Commons.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Commons.Enums;
 
 namespace Models.Requests
 {
-    public class GetPagingRequest : PagingRequestBase
-    {
+    public class GetPagingRequest : PagingRequestBase { }
 
-    }
     public class GetMateriaSeriaPagingRequest : PagingRequestBase
     {
         public string MateriaSeriaIds { get; set; }
         public string HadSelled { get; set; }
     }
+
     public class GetCommentRequest : PagingRequestBase
     {
         public int PostID { get; set; }
     }
+
     public class GetLikeRequest : PagingRequestBase
     {
         public int PostID { get; set; }
     }
+
     public class GetImageRequest : PagingRequestBase
     {
-         public int PostID { get; set; }
+        public int PostID { get; set; }
     }
-    public class GetSIMRequest : PagingRequestBase
-    {
 
-    }
+    public class GetSIMRequest : PagingRequestBase { }
+
     public class SearchSIMRequest : PagingRequestBase
     {
         public List<int>? networkIds { get; set; } = new List<int>();
@@ -43,13 +43,15 @@ namespace Models.Requests
         public SortBy sortBy { get; set; } = SortBy.Normal;
         public double priceFrom { get; set; }
         public double priceTo { get; set; }
-        public Guid userId { get; set; }
+        public Guid? userId { get; set; }
     }
+
     public class SearchSIMDataOnAppRequest : PagingRequestBase
     {
         public List<int>? productTypeIds { get; set; } = new List<int>();
         public SortBy sortBy { get; set; } = SortBy.Normal;
     }
+
     public class SearchSIMOfAgentOnAppRequest : PagingRequestBase
     {
         public Guid? userId { get; set; }
@@ -65,6 +67,7 @@ namespace Models.Requests
         public string? agentAcc { get; set; }
         public List<int>? agentGroup { get; set; }
     }
+
     //Order filter
     public class OrderFilterRequest : PagingRequestBase
     {
@@ -83,4 +86,8 @@ namespace Models.Requests
         public int pageSize { get; set; }
     }
 
+    public class GetPostRequest : PagingRequestBase
+    {
+        public Guid UserId { get; set; }
+    }
 }

@@ -1,13 +1,14 @@
-import React, { useContext, useState } from 'react';
-import { argonTheme } from '../constants';
-import * as Clipboard from 'expo-clipboard';
+import React, { useContext, useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { argonTheme } from "../constants";
+import * as Clipboard from "expo-clipboard";
 
 import {
   responsiveHeight,
   responsiveWidth,
-  responsiveFontSize
+  responsiveFontSize,
 } from "react-native-responsive-dimensions";
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from "react-native-vector-icons/Ionicons";
 import {
   StyleSheet,
   StatusBar,
@@ -17,68 +18,81 @@ import {
   Text,
   ScrollView,
   TextInput,
-  ToastAndroid
-
+  ToastAndroid,
 } from "react-native";
-import Config from '../constants/Config';
-import { AuthContext } from '../context/AuthContext';
-import { EscrowWalletContext } from '../context/EscrowWalletContext';
+import Config from "../constants/Config";
+import { AuthContext } from "../context/AuthContext";
+import { EscrowWalletContext } from "../context/EscrowWalletContext";
 
 const ConvertCurrency = (numberString) => {
-  const formattedNumber = parseInt(numberString, 10).toLocaleString('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
+  const formattedNumber = parseInt(numberString, 10).toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
   });
-  const convertedNumber = formattedNumber.replace('₫', 'VND');
+  const convertedNumber = formattedNumber.replace("₫", "VND");
   return convertedNumber;
-}
+};
 
 const ConvertCurrencyNumber = (numberString) => {
   if (isNaN(parseInt(numberString))) {
-      return "";
+    return "";
+  } else {
+    const number = parseInt(numberString.replace(/\D/g, ""), 10);
+    const formattedNumber = number.toLocaleString("vi-VN");
+    return formattedNumber;
   }
-  else {
-      const number = parseInt(numberString.replace(/\D/g, ''), 10);
-      const formattedNumber = number.toLocaleString('vi-VN');
-      return formattedNumber;
-  }
-
 };
 const ReverseCurrencyNumber = (formattedNumber) => {
-  const numberString = formattedNumber.replace(/\D/g, '');
+  const numberString = formattedNumber.replace(/\D/g, "");
   const number = parseInt(numberString, 10);
   return number.toString();
 };
 
-
-
 const EscrowWalletPopScreen = (props) => {
+  useFocusEffect(
+    useCallback(() => {
+      console.log("LOG Active Screen : EscrowWalletPopScreen");
+      return () => {
+        // Optional: Add cleanup logic here if needed when the screen loses focus
+      };
+    }, []),
+  );
   const { userInfos } = useContext(AuthContext);
-  const {moneyEscrowData} = useContext(EscrowWalletContext);
-  const {PushPopEscrow} = useContext(EscrowWalletContext);
+  const { moneyEscrowData } = useContext(EscrowWalletContext);
+  const { PushPopEscrow } = useContext(EscrowWalletContext);
 
   const ExitButton = () => {
     return (
       // Nút Thoát
-      <TouchableOpacity className="p-1 rounded-full bg-white mx-1 "
+      <TouchableOpacity
+        className="p-1 rounded-full bg-white mx-1 "
         onPress={() => {
-          props.navigation.closeDrawer();
-        }}>
-        <Ionicons name="chevron-back-outline" color="black" size={26}></Ionicons>
+          props.navigation.goBack();
+        }}
+      >
+        <Ionicons
+          name="chevron-back-outline"
+          color="black"
+          size={26}
+        ></Ionicons>
       </TouchableOpacity>
     );
-  }
+  };
   const Title = () => {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text style={{ color: "white", fontWeight: "bold", fontSize: responsiveFontSize(2.2) }}>Rút ký quỹ</Text>
+        <Text
+          style={{
+            color: "white",
+            fontWeight: "bold",
+            fontSize: responsiveFontSize(2.2),
+          }}
+        >
+          Rút ký quỹ
+        </Text>
       </View>
-
     );
-  }
-
-
-
+  };
 
   const [bankName, SetBankNameState] = useState("");
   const [bankBranch, SetBankBranchState] = useState("");
@@ -88,34 +102,40 @@ const EscrowWalletPopScreen = (props) => {
 
   const onChangeBankName = (text) => {
     SetBankNameState(text);
-  }
+  };
   const onChangeBankBranch = (text) => {
     SetBankBranchState(text);
-  }
+  };
   const onChangeBankAccountNumber = (text) => {
     SetBankAccountNum(text);
-  }
+  };
   const onChangeBankAccountName = (text) => {
     SetBankAccountName(text);
-  }
+  };
 
   const onChangeMoney = (text) => {
     SetMoneyState(ReverseCurrencyNumber(text));
-  }
-  const ResetInformation = () =>{
+  };
+  const ResetInformation = () => {
     SetBankNameState("");
     SetBankBranchState("");
     SetBankAccountNum("");
     SetBankAccountName("");
     SetMoneyState("");
-  }
+  };
   const CheckInformation = async () => {
-    if (bankName != "" && bankBranch != "" && bankAccountNumber != "" && bankAccountName != "" && ReverseCurrencyNumber(money)  != "") {
+    if (
+      bankName != "" &&
+      bankBranch != "" &&
+      bankAccountNumber != "" &&
+      bankAccountName != "" &&
+      ReverseCurrencyNumber(money) != ""
+    ) {
       if (parseInt(ReverseCurrencyNumber(money)) > parseInt(moneyEscrowData)) {
         ToastAndroid.showWithGravity(
           "Số tiền rút phải bé hơn số tiền có trong ví!",
           ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM
+          ToastAndroid.BOTTOM,
         );
       } else {
         var description = `
@@ -126,18 +146,20 @@ const EscrowWalletPopScreen = (props) => {
           SỐ TIỀN: ${ConvertCurrency(ReverseCurrencyNumber(money))},
           NỘI DUNG: ${`RKQ ${userInfos.username}`},
         `;
-        var result = await PushPopEscrow(false, parseInt(ReverseCurrencyNumber(money)), description, "RÚT TIỀN");
-    
+        var result = await PushPopEscrow(
+          false,
+          parseInt(ReverseCurrencyNumber(money)),
+          description,
+          "RÚT TIỀN",
+        );
+
         if (result) {
           ResetInformation();
-          props.navigation.closeDrawer();
+          props.navigation.goBack();
         } else {
-    
         }
       }
-    
-    }
-    else {
+    } else {
       const missingFields = [];
 
       if (bankName === "") {
@@ -159,147 +181,129 @@ const EscrowWalletPopScreen = (props) => {
       }
 
       if (missingFields.length === 0) {
-
-      }
-      else if (missingFields.length === 5) {
-          ToastAndroid.showWithGravity(
-              "Vui lòng kiểm tra Thông Tin!",
-              ToastAndroid.SHORT,
-              ToastAndroid.BOTTOM,
-          );
+      } else if (missingFields.length === 5) {
+        ToastAndroid.showWithGravity(
+          "Vui lòng kiểm tra Thông Tin!",
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+        );
       } else {
-          ToastAndroid.showWithGravity(
-              "Vui lòng kiểm tra " + missingFields.join(", ") + " !",
-              ToastAndroid.SHORT,
-              ToastAndroid.BOTTOM,
-          );
+        ToastAndroid.showWithGravity(
+          "Vui lòng kiểm tra " + missingFields.join(", ") + " !",
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+        );
       }
-
     }
-  }
+  };
   return (
-    <SafeAreaView style={{}}>
-
-      <View className="flex-row p-2" style={{ zIndex: 1000, marginTop: StatusBar.currentHeight }} backgroundColor={argonTheme.COLORS.ERROR}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: argonTheme.COLORS.ERROR }}>
+      <View
+        className="flex-row p-2"
+        style={{ zIndex: 1000, marginTop: StatusBar.currentHeight }}
+        backgroundColor={argonTheme.COLORS.ERROR}
+      >
         <ExitButton />
         <Title />
       </View>
 
-      <ScrollView className="mx-2" style={{ marginBottom: responsiveHeight(10) }}>
-        <View >
-          <View style={styles2.card2}>
-            <Text style={styles2.nameText}>{userInfos.fullName.toUpperCase()}</Text>
-            <Text style={styles2.moneyText}>{`${ConvertCurrency(moneyEscrowData)}`}</Text>
-          </View>
-          <Text style={styles2.cardContentText}>Ngân hàng</Text>
-          <View style={styles.Inputcontainer}>
-            <TextInput
-              style={styles.input}
-              autoFocus
-              placeholder="Nhập ngân hàng"
-              placeholderTextColor="#888"
-
-              value={bankName}
-              onChangeText={onChangeBankName}
-
-
-            />
-
-          </View>
-          <Text style={styles2.cardContentText}>Chi nhánh</Text>
-          <View style={styles.Inputcontainer}>
-            <TextInput
-              style={styles.input}
-
-              placeholder="Nhập chi nhánh"
-              placeholderTextColor="#888"
-
-              value={bankBranch}
-              onChangeText={onChangeBankBranch}
-
-
-            />
-
-          </View>
-
-          <Text style={styles2.cardContentText}>Số tài khoản</Text>
-          <View style={styles.Inputcontainer}>
-            <TextInput
-              style={styles.input}
-
-              placeholder="Nhập số tài khoản"
-              placeholderTextColor="#888"
-
-              value={bankAccountNumber}
-              onChangeText={onChangeBankAccountNumber}
-
-
-            />
-
-          </View>
-          <Text style={styles2.cardContentText}>Tên tài khoản</Text>
-          <View style={styles.Inputcontainer}>
-            <TextInput
-              style={styles.input}
-
-              placeholder="Nhập tên tài khoản"
-              placeholderTextColor="#888"
-
-              value={bankAccountName}
-              onChangeText={onChangeBankAccountName}
-
-
-            />
-
-          </View>
-
-          <Text style={styles2.cardContentText}>Số tiền</Text>
-          <View style={styles.Inputcontainer}>
-            <TextInput
-              style={styles.input}
-
-              placeholder="Nhập số tiền"
-              placeholderTextColor="#888"
-              keyboardType='numeric'
-              value={ConvertCurrencyNumber(money)}
-              onChangeText={onChangeMoney}
-
-
-            />
-
-          </View>
-
-          <TouchableOpacity activeOpacity={.9}
-
-            style={styles2.orderButton}
-            onPress={() => {
-
-              CheckInformation();
-            }}
-          >
-            <Text style={{}}>
-              <Ionicons name="download-outline" color="white" size={15}></Ionicons>
-              <Text style={{ color: "white", fontWeight: "bold" }} >
-                {` RÚT TIỀN`}
-
+      <View style={{ flex: 1, backgroundColor: "white" }}>
+        <ScrollView
+          className="mx-2"
+          style={{ marginBottom: responsiveHeight(10) }}
+        >
+          <View>
+            <View style={styles2.card2}>
+              <Text style={styles2.nameText}>
+                {userInfos.fullName.toUpperCase()}
               </Text>
-            </Text>
+              <Text
+                style={styles2.moneyText}
+              >{`${ConvertCurrency(moneyEscrowData)}`}</Text>
+            </View>
+            <Text style={styles2.cardContentText}>Ngân hàng</Text>
+            <View style={styles.Inputcontainer}>
+              <TextInput
+                style={styles.input}
+                autoFocus
+                placeholder="Nhập ngân hàng"
+                placeholderTextColor="#888"
+                value={bankName}
+                onChangeText={onChangeBankName}
+              />
+            </View>
+            <Text style={styles2.cardContentText}>Chi nhánh</Text>
+            <View style={styles.Inputcontainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập chi nhánh"
+                placeholderTextColor="#888"
+                value={bankBranch}
+                onChangeText={onChangeBankBranch}
+              />
+            </View>
 
-          </TouchableOpacity>
+            <Text style={styles2.cardContentText}>Số tài khoản</Text>
+            <View style={styles.Inputcontainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập số tài khoản"
+                placeholderTextColor="#888"
+                value={bankAccountNumber}
+                onChangeText={onChangeBankAccountNumber}
+              />
+            </View>
+            <Text style={styles2.cardContentText}>Tên tài khoản</Text>
+            <View style={styles.Inputcontainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập tên tài khoản"
+                placeholderTextColor="#888"
+                value={bankAccountName}
+                onChangeText={onChangeBankAccountName}
+              />
+            </View>
 
-        </View>
-      </ScrollView>
+            <Text style={styles2.cardContentText}>Số tiền</Text>
+            <View style={styles.Inputcontainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập số tiền"
+                placeholderTextColor="#888"
+                keyboardType="numeric"
+                value={ConvertCurrencyNumber(money)}
+                onChangeText={onChangeMoney}
+              />
+            </View>
 
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles2.orderButton}
+              onPress={() => {
+                CheckInformation();
+              }}
+            >
+              <Text style={{}}>
+                <Ionicons
+                  name="download-outline"
+                  color="white"
+                  size={15}
+                ></Ionicons>
+                <Text style={{ color: "white", fontWeight: "bold" }}>
+                  {` RÚT TIỀN`}
+                </Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
     </SafeAreaView>
-  )
-
-
-}
+  );
+};
 
 const styles2 = StyleSheet.create({
-
   card: {
-    backgroundColor: '#e6e6e6',
+    backgroundColor: "#e6e6e6",
     marginRight: 1,
     marginLeft: 1,
     marginTop: 5,
@@ -308,10 +312,10 @@ const styles2 = StyleSheet.create({
     borderRadius: 5,
   },
   card2: {
-    backgroundColor: 'white',
-    shadowColor: 'black',
+    backgroundColor: "white",
+    shadowColor: "black",
     shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.3,
     shadowRadius: 4,
     marginRight: 1,
     marginLeft: 1,
@@ -323,10 +327,10 @@ const styles2 = StyleSheet.create({
   },
 
   card3: {
-    backgroundColor: 'white',
-    shadowColor: 'black',
+    backgroundColor: "white",
+    shadowColor: "black",
     shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.3,
     shadowRadius: 4,
     marginRight: 1,
     marginLeft: 1,
@@ -344,7 +348,7 @@ const styles2 = StyleSheet.create({
     fontWeight: "bold",
   },
   cardRow: {
-    flexDirection: "row"
+    flexDirection: "row",
   },
   cardHeader: {
     width: "40%",
@@ -354,13 +358,13 @@ const styles2 = StyleSheet.create({
     flex: 1,
   },
   cardHeaderText: {
-    fontSize: responsiveFontSize(2)
+    fontSize: responsiveFontSize(2),
   },
   cardContentText: {
     fontWeight: "bold",
     fontSize: responsiveFontSize(2),
     textAlign: "left",
-    alignItems: "flex-start"
+    alignItems: "flex-start",
   },
   manualText: {
     fontSize: responsiveFontSize(2),
@@ -370,20 +374,18 @@ const styles2 = StyleSheet.create({
     fontSize: responsiveFontSize(2),
     textAlign: "justify",
     color: argonTheme.COLORS.ERROR,
-    fontWeight: "bold"
-  }
-  ,
+    fontWeight: "bold",
+  },
   orderButton: {
     borderRadius: 10,
     flexDirection: "row",
     alignContent: "center",
     justifyContent: "center",
-    borderColor: 'grey',
+    borderColor: "grey",
     padding: 10,
     alignItems: "center",
     backgroundColor: argonTheme.COLORS.ERROR,
     marginTop: 10,
-
   },
 });
 
@@ -391,26 +393,25 @@ const styles = StyleSheet.create({
   Inputcontainer: {
     marginTop: 5,
     marginBottom: 5,
-    flexDirection: 'row',
+    flexDirection: "row",
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: 'white'
+    borderColor: "#ccc",
+    backgroundColor: "white",
   },
   container: {
-    backgroundColor: 'black',
+    backgroundColor: "black",
   },
   overview: {
-    height: 'auto',
+    height: "auto",
     borderRadius: 3,
     padding: 10,
     margin: 4,
-    shadowOpacity: .1,
+    shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 1,
 
-    shadowColor: 'black',
-
+    shadowColor: "black",
   },
   textRow: {
     textAlign: "auto",
@@ -439,19 +440,19 @@ const styles = StyleSheet.create({
     textAlign: "justify",
     marginLeft: 5,
     marginRight: 5,
-    fontSize: responsiveFontSize(2.1)
+    fontSize: responsiveFontSize(2.1),
   },
   textParentContent: {
     textAlign: "justify",
-    fontSize: responsiveFontSize(2.1)
+    fontSize: responsiveFontSize(2.1),
   },
   cellTableTxt: {
     textAlign: "justify",
-    fontSize: responsiveFontSize(1.9)
+    fontSize: responsiveFontSize(1.9),
   },
   cellTable: {
     borderWidth: 1,
-    borderColor: 'black',
+    borderColor: "black",
     flex: 1,
     alignItems: "center",
     width: 100,
@@ -465,13 +466,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
     padding: 15,
-    borderRadius: 10
-
+    borderRadius: 10,
   },
   pointTxt: {
     color: "white",
     fontWeight: "bold",
-    fontSize: responsiveFontSize(2.2)
+    fontSize: responsiveFontSize(2.2),
   },
   improveSim: {
     alignItems: "center",
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     width: "auto",
     margin: 1,
     padding: 15,
-    borderRadius: 10
+    borderRadius: 10,
   },
   bottomSim: {
     flexDirection: "row",
@@ -488,7 +488,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 5,
     margin: 5,
-
 
     justifyContent: "center",
   },
@@ -502,7 +501,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     paddingHorizontal: 10,
-    color: '#333',
+    color: "#333",
     height: 35,
   },
   button: {
@@ -511,9 +510,9 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 5,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    marginLeft: 'auto',
+    marginLeft: "auto",
     height: 35,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
 });
 

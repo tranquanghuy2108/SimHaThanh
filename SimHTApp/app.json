@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "AppSimHT",
-    "slug": "appsimht",
-    "version": "1.0.9",
+    "name": "Sim Hà Thành",
+    "slug": "simht",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/AppImages/logoSIMHT.png",
     "userInterfaceStyle": "light",
@@ -11,9 +11,7 @@
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
+    "updates": {},
     "assetBundlePatterns": ["**/*"],
     "plugins": [
       [
@@ -22,35 +20,84 @@
           "icon": "./assets/AppImages/logoSIMHT.png",
           "color": "#ffffff"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "targetSdkVersion": 36,
+            "compileSdkVersion": 36,
+            "minSdkVersion": 28
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false
+        }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Sim Hà Thành chỉ truy cập ảnh và video bạn chọn để cập nhật ảnh đại diện, đăng bài hoặc gửi trong cuộc trò chuyện.",
+          "cameraPermission": "Sim Hà Thành cần dùng camera để bạn chụp ảnh đại diện, chụp ảnh đăng bài hoặc chụp ảnh và video gửi trong cuộc trò chuyện.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Sim Hà Thành chỉ truy cập ảnh và video bạn chọn để cập nhật ảnh đại diện, đăng bài hoặc gửi trong cuộc trò chuyện.",
+          "savePhotosPermission": "Sim Hà Thành cần thêm ảnh hoặc video vào thư viện khi bạn chọn tải nội dung từ cuộc trò chuyện về iPhone.",
+          "granularPermissions": [
+            "audio"
+          ]
+        }
       ]
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.simhathanh.appsim",
+      "bundleIdentifier": "com.simhathanh.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.RECORD_AUDIO"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.simhathanh.appsim",
-      "versionCode": 9,
+      "package": "com.simhathanh.app",
+      "versionCode": 4,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/AppImages/logoSIMHT.png"
     },
-    "preview": {
-      "android": {
-        "buildType": "apk"
-      }
-    },
     "extra": {
       "eas": {
-        "projectId": "12a76e6d-0ade-49aa-a507-13b676ba03a7"
+        "projectId": "b7d7925d-ccdd-41d6-82d3-c5da0c73eacc"
       }
-    }
+    },
+    "owner": "huongnx"
   }
 }

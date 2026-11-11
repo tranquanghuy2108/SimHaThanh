@@ -16,13 +16,14 @@ namespace WebSIMAPI.Controllers
 {
     [Route("api/sim")]
     [ApiController]
-    [AllowAnonymous]
+    [Authorize]
     public class SIMController : ControllerBase
     {
         private readonly ISIMRepository _simRepository;
         private readonly IAppContentRepository _appContentRepository;
         private readonly ISIMOrderRepository _simOrderRepository;
         private readonly ISystemConfigRepository _systemConfigRepository;
+        int eSimPrice = 30000;
 
         public SIMController(
             ISIMRepository repository,
@@ -35,9 +36,12 @@ namespace WebSIMAPI.Controllers
             _simOrderRepository = simOrderRepository;
             _appContentRepository = appContentRepository;
             _systemConfigRepository = systemConfigRepository;
+            var sysConfig = _systemConfigRepository.GetAppSysConfig();
+            eSimPrice = sysConfig.ESim_SimPrice;
         }
 
         // GET: api/<SIMController>
+        [AllowAnonymous]
         [HttpPost("search")]
         public List<SimOnAppModel> SearchSIM([FromBody] SearchSIMRequest request)
         {
@@ -50,6 +54,7 @@ namespace WebSIMAPI.Controllers
         }
 
         // GET: api/<SIMController>
+        [AllowAnonymous]
         [HttpPost("search-sim-data")]
         public List<SimOnAppModel> SearchSIMDataOnApp([FromBody] SearchSIMDataOnAppRequest request)
         {
@@ -107,7 +112,7 @@ namespace WebSIMAPI.Controllers
                 simPrice += item.Price * item.Qty;
                 totalPrice += simPrice;
                 if (item.Esim)
-                    totalPrice += 50000;
+                    totalPrice += eSimPrice;
                 if (item.Type == SIMProductType.Normal)
                 {
                     simIds.Add(
@@ -221,7 +226,7 @@ namespace WebSIMAPI.Controllers
             if (request.BuyEsim)
             {
                 model.Note += " - Mua eSim";
-                Price += request.Amount * 50000;
+                Price += request.Amount * eSimPrice;
             }
             model.PriceOfSim = Price;
             model.PriceOrder = Price;
@@ -264,42 +269,49 @@ namespace WebSIMAPI.Controllers
         }
 
         // GET api/<SIMController>
+        [AllowAnonymous]
         [HttpGet("all-network-infos")]
         public List<SIMNetworkViewModel> GetNetworkInfos()
         {
             return _simRepository.GetSIMNetwork();
         }
 
+        [AllowAnonymous]
         [HttpGet("all-simtype-infos")]
         public List<TypeOfSIMViewModel> GetSimTypekInfos()
         {
             return _simRepository.GetTypeOfSIM();
         }
 
+        [AllowAnonymous]
         [HttpGet("sim-flash-sale")]
         public FlashSaleModel GetSimFlashSale()
         {
             return _appContentRepository.GetCurentFlashSale();
         }
 
+        [AllowAnonymous]
         [HttpGet("sim-sale-on-day")]
         public List<SIMViewOnApp> GetSimSaleOnDay()
         {
             return _simRepository.GetSIMSaleOnDay();
         }
 
+        [AllowAnonymous]
         [HttpGet("sim-last-update")]
         public List<SIMViewOnApp> GetSimLastUpdate()
         {
             return _simRepository.GetSIMLastUpdate();
         }
 
+        [AllowAnonymous]
         [HttpGet("package-of-sim-data")]
         public List<ProductTypeModel> GetProductTypeOfSimData()
         {
             return _simRepository.GetProductTypeOfSimData();
         }
 
+        [AllowAnonymous]
         [HttpGet("get-country")]
         public List<CountryModels> GetCountry()
         {
@@ -312,12 +324,14 @@ namespace WebSIMAPI.Controllers
             return _simRepository.GetSimInfoOfUser(userId);
         }
 
+        [AllowAnonymous]
         [HttpGet("get-data-sim")]
         public List<ProductTypeOfSimData> GetDataSim()
         {
             return _simOrderRepository.GetListSimData();
         }
 
+        [AllowAnonymous]
         [HttpGet("get-tourist-sim")]
         public List<ProductTypeOfSimData> GetTouristSim()
         {

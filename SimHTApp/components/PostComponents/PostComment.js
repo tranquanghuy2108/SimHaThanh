@@ -1,13 +1,17 @@
-import React, { createContext, useEffect, useState, useContext } from "react";
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, RefreshControl, Modal, Button, ScrollView, Image, FlatList, ActivityIndicator } from 'react-native';
+import React, { useState, useContext } from "react";
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, RefreshControl, Modal, ScrollView, Image, ActivityIndicator } from 'react-native';
 import MasonryList from '@react-native-seoul/masonry-list';
 import { PostContext } from "../../context/PostContext";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { argonTheme } from "../../constants";
 import { responsiveFontSize } from "react-native-responsive-dimensions";
+import { AuthContext } from "../../context/AuthContext";
+import ModerationActions from "../ModerationActions";
+import { blockUser, reportPost } from "../../utils/moderationService";
 
-const CommentTree = ({ comments }) => {
-    const { SetReplyComment } = useContext(PostContext);
+const CommentTree = ({ comments, postID, onModerationComplete }) => {
+    const { SetReplyComment, HideBlockedUserContent } = useContext(PostContext);
+    const { userInfos, userToken } = useContext(AuthContext);
     const ReplyComment = (commentID, commentName) => {
         SetReplyComment(
             {
@@ -18,6 +22,26 @@ const CommentTree = ({ comments }) => {
     }
     const renderComment = comment => {
         const childComments = comments.filter(c => c.parentCommentID === comment.id);
+
+        const reportComment = async () => {
+            await reportPost({
+                userId: userInfos.id,
+                postId: postID,
+                reason: `Báo cáo bình luận #${comment.id}: nội dung không phù hợp`,
+                userToken,
+            });
+            await onModerationComplete();
+        };
+
+        const blockCommentAuthor = async () => {
+            await blockUser({
+                userId: userInfos.id,
+                blockedUserId: comment.userID,
+                userToken,
+            });
+            HideBlockedUserContent(comment.userID);
+            await onModerationComplete(comment.userID);
+        };
 
         return (
 
@@ -47,6 +71,13 @@ const CommentTree = ({ comments }) => {
                             >
                                 <Text className="font-bold">Phản hồi</Text>
                             </TouchableOpacity>
+                            {String(comment.userID) !== String(userInfos.id) ? (
+                                <ModerationActions
+                                    compact
+                                    onReport={reportComment}
+                                    onBlock={blockCommentAuthor}
+                                />
+                            ) : null}
                         </View>
 
                     </View>
@@ -127,7 +158,7 @@ const CommentInput = ({ postID, onRefreshDatas }) => {
     );
 }
 
-const PostComment = ({ postID, visible, onClickClose, onRefreshDatas }) => {
+const PostComment = ({ postID, visible, onClickClose, onRefreshDatas, onModerationComplete }) => {
     const { commentDatas, isLoadComment } = useContext(PostContext);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -183,7 +214,11 @@ const PostComment = ({ postID, visible, onClickClose, onRefreshDatas }) => {
 
                             }
 
-                            <CommentTree comments={commentDatas} />
+                            <CommentTree
+                                comments={commentDatas}
+                                postID={postID}
+                                onModerationComplete={onModerationComplete}
+                            />
                         </View>
 
                     </ScrollView>

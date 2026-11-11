@@ -8,17 +8,29 @@
     <div class="block-head">SIM DATA</div>
 
     <div class="block-body p-3">
-        <div class="card m-3 p-3">
+        <div class="card m-3 p-1">
             <div class="row">
-                <div class="col-5">
+                <div class="col-4">
+                    <label></label>
+                </div>
+                <div class="col-4">
+                    <label>Chọn loại gói cần mua</label>
+                    </select>
+                </div>
+                <div class="col-4">
+                    <label></label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4">
                     <input id="simNumber" type="text" class="form-control" placeholder="Tìm sim theo số">
                 </div>
-                <div class="col-5">
+                <div class="col-4">
                     <select type="text" class="form-select" id="productTypeId" asp-items="@ViewBag.ProductTypes">
                     </select>
                 </div>
-                <div class="col-2">
-                    <button type="button" class="btn btn-warning" width="300px" onclick="SearchSim(1);">Tìm sim</button>
+                <div class="col-4">
+                    <button type="button" class="col-12 btn btn-warning" width="300px" onclick="SearchSim(1);">Lấy danh sách sim</button>
                 </div>
             </div>
         </div>
@@ -43,7 +55,7 @@
 
                                         <div class="card-footer text-center">
                                             <div class="input-group mb-3">
-                                                <input type="number" class="form-control" id="@(item.Id + item.Name)" placeholder="Số lượng">
+                                                <input type="number" class="form-control" id="@(item.Id + item.Name)" placeholder="Số lượng" oninput="if (this.value.length > 4) this.value = this.value.slice(0, 4);">
                                                 <button onclick="AddSimData(@item.Id, '@item.Name', @item.Price);" class="btn btn-warning">
                                                      <i class="bi bi-cart-plus"></i>
                                                 </button>
@@ -286,7 +298,7 @@
                                 }
                                 newBody += '<div class="col-6 col-xl-4 pl-0 item-result">'
                                     + '<div class="container sim-item sim-hot">'
-                                    + '<a href="@Url.Action("CreateOrder", "Home")?id=' + el.id + '">'
+                                    + '<a href="#" onclick="AddSimToCard(' + el.id + ',' + el.simNumber + el.simPrice + ');" >'
                                     + '<div class="row">'
                                     + '<div class="col-4" style="max-width: 55px;">'
                                     + '<img class="lazy" src="' + imgSrc + '" style="width: 50px;height: auto;padding-top: 5px;" />'

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useRef } from "react";
 import axios from "axios";
 import Config from "../constants/Config";
 import { AuthContext } from "./AuthContext";
@@ -16,6 +16,8 @@ const SearchProvider = ({ children }) => {
   const [sortType, SetSortByState] = useState(0);
   const [pageIndex, SetPageIndexState] = useState(1);
   const [searchResult, SetSearchResultState] = useState(null);
+  const [isSearching, SetIsSearchingState] = useState(false);
+  const searchRequestIdRef = useRef(0);
 
   const [subscriptionTypes, SetSubscriptionState] = useState([]);
   const [avoidNumberTypes, SetAvoidNumberState] = useState([]);
@@ -55,7 +57,8 @@ const SearchProvider = ({ children }) => {
   //
   const searchPaging = (options = {}) => {
     if (!(options && options.suppressLoading)) SetLoading(true);
-    axios
+    const requestId = searchRequestIdRef.current;
+    return axios
       .post(
         Config.BASE_URL + "/api/sim/search",
         {
@@ -72,23 +75,24 @@ const SearchProvider = ({ children }) => {
           sortBy: sortType,
           priceFrom: price.min,
           priceTo: price.max,
-          userId: userInfos.id,
+          userId: userInfos?.id ?? null,
         },
         {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       )
       .then((response) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         processPagingAsyncTask(response.data);
         SetPageIndexState(pageIndex + 1);
         if (!(options && options.suppressLoading)) SetLoading(false);
         return true;
       })
       .catch((error) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         ToastAndroid.showWithGravity(
           "Tìm kiếm thất bại!",
           ToastAndroid.SHORT,
@@ -109,21 +113,49 @@ const SearchProvider = ({ children }) => {
     SetKeyWordState(keyword);
   };
 
+  // Chỉ xóa state, không gửi request. Dùng trước khi bắt đầu
+  // một luồng tìm kiếm mới từ Home hoặc danh mục SIM.
+  const ClearSearchFilters = () => {
+    searchRequestIdRef.current += 1;
+    SetKeyWordState("");
+    SetNetWorksState([]);
+    SetPriceState({ min: 0, max: 0 });
+    SetSimTypeState(null);
+    SetSubscriptionState([]);
+    SetAvoidNumberState([]);
+    SetPrefixState([]);
+    SetAvoidSixDigitState(true);
+    SetSortByState(0);
+    SetPageIndexState(1);
+    SetSearchResultState(null);
+    SetDeleteAllFilter(false);
+    SetIsSearchingState(false);
+  };
+
   //
   const search = (keyWorkS, pricesX, netWorkS, simTypeS, options = {}) => {
     if (!(options && options.suppressLoading)) SetLoading(true);
+    const requestId = ++searchRequestIdRef.current;
+    SetPageIndexState(1);
+    SetSearchResultState(null);
+    SetIsSearchingState(true);
 
+    const resetFilters = options && options.resetFilters === true;
     if (keyWorkS == null) {
-      keyWorkS = keyWord;
+      keyWorkS = resetFilters ? "" : keyWord;
     }
     if (pricesX == null) {
-      pricesX = price;
+      pricesX = resetFilters ? { min: 0, max: 0 } : price;
     }
     if (netWorkS == null) {
-      netWorkS = networkTypes;
+      netWorkS = resetFilters ? [] : networkTypes;
     }
+    const prefixsForSearch = resetFilters ? [] : prefixTypes;
+    const subscriptionsForSearch = resetFilters ? [] : subscriptionTypes;
+    const avoidNumbersForSearch = resetFilters ? [] : avoidNumberTypes;
+    const avoidSixForSearch = resetFilters ? true : isAvoidSixDigit;
     var newSimType = [];
-    axios
+    return axios
       .post(
         Config.BASE_URL + "/api/sim/search",
         {
@@ -138,40 +170,56 @@ const SearchProvider = ({ children }) => {
                 ? []
                 : [simTypes]
               : [simTypeS],
-          prefixs: prefixTypes,
-          productTypeIds: subscriptionTypes,
-          avoidNums: avoidNumberTypes,
-          avoidSixNum: isAvoidSixDigit,
+          prefixs: prefixsForSearch,
+          productTypeIds: subscriptionsForSearch,
+          avoidNums: avoidNumbersForSearch,
+          avoidSixNum: avoidSixForSearch,
           sordBy: Config.SEARCH_SIM_SORT_TYPE.NORMAL,
           priceFrom: pricesX.min,
           priceTo: pricesX.max,
-          userId: userInfos.id,
+          userId: userInfos?.id ?? null,
         },
         {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       )
       .then((response) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         SetNetWorksState(netWorkS);
         SetPriceState({ min: pricesX.min, max: pricesX.max });
         SetSimTypeState(simTypeS);
         SetKeyWordState(keyWorkS);
+        SetPrefixState(prefixsForSearch);
+        SetSubscriptionState(subscriptionsForSearch);
+        SetAvoidNumberState(avoidNumbersForSearch);
+        SetAvoidSixDigitState(avoidSixForSearch);
         processSearchAsyncTask(response.data);
         SetSortByState(Config.SEARCH_SIM_SORT_TYPE.NORMAL);
         if (!(options && options.suppressLoading)) SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
         return true;
       })
       .catch((error) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         ToastAndroid.showWithGravity(
           "Tìm kiếm thất bại!",
           ToastAndroid.SHORT,
           ToastAndroid.BOTTOM,
         );
+        SetSearchResultState([]);
         if (!(options && options.suppressLoading)) SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
         return false;
       });
   };
@@ -187,7 +235,11 @@ const SearchProvider = ({ children }) => {
     sortByX,
   ) => {
     SetLoading(true);
-    axios
+    const requestId = ++searchRequestIdRef.current;
+    SetPageIndexState(1);
+    SetSearchResultState(null);
+    SetIsSearchingState(true);
+    return axios
       .post(
         Config.BASE_URL + "/api/sim/search",
         {
@@ -204,17 +256,17 @@ const SearchProvider = ({ children }) => {
           sortBy: sortByX,
           priceFrom: priceMin,
           priceTo: priceMax,
-          userId: userInfos.id,
+          userId: userInfos?.id ?? null,
         },
         {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       )
       .then((response) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         SetNetWorksState(networkTypesX);
         SetPriceState({ min: priceMin, max: priceMax });
         SetSimTypeState(simTypesX);
@@ -226,24 +278,40 @@ const SearchProvider = ({ children }) => {
         processSearchAsyncTask(response.data);
 
         SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
 
         return true;
       })
       .catch((error) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         console.error("Error: ", error);
         ToastAndroid.showWithGravity(
           "Tìm kiếm thất bại!",
           ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
+        ToastAndroid.BOTTOM,
         );
+        SetSearchResultState([]);
         SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
         return false;
       });
   };
   //
   const ResetSearchFilter = () => {
     SetLoading(true);
-    axios
+    const requestId = ++searchRequestIdRef.current;
+    SetPageIndexState(1);
+    SetSearchResultState(null);
+    SetIsSearchingState(true);
+    return axios
       .post(
         Config.BASE_URL + "/api/sim/search",
         {
@@ -260,17 +328,17 @@ const SearchProvider = ({ children }) => {
           sortBy: sortType,
           priceFrom: 0,
           priceTo: 0,
-          userId: userInfos.id,
+          userId: userInfos?.id ?? null,
         },
         {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       )
       .then((response) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         SetNetWorksState([]);
         SetPriceState({ min: 0, max: 0 });
         SetSimTypeState(null);
@@ -282,17 +350,29 @@ const SearchProvider = ({ children }) => {
         processSearchAsyncTask(response.data);
         SetDeleteAllFilter(false);
         SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
 
         return true;
       })
       .catch((error) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         console.error("Error: ", error);
         ToastAndroid.showWithGravity(
           "Tìm kiếm thất bại!",
           ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
+        ToastAndroid.BOTTOM,
         );
+        SetSearchResultState([]);
         SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
         return false;
       });
   };
@@ -328,10 +408,12 @@ const SearchProvider = ({ children }) => {
         search,
         searchPaging,
         ResetSearchFilter,
+        ClearSearchFilters,
         DeleteAllFilter,
         SetKeyWord,
         pageIndex,
         searchResult,
+        isSearching,
         networkTypes,
         subscriptionTypes,
         keyWord,

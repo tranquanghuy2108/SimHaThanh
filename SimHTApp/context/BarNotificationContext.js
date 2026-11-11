@@ -5,12 +5,14 @@ import React, {
   useState,
   useRef,
 } from "react";
-import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
+import { isRunningInExpoGo } from "expo";
 
-import { Image, SafeAreaView, View, Text, Button } from "react-native";
+import { Image, SafeAreaView, View, Text, Button, Platform } from "react-native";
 const BarNotificationContext = createContext();
+const isAndroidExpoGo = Platform.OS === "android" && isRunningInExpoGo();
+const getNotificationsModule = () => require("expo-notifications");
 
 //Expo - Notification
 
@@ -21,6 +23,14 @@ const BarNotificationProvider = ({ children }) => {
   const responseListener = useRef();
 
   const RegisterNotification = () => {
+    // Expo Go on Android does not support remote push notifications from SDK 53.
+    // Development and production builds still run the full registration flow below.
+    if (isAndroidExpoGo) {
+      return;
+    }
+
+    const Notifications = getNotificationsModule();
+
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -50,6 +60,12 @@ const BarNotificationProvider = ({ children }) => {
   };
   //
   async function schedulePushNotification(title, body, data) {
+    if (isAndroidExpoGo) {
+      return;
+    }
+
+    const Notifications = getNotificationsModule();
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: title,
@@ -61,6 +77,12 @@ const BarNotificationProvider = ({ children }) => {
   }
 
   async function registerForPushNotificationsAsync() {
+    if (isAndroidExpoGo) {
+      return;
+    }
+
+    const Notifications = getNotificationsModule();
+
     let token;
 
     if (Platform.OS === "android") {

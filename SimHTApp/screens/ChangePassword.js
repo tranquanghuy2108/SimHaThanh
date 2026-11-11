@@ -1,4 +1,5 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useCallback } from "react";
+import { useFocusEffect } from '@react-navigation/native';
 import {
   StyleSheet,
   Dimensions,
@@ -9,6 +10,7 @@ import {
   Text
 
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Block} from "galio-framework";
 
@@ -20,6 +22,14 @@ import { responsiveFontSize } from "react-native-responsive-dimensions";
 const { width, height } = Dimensions.get("screen");
 
 export default function ChangePassword(props) {
+  useFocusEffect(
+    useCallback(() => {
+      console.log("LOG Active Screen : ChangePassword");
+      return () => {
+        // Optional: Add cleanup logic here if needed when the screen loses focus
+      };
+    }, [])
+  );
   const [password, setPassword] = useState(null);
   const [newPassword, setNewPassword] = useState(null);
   const [reNewPassword, setReNewPassword] = useState(null);
@@ -63,7 +73,11 @@ export default function ChangePassword(props) {
       // Nút Thoát
       <TouchableOpacity className="p-1 rounded-full bg-white mx-1 "
         onPress={() => {
-          props.navigation.closeDrawer();
+          if (typeof props.navigation.closeDrawer === "function") {
+            props.navigation.closeDrawer();
+          } else {
+            props.navigation.goBack();
+          }
         }}>
         <Ionicons name="chevron-back-outline" color="black" size={26}></Ionicons>
       </TouchableOpacity>
@@ -87,10 +101,12 @@ export default function ChangePassword(props) {
   return (
 
     <View style={{ flex: 1 }}>
-      <View className="flex-row p-2" style={{ zIndex: 1000, marginTop: StatusBar.currentHeight }} backgroundColor={argonTheme.COLORS.ERROR}>
-        <ExitButton />
-        <Title/>
-      </View>
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: argonTheme.COLORS.ERROR }}>
+        <View className="flex-row p-2" style={{ zIndex: 1000 }} backgroundColor={argonTheme.COLORS.ERROR}>
+          <ExitButton />
+          <Title/>
+        </View>
+      </SafeAreaView>
 
 
       <View className="m-3">

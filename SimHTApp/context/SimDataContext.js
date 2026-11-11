@@ -1,18 +1,31 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useRef } from "react";
 import axios from "axios";
 import Config from "../constants/Config";
-import { AuthContext } from "./AuthContext";
 import { SetLoadingContext } from "./SetLoadingContext";
-import { ToastAndroid } from "react-native";
+import { Alert, Platform, ToastAndroid } from "react-native";
+
+const showSearchError = () => {
+  if (Platform.OS === "android") {
+    ToastAndroid.showWithGravity(
+      "Tìm kiếm thất bại!",
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+    );
+    return;
+  }
+
+  Alert.alert("Thông báo", "Tìm kiếm thất bại!");
+};
 const SimDataContext = createContext();
 
 const SimDataProvider = ({ children }) => {
-  const { userToken } = useContext(AuthContext);
   const { SetLoading } = useContext(SetLoadingContext);
   const [keyWord, SetKeyWordState] = useState("");
   const [sortType, SetSortByState] = useState(0);
   const [pageIndex, SetPageIndexState] = useState(1);
   const [searchResult, SetSearchResultState] = useState(null);
+  const [isSearching, SetIsSearchingState] = useState(false);
+  const searchRequestIdRef = useRef(0);
 
   const [subscriptionTypes, SetSubscriptionState] = useState([]);
 
@@ -70,7 +83,8 @@ const SimDataProvider = ({ children }) => {
   //
   const searchPaging = (options = {}) => {
     if (!(options && options.suppressLoading)) SetLoading(true);
-    axios
+    const requestId = searchRequestIdRef.current;
+    return axios
       .post(
         Config.BASE_URL + "/api/sim/search-sim-data",
         {
@@ -85,23 +99,20 @@ const SimDataProvider = ({ children }) => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       )
       .then((response) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         processPagingAsyncTask(response.data);
         SetPageIndexState(pageIndex + 1);
         if (!(options && options.suppressLoading)) SetLoading(false);
         return true;
       })
       .catch((error) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         console.error("Error: ", error);
-        ToastAndroid.showWithGravity(
-          "Tìm kiếm thất bại!",
-          ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
-        );
+        showSearchError();
         if (!(options && options.suppressLoading)) SetLoading(false);
         return false;
       });
@@ -119,6 +130,10 @@ const SimDataProvider = ({ children }) => {
 
   const search = (keyWorkS, subscriptionTypeS, options = {}) => {
     if (!(options && options.suppressLoading)) SetLoading(true);
+    const requestId = ++searchRequestIdRef.current;
+    SetPageIndexState(1);
+    SetSearchResultState(null);
+    SetIsSearchingState(true);
     console.log("[Search] start, keyword:", keyWorkS);
     const _searchStart = Date.now();
 
@@ -129,7 +144,7 @@ const SimDataProvider = ({ children }) => {
       subscriptionTypeS = subscriptionTypes;
     }
     var newSimType = [];
-    axios
+    return axios
       .post(
         Config.BASE_URL + "/api/sim/search-sim-data",
         {
@@ -144,16 +159,22 @@ const SimDataProvider = ({ children }) => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       )
       .then((response) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         SetKeyWordState(keyWorkS);
         SetSubscriptionState(subscriptionTypeS);
         SetSortByState(Config.SEARCH_SIM_SORT_TYPE.NORMAL);
+        SetPageIndexState(1);
         processSearchAsyncTask(response.data);
         if (!(options && options.suppressLoading)) SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
         console.log(`[Search] duration: ${Date.now() - _searchStart} ms`);
         console.log(
           "[Search] result count:",
@@ -162,13 +183,16 @@ const SimDataProvider = ({ children }) => {
         return true;
       })
       .catch((error) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         console.error("Error: ", error);
-        ToastAndroid.showWithGravity(
-          "Tìm kiếm thất bại!",
-          ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
-        );
+        showSearchError();
+        SetSearchResultState([]);
         if (!(options && options.suppressLoading)) SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
         console.log(`[Search] duration: ${Date.now() - _searchStart} ms`);
         console.log("[Search] failed for keyword:", keyWorkS);
         return false;
@@ -177,7 +201,11 @@ const SimDataProvider = ({ children }) => {
 
   const searchFilter = (subscriptionX, sortByX) => {
     SetLoading(true);
-    axios
+    const requestId = ++searchRequestIdRef.current;
+    SetPageIndexState(1);
+    SetSearchResultState(null);
+    SetIsSearchingState(true);
+    return axios
       .post(
         Config.BASE_URL + "/api/sim/search-sim-data",
         {
@@ -192,32 +220,45 @@ const SimDataProvider = ({ children }) => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       )
       .then((response) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         SetSubscriptionState(subscriptionX);
         SetSortByState(sortByX);
+        SetPageIndexState(1);
         processSearchAsyncTask(response.data);
         SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
         return true;
       })
       .catch((error) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         console.error("Error: ", error);
-        ToastAndroid.showWithGravity(
-          "Tìm kiếm thất bại!",
-          ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
-        );
+        showSearchError();
+        SetSearchResultState([]);
         SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
         return false;
       });
   };
   //
   const ResetSearchFilter = () => {
     SetLoading(true);
-    axios
+    const requestId = ++searchRequestIdRef.current;
+    SetPageIndexState(1);
+    SetSearchResultState(null);
+    SetIsSearchingState(true);
+    return axios
       .post(
         Config.BASE_URL + "/api/sim/search-sim-data",
         {
@@ -232,26 +273,35 @@ const SimDataProvider = ({ children }) => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: "Bearer " + userToken,
           },
         },
       )
       .then((response) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         SetSubscriptionState([]);
         SetSortByState(0);
+        SetPageIndexState(1);
         processSearchAsyncTask(response.data);
         SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
 
         return true;
       })
       .catch((error) => {
+        if (requestId !== searchRequestIdRef.current) return false;
         console.error("Error: ", error);
-        ToastAndroid.showWithGravity(
-          "Tìm kiếm thất bại!",
-          ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
-        );
+        showSearchError();
+        SetSearchResultState([]);
         SetLoading(false);
+        requestAnimationFrame(() => {
+          if (requestId === searchRequestIdRef.current) {
+            SetIsSearchingState(false);
+          }
+        });
         return false;
       });
   };
@@ -263,7 +313,6 @@ const SimDataProvider = ({ children }) => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: "Bearer " + userToken,
         },
       })
       .then((response) => {
@@ -285,18 +334,15 @@ const SimDataProvider = ({ children }) => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: "Bearer " + userToken,
         },
       })
       .then((response) => {
         SetCountryState(response.data);
-        SetLoading(false);
         return true;
       })
       .catch((error) => {
         console.error("Error: ", error);
         SetCountryState([]);
-        SetLoading(false);
         return false;
       });
   };
@@ -315,6 +361,7 @@ const SimDataProvider = ({ children }) => {
         SetResetFrame,
         pageIndex,
         searchResult,
+        isSearching,
         subscriptionTypes,
         keyWord,
         updatedSubscriptionArray,

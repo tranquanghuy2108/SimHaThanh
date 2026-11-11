@@ -12,13 +12,10 @@ namespace WebSIMAPI.Controllers
     [Authorize]
     public class InstallmentController : Controller
     {
+
         private readonly ISIMOrderRepository _simorderRepository;
         private readonly ISystemConfigRepository _systemConfigRepository;
-
-        public InstallmentController(
-            ISIMOrderRepository simorderRepository,
-            ISystemConfigRepository systemConfigRepository
-        )
+        public InstallmentController(ISIMOrderRepository simorderRepository, ISystemConfigRepository systemConfigRepository)
         {
             _simorderRepository = simorderRepository;
             _systemConfigRepository = systemConfigRepository;
@@ -35,5 +32,6 @@ namespace WebSIMAPI.Controllers
         {
             return _simorderRepository.GetInstallmentOrder(userId);
         }
+
     }
 }

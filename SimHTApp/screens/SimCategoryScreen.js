@@ -1,5 +1,6 @@
-import React from 'react';
-import { TouchableOpacity, ScrollView, View, TextInput, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import React, { useContext } from 'react';
+import { TouchableOpacity, ScrollView, View, TextInput, StyleSheet, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppConst } from '../constants/AppConst';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { argonTheme } from '../constants';
@@ -12,11 +13,13 @@ import {
 import SimNetWorkAtCategory from '../customComponents/SimNetWorkAtCategory';
 import SimAsPricesAtCategory from '../customComponents/SimAsPricesAtCategory';
 import SpecialSimAtCategory from '../customComponents/SpecialSimAtCategory';
+import { SearchContext } from '../context/SearchContext';
 
 
 const SimCategoryScreen = ({ navigation,route }) => {
+    const { ClearSearchFilters } = useContext(SearchContext);
     const handleSearchtFocus = () => {
-        
+        ClearSearchFilters();
         navigation.navigate(AppConst.ScreenConst.SEARCH_SCREEN, { screenParam: AppConst.SearchFrameConst.IS_HOMESEARCH });
 
     }
@@ -66,7 +69,7 @@ const SimCategoryScreen = ({ navigation,route }) => {
     }
     const HomeHeader = () => {
         return (
-            <View className="flex-row justify-center items-center p-2" style={{ position: 'absolute', zIndex: 1000, marginTop: StatusBar.currentHeight }} backgroundColor={argonTheme.COLORS.ERROR}>
+            <View className="flex-row justify-center items-center p-2" style={styles.header} backgroundColor={argonTheme.COLORS.ERROR}>
                 <ExitButton />
                 <SearchButton />
             </View>
@@ -76,8 +79,8 @@ const SimCategoryScreen = ({ navigation,route }) => {
     const SimCateGory = () => {
         return (
  
-                <ScrollView>
-                    <View style={{marginTop: StatusBar.currentHeight + responsiveScreenHeight(10)}}>
+                <ScrollView style={styles.content}>
+                    <View>
                         <SimNetWorkAtCategory navi={navigation} route={route} />
                         <SimAsPricesAtCategory navi={navigation} route={route} />
                         <SpecialSimAtCategory navi={navigation} route={route} />
@@ -89,14 +92,12 @@ const SimCategoryScreen = ({ navigation,route }) => {
 
     return (
 
-        <View>
-            <SafeAreaView>
-                <StatusBar translucent backgroundColor={argonTheme.COLORS.ERROR} />
-
-                {/* Header */}
+        <View style={styles.screen}>
+            <StatusBar translucent backgroundColor={argonTheme.COLORS.ERROR} barStyle="light-content" />
+            <SafeAreaView edges={["top"]} style={styles.headerSafeArea}>
                 <HomeHeader />
-                <SimCateGory />
             </SafeAreaView>
+            <SimCateGory />
         </View>
 
 
@@ -105,6 +106,20 @@ const SimCategoryScreen = ({ navigation,route }) => {
 }
 
 const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+        backgroundColor: '#f8f8f8',
+    },
+    headerSafeArea: {
+        backgroundColor: argonTheme.COLORS.ERROR,
+    },
+    header: {
+        minHeight: 60,
+        zIndex: 1000,
+    },
+    content: {
+        flex: 1,
+    },
     container: {
         flexDirection: 'row',
         borderRadius: 5,

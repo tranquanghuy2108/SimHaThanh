@@ -8,27 +8,28 @@ import {
   TouchableOpacity,
   View,
   Animated,
+  Alert,
 } from "react-native";
-import { Block, Text} from "galio-framework";
+import { Block, Text } from "galio-framework";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Icon, Input } from "../components";
 import { argonTheme } from "../constants";
 import { AuthContext } from "../context/AuthContext";
 import { AppConst } from "../constants/AppConst";
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from "react-native-vector-icons/Ionicons";
 const { width, height } = Dimensions.get("screen");
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system/legacy";
+import * as ImageManipulator from "expo-image-manipulator";
 import SendBird from "sendbird";
 
 import {
   responsiveHeight,
   responsiveWidth,
-  responsiveFontSize
+  responsiveFontSize,
 } from "react-native-responsive-dimensions";
 import { SendBirdContext } from "../context/SendbirdContext";
-
-
 
 export default function UpdateProfileScreen({ navigation }) {
   const { updateUserInfo, userInfos } = useContext(AuthContext);
@@ -38,14 +39,12 @@ export default function UpdateProfileScreen({ navigation }) {
   const [website, setWebsite] = useState(userInfos.website);
   const [address, setAddress] = useState(userInfos.address);
   const [description, setDescription] = useState(userInfos.remark);
-  const [validateText, setValidateText] = useState(null);
-  const [validateEmail, SetValidateEmail] = useState(true);
-  const {UpdateProfileSendBird} = useContext(SendBirdContext);
+  const [emailError, setEmailError] = useState("");
+  const { UpdateProfileSendBird } = useContext(SendBirdContext);
   //
   const ShowAvatar = () => {
     setImgBase64(userInfos.avatar);
-  }
-
+  };
 
   //Animate
   const [isExpanded, setIsExpanded] = useState(false);
@@ -56,7 +55,6 @@ export default function UpdateProfileScreen({ navigation }) {
       hideAnimation();
     } else {
       showAnimation();
-
     }
   };
 
@@ -82,125 +80,183 @@ export default function UpdateProfileScreen({ navigation }) {
   const interpolatedAnimation = animation.interpolate({
     inputRange: [0, 1],
     outputRange: [height, 0],
-    extrapolate: 'clamp',
+    extrapolate: "clamp",
   });
 
   //Pick Image
-  const [imgBase64, setImgBase64] = useState([]);
+  const [imgBase64, setImgBase64] = useState(userInfos?.avatar || "");
 
   useEffect(() => {
+    console.log("Active Screen  : UpdateProfileScreen");
     ShowAvatar();
-  }, []);
+  }, [userInfos?.avatar]);
+
+  const setSelectedAvatar = async (asset) => {
+    // Chuẩn hóa về JPEG và giới hạn kích thước để payload avatar
+    // không bị API từ chối khi ảnh chụp từ iPhone quá lớn/thuộc HEIC.
+    const actions = asset.width > 1024 ? [{ resize: { width: 1024 } }] : [];
+    const processedImage = await ImageManipulator.manipulateAsync(asset.uri, actions, {
+      compress: 0.75,
+      format: ImageManipulator.SaveFormat.JPEG,
+      base64: true,
+    });
+    const base64 =
+      processedImage.base64 ||
+      (await FileSystem.readAsStringAsync(processedImage.uri, { encoding: "base64" }));
+    setImgBase64(base64);
+    hideAnimation();
+  };
 
   const handleChooseImages = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
-      alert('Permission to access camera roll is required!');
-      return;
+    try {
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        // PHPicker/Android Photo Picker chỉ cấp quyền cho ảnh người dùng chọn.
+        mediaTypes: ["images"],
+        allowsMultipleSelection: false,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.75,
+        base64: true,
+      });
+
+      if (!pickerResult.canceled && pickerResult.assets?.[0]) {
+        await setSelectedAvatar(pickerResult.assets[0]);
+      }
+    } catch (error) {
+      console.error("Choose avatar failed:", error);
+      Alert.alert("Không thể chọn ảnh", "Vui lòng thử lại với một ảnh khác.");
     }
-
-    const pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: false,
-      allowsEditing: false,
-    });
-
-    if (!pickerResult.canceled) {
-      const base64 = await FileSystem.readAsStringAsync(pickerResult.assets[0].uri, { encoding: 'base64' });
-      setImgBase64(base64);
-    }
-
-
   };
   //
   const handleTakePhoto = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
-      alert('Permission to access the camera is required!');
+      alert("Permission to access the camera is required!");
       return;
     }
 
-    const pickerResult = await ImagePicker.launchCameraAsync();
-    if (pickerResult.canceled === true) {
-      return;
+    try {
+      const pickerResult = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.75,
+        base64: true,
+      });
+      if (!pickerResult.canceled && pickerResult.assets?.[0]) {
+        await setSelectedAvatar(pickerResult.assets[0]);
+      }
+    } catch (error) {
+      console.error("Take avatar photo failed:", error);
+      Alert.alert("Không thể chụp ảnh", "Vui lòng kiểm tra quyền camera và thử lại.");
     }
-
-    const base64 = await FileSystem.readAsStringAsync(pickerResult.assets[0].uri, { encoding: 'base64' });
-    setImgBase64(base64);
-
   };
   const ValidateEmail = () => {
+    const normalizedEmail = email?.trim() || "";
     const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
-    if (emailRegex.test(email) || email == userInfos.email) {
-      SetValidateEmail(true);
-      return true;
-    } else {
-      SetValidateEmail(false);
-      return false;
+    if (!normalizedEmail) {
+      const message = "Vui lòng nhập địa chỉ email.";
+      setEmailError(message);
+      Alert.alert("Email không hợp lệ", message);
+      return null;
     }
+
+    if (!emailRegex.test(normalizedEmail)) {
+      const message = "Email phải có định dạng hợp lệ, ví dụ: ten@example.com.";
+      setEmailError(message);
+      Alert.alert("Email không hợp lệ", message);
+      return null;
+    }
+
+    setEmail(normalizedEmail);
+    setEmailError("");
+    return normalizedEmail;
   };
 
   //HEADER
   const handleExit = () => {
     navigation.goBack();
-
-  }
+  };
 
   const SearchButton = () => {
     return (
       <View className="flex-1">
-        <Text style={{ textAlign: "center", fontSize: responsiveFontSize(2.5), color: "white", fontWeight: "bold" }}>Sửa Thông Tin</Text>
+        <Text
+          style={{
+            textAlign: "center",
+            fontSize: responsiveFontSize(2.5),
+            color: "white",
+            fontWeight: "bold",
+          }}
+        >
+          Sửa Thông Tin
+        </Text>
       </View>
     );
-  }
+  };
   const ExitButton = () => {
     return (
       // Nút Thoát
-      <TouchableOpacity className="p-1 rounded-full mx-1"
+      <TouchableOpacity
+        className="p-1 rounded-full mx-1"
         onPress={() => {
-
           handleExit();
-        }}>
-        <Ionicons name="chevron-back-outline"color="white" size={responsiveFontSize(3)}></Ionicons>
-        
+        }}
+      >
+        <Ionicons
+          name="chevron-back-outline"
+          color="white"
+          size={responsiveFontSize(3)}
+        ></Ionicons>
       </TouchableOpacity>
     );
-  }
+  };
   const SaveButton = () => {
     return (
       // Nút Thoát
-      <TouchableOpacity className="py-1 px-2 rounded-full bg-white mx-1"
+      <TouchableOpacity
+        className="py-1 px-2 rounded-full bg-white mx-1"
         onPress={async () => {
-          if (ValidateEmail()) {  
+          const validatedEmail = ValidateEmail();
+          if (validatedEmail) {
             UpdateProfileSendBird(fullName);
-            var result = await updateUserInfo(fullName, email, website, address, imgBase64, description);
-            if(result){
+            var result = await updateUserInfo(
+              fullName,
+              validatedEmail,
+              website,
+              address,
+              imgBase64,
+              description,
+            );
+            if (result) {
               navigation.navigate(AppConst.ScreenConst.PROFILE_SCREEN);
             }
           }
         }}
       >
-           <Text
-            style={{fontSize:responsiveFontSize(1.8),fontWeight:"bold"}}
-         >
-            Lưu
-         </Text>
+        <Text style={{ fontSize: responsiveFontSize(1.8), fontWeight: "bold" }}>
+          Lưu
+        </Text>
         {/* <Ionicons name="save-outline" color="black" size={responsiveFontSize(2.5)}></Ionicons> */}
       </TouchableOpacity>
     );
-  }
+  };
 
   const HomeHeader = () => {
     return (
-      <View className="flex-row justify-center items-center p-2 " style={{ zIndex: 1000, marginTop: StatusBar.currentHeight }} backgroundColor={argonTheme.COLORS.ERROR}>
-        <ExitButton />
-        <SearchButton />
-        <SaveButton />
-      </View>
+      <SafeAreaView edges={["top"]} style={styles.headerSafeArea}>
+        <View
+          className="flex-row justify-center items-center p-2"
+          style={styles.headerBar}
+        >
+          <ExitButton />
+          <SearchButton />
+          <SaveButton />
+        </View>
+      </SafeAreaView>
     );
-  }
-
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -212,34 +268,36 @@ export default function UpdateProfileScreen({ navigation }) {
         <View style={styles.avatarContainer}>
           <TouchableOpacity
             onPress={() => {
-              handlePress()
+              handlePress();
             }}
           >
-
             <Image
               source={{ uri: `data:image/jpeg;base64,${imgBase64}` }}
               style={styles.avatar}
             />
-            <Ionicons style={{ position: 'absolute', right: 15, bottom: 10, color: "black" }} name="camera" size={20}></Ionicons>
+            <Ionicons
+              style={{
+                position: "absolute",
+                right: 15,
+                bottom: 10,
+                color: "black",
+              }}
+              name="camera"
+              size={20}
+            ></Ionicons>
           </TouchableOpacity>
-
         </View>
-
       </View>
-      <View style={{flex:1,margin:15}}>
-        <KeyboardAvoidingView
-          style={{}}
-          behavior="padding"
-          enabled
-        >
-          <Block style={{ }}>
+      <View style={{ flex: 1, margin: 15 }}>
+        <KeyboardAvoidingView style={{}} behavior="padding" enabled>
+          <Block style={{}}>
             <Input
               editable={false}
-              style={{ backgroundColor: '#d4d3d2' }}
+              style={{ backgroundColor: "#d4d3d2" }}
               borderless
               placeholder="Số điện thoại"
               value={phoneNumber}
-              onChangeText={text => setPhoneNumber(text)}
+              onChangeText={(text) => setPhoneNumber(text)}
               iconContent={
                 <Icon
                   size={16}
@@ -251,12 +309,12 @@ export default function UpdateProfileScreen({ navigation }) {
               }
             />
           </Block>
-          <Block style={{ }}>
+          <Block style={{}}>
             <Input
               borderless
               placeholder="Họ tên"
               value={fullName}
-              onChangeText={text => setFullName(text)}
+              onChangeText={(text) => setFullName(text)}
               iconContent={
                 <Icon
                   size={16}
@@ -268,12 +326,18 @@ export default function UpdateProfileScreen({ navigation }) {
               }
             />
           </Block>
-          <Block style={{  }}>
+          <Block style={{}}>
             <Input
               borderless
               placeholder="Email"
               value={email}
-              onChangeText={text => setEmail(text)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (emailError) setEmailError("");
+              }}
               iconContent={
                 <Icon
                   size={16}
@@ -304,12 +368,12 @@ export default function UpdateProfileScreen({ navigation }) {
             />
           </Block> */}
 
-          <Block style={{  }}>
+          <Block style={{}}>
             <Input
               borderless
               placeholder="Địa chỉ"
               value={address}
-              onChangeText={text => setAddress(text)}
+              onChangeText={(text) => setAddress(text)}
               iconContent={
                 <Icon
                   size={16}
@@ -322,12 +386,12 @@ export default function UpdateProfileScreen({ navigation }) {
             />
           </Block>
 
-          <Block style={{ }}>
+          <Block style={{}}>
             <Input
               borderless
               placeholder="Giới thiệu"
               value={description}
-              onChangeText={text => setDescription(text)}
+              onChangeText={(text) => setDescription(text)}
               iconContent={
                 <Icon
                   size={16}
@@ -339,52 +403,69 @@ export default function UpdateProfileScreen({ navigation }) {
               }
             />
           </Block>
-          {
-            !validateEmail && (
-              <Block row>
-                <Text color="red">Vui lòng kiểm tra lại thông tin</Text>
-              </Block>
-            )
-          }
+          {!!emailError && (
+            <Block row>
+              <Text color="red" size={13}>{emailError}</Text>
+            </Block>
+          )}
         </KeyboardAvoidingView>
       </View>
       {isExpanded && (
         <TouchableOpacity
-          style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '100%' }}
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: "100%",
+          }}
           onPress={hideAnimation}
           activeOpacity={1}
         >
           <Animated.View
             style={{
-              position: 'absolute',
+              position: "absolute",
               left: 0,
               right: 0,
               bottom: 0,
-              borderTopColor: 'grey',
+              borderTopColor: "grey",
               borderTopWidth: 1,
               transform: [{ translateY: interpolatedAnimation }],
-              backgroundColor: 'white',
-              justifyContent: 'center',
-              alignItems: 'center',
+              backgroundColor: "white",
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
-
-
             <View style={{ height: "100%", width: "100%" }}>
               <View className="items-start mx-5">
-                <TouchableOpacity onPress={handleChooseImages} className="flex-row justify-center items-center mt-3" style={{ width: '100%' }} activeOpacity={0.8}>
-                  <Ionicons name="image-outline" color="green" size={25}></Ionicons>
+                <TouchableOpacity
+                  onPress={handleChooseImages}
+                  className="flex-row justify-center items-center mt-3"
+                  style={{ width: "100%" }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="image-outline"
+                    color="green"
+                    size={25}
+                  ></Ionicons>
                   <Text className="font-bold mx-2">Chọn Ảnh</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleTakePhoto} className="flex-row justify-center items-center mt-3" style={{ width: '100%', left: -7 }} activeOpacity={0.8}>
-                  <Ionicons name="camera-outline" color="green" size={25}></Ionicons>
+                <TouchableOpacity
+                  onPress={handleTakePhoto}
+                  className="flex-row justify-center items-center mt-3"
+                  style={{ width: "100%", left: -7 }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="camera-outline"
+                    color="green"
+                    size={25}
+                  ></Ionicons>
                   <Text className="font-bold mx-2">Camera</Text>
                 </TouchableOpacity>
               </View>
             </View>
-
-
-
           </Animated.View>
         </TouchableOpacity>
       )}
@@ -393,6 +474,13 @@ export default function UpdateProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  headerSafeArea: {
+    backgroundColor: argonTheme.COLORS.ERROR,
+    zIndex: 1000,
+  },
+  headerBar: {
+    backgroundColor: argonTheme.COLORS.ERROR,
+  },
   container: {
     width: width * 0.9,
     height: height * 0.875,
@@ -401,31 +489,31 @@ const styles = StyleSheet.create({
     shadowColor: argonTheme.COLORS.BLACK,
     shadowOffset: {
       width: 0,
-      height: 4
+      height: 4,
     },
     shadowRadius: 8,
     shadowOpacity: 0.1,
     elevation: 1,
-    overflow: "hidden"
+    overflow: "hidden",
   },
   socialConnect: {
     marginTop: 30,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: "#8898AA"
+    borderColor: "#8898AA",
   },
   inputIcons: {
-    marginRight: 12
+    marginRight: 12,
   },
   passwordCheck: {
     paddingTop: 13,
-    paddingBottom: 30
+    paddingBottom: 30,
   },
   createButton: {
     flex: 1,
     marginTop: 25,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center'
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
   navText: {
     flex: 1,
@@ -434,30 +522,29 @@ const styles = StyleSheet.create({
   },
   header: {
     marginTop: 50,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: "center",
+    alignItems: "center",
   },
   avatarContainer: {
     position: "relative",
 
     width: 100,
     height: 100,
-
   },
   avatar: {
     width: 100,
     height: 100,
     borderWidth: 0,
     borderRadius: 62,
-    backgroundColor: 'gray',
+    backgroundColor: "gray",
   },
   nameInfo: {
-    marginTop: 5
+    marginTop: 5,
   },
   divider: {
     width: "90%",
     borderWidth: 1,
-    borderColor: "#E9ECEF"
+    borderColor: "#E9ECEF",
   },
 });
 
