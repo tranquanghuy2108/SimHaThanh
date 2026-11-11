@@ -16,7 +16,6 @@ Bộ tài liệu này giúp đơn vị tiếp nhận hiểu cấu trúc source, 
 4. [04-VAN-HANH-VA-XU-LY-SU-CO.md](04-VAN-HANH-VA-XU-LY-SU-CO.md): web/API/worker, log, backup và runbook sự cố.
 5. [05-CHECKLIST-BAN-GIAO.md](05-CHECKLIST-BAN-GIAO.md): danh sách hiện vật, quyền truy cập và tiêu chí nghiệm thu.
 6. [06-RUI-RO-VA-KHUYEN-NGHI.md](06-RUI-RO-VA-KHUYEN-NGHI.md): phát hiện kỹ thuật và thứ tự ưu tiên xử lý.
-7. [appsettings.Handover.example.json](appsettings.Handover.example.json): mẫu khóa cấu hình, không chứa secret.
 
 ## 3. Tóm tắt nhanh cho đơn vị tiếp nhận
 

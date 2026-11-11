@@ -54,7 +54,6 @@ dotnet publish WebSIMManager/WebSIMAPI/WebSIMAPI.csproj -c Release -o ./artifact
 dotnet publish WebSIMManager/WorkerService/WS_GetSimVNPT.csproj -c Release -o ./artifacts/get-sim
 dotnet publish WebSIMManager/WS_CheckSimVNPT/WS_CheckSimVNPT.csproj -c Release -o ./artifacts/check-sim
 dotnet publish WebSIMManager/WS_SendMail/WS_SendMail.csproj -c Release -o ./artifacts/send-mail
-dotnet publish WebSIMManager/WS_UpdatePTSim/WS_UpdatePTSim.csproj -c Release -o ./artifacts/update-sim
 ```
 
 Không dùng sẵn thư mục `WebSIMManager/publish` làm nguồn phát hành nếu chưa đối chiếu commit/checksum. Nên build artifact từ tag bàn giao bằng pipeline tái lập được.
