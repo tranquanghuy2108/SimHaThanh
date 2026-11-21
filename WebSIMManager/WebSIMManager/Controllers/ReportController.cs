@@ -1348,7 +1348,9 @@ namespace WebSIMManager.Controllers
             // Tạo một workbook mới
             var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Data");
-
+            worksheet.Column(5).Style.Alignment.WrapText = true;
+            worksheet.Column(6).Style.Alignment.WrapText = true;
+            worksheet.RowsUsed().AdjustToContents();
             //var agent = new UserEditRequest();
             //if (Guid.TryParse(request.agentId, out Guid userId))
             //{
@@ -1390,16 +1392,17 @@ namespace WebSIMManager.Controllers
             worksheet.Cell(4, 3).Value = "Loại phiếu";
             worksheet.Cell(4, 4).Value = "Đại lý";
             worksheet.Cell(4, 5).Value = "Số sim";
-            worksheet.Cell(4, 6).Value = "Giá niêm yết";
-            worksheet.Cell(4, 7).Value = "Giá thu về";
-            worksheet.Cell(4, 8).Value = "Phí PS";
-            worksheet.Cell(4, 9).Value = "P/S Tăng";
-            worksheet.Cell(4, 10).Value = "P/S Giảm";
-            worksheet.Cell(4, 11).Value = "Công nợ PS";
-            worksheet.Cell(4, 12).Value = "Diễn giải/Ghi chú";
-            worksheet.Cell(4, 13).Value = "Hình thức giao dịch";
-            worksheet.Cell(4, 14).Value = "COD";
-            worksheet.Cell(4, 15).Value = "Người lập";
+            worksheet.Cell(4, 6).Value = "Số sim";
+            worksheet.Cell(4, 7).Value = "Giá niêm yết";
+            worksheet.Cell(4, 8).Value = "Giá thu về";
+            worksheet.Cell(4, 9).Value = "Phí PS";
+            worksheet.Cell(4, 10).Value = "P/S Tăng";
+            worksheet.Cell(4, 11).Value = "P/S Giảm";
+            worksheet.Cell(4, 12).Value = "Công nợ PS";
+            worksheet.Cell(4, 13).Value = "Diễn giải/Ghi chú";
+            worksheet.Cell(4, 14).Value = "Hình thức giao dịch";
+            worksheet.Cell(4, 15).Value = "COD";
+            worksheet.Cell(4, 16).Value = "Người lập";
 
             for (int i = 0; i < data.Data.Count; i++)
             {
@@ -1408,33 +1411,34 @@ namespace WebSIMManager.Controllers
                 worksheet.Cell(i + 5, 2).Value = data.Data[i].InvoiceCode;
                 worksheet.Cell(i + 5, 3).Value = data.Data[i].InvoiceType;
                 worksheet.Cell(i + 5, 4).Value = data.Data[i].AgentName;
-                worksheet.Cell(i + 5, 5).Value = data.Data[i].NumberOfSIMs;
-                worksheet.Cell(i + 5, 6).Value = data.Data[i].ListedPrice;
-                worksheet.Cell(i + 5, 6).Style.NumberFormat.Format = "#,##0";
-                worksheet.Cell(i + 5, 7).Value = data.Data[i].ActualPriceReceived;
+                worksheet.Cell(i + 5, 5).Value = data.Data[i].NumberOfSIMs?.Replace(".", "");
+                worksheet.Cell(i + 5, 6).Value = data.Data[i].NumberOfSIMs;
+                worksheet.Cell(i + 5, 7).Value = data.Data[i].ListedPrice;
                 worksheet.Cell(i + 5, 7).Style.NumberFormat.Format = "#,##0";
-                worksheet.Cell(i + 5, 8).Value = data.Data[i].IncidentalFee;
+                worksheet.Cell(i + 5, 8).Value = data.Data[i].ActualPriceReceived;
                 worksheet.Cell(i + 5, 8).Style.NumberFormat.Format = "#,##0";
-                worksheet.Cell(i + 5, 9).Value = data.Data[i].IncreaseIncidents;
+                worksheet.Cell(i + 5, 9).Value = data.Data[i].IncidentalFee;
                 worksheet.Cell(i + 5, 9).Style.NumberFormat.Format = "#,##0";
-                worksheet.Cell(i + 5, 10).Value = data.Data[i].DecreaseIncidents;
+                worksheet.Cell(i + 5, 10).Value = data.Data[i].IncreaseIncidents;
                 worksheet.Cell(i + 5, 10).Style.NumberFormat.Format = "#,##0";
-                worksheet.Cell(i + 5, 11).Value = data.Data[i].IncidentalDebt;
+                worksheet.Cell(i + 5, 11).Value = data.Data[i].DecreaseIncidents;
                 worksheet.Cell(i + 5, 11).Style.NumberFormat.Format = "#,##0";
-                worksheet.Cell(i + 5, 12).Value = data.Data[i].Note;
-                worksheet.Cell(i + 5, 13).Value = data.Data[i].TransactionMethod;
-                worksheet.Cell(i + 5, 14).Value = data.Data[i].COD;
-                worksheet.Cell(i + 5, 14).Style.NumberFormat.Format = "#,##0";
-                worksheet.Cell(i + 5, 15).Value = data.Data[i].Creator;
+                worksheet.Cell(i + 5, 12).Value = data.Data[i].IncidentalDebt;
+                worksheet.Cell(i + 5, 12).Style.NumberFormat.Format = "#,##0";
+                worksheet.Cell(i + 5, 13).Value = data.Data[i].Note;
+                worksheet.Cell(i + 5, 14).Value = data.Data[i].TransactionMethod;
+                worksheet.Cell(i + 5, 15).Value = data.Data[i].COD;
+                worksheet.Cell(i + 5, 15).Style.NumberFormat.Format = "#,##0";
+                worksheet.Cell(i + 5, 16).Value = data.Data[i].Creator;
             }
             worksheet.Cell(data.Data.Count + 5, 1).Value = "Tổng PS";
             worksheet.Cell(data.Data.Count + 5, 2).Value = data.Data.Count.ToString();
-            worksheet.Cell(data.Data.Count + 5, 9).Value = data.Data.Sum(t => t.IncreaseIncidents);
-            worksheet.Cell(data.Data.Count + 5, 9).Style.NumberFormat.Format = "#,##0";
-            worksheet.Cell(data.Data.Count + 5, 10).Value = data.Data.Sum(t => t.DecreaseIncidents);
+            worksheet.Cell(data.Data.Count + 5, 10).Value = data.Data.Sum(t => t.IncreaseIncidents);
             worksheet.Cell(data.Data.Count + 5, 10).Style.NumberFormat.Format = "#,##0";
-            worksheet.Cell(data.Data.Count + 5, 11).Value = data.Data.Sum(t => t.IncidentalDebt);
+            worksheet.Cell(data.Data.Count + 5, 11).Value = data.Data.Sum(t => t.DecreaseIncidents);
             worksheet.Cell(data.Data.Count + 5, 11).Style.NumberFormat.Format = "#,##0";
+            worksheet.Cell(data.Data.Count + 5, 12).Value = data.Data.Sum(t => t.IncidentalDebt);
+            worksheet.Cell(data.Data.Count + 5, 12).Style.NumberFormat.Format = "#,##0";
             var rowSum = worksheet.Range($"A{data.Data.Count + 5}:N{data.Data.Count + 5}");
             rowSum.Style.Font.Bold = true;
 

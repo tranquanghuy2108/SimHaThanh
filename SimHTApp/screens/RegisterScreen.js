@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useCallback } from "react";
+import React, { useContext, useState, useRef, useCallback } from "react";
 import {
   StyleSheet,
   Dimensions,
@@ -11,6 +11,9 @@ import {
   SafeAreaView,
   ScrollView,
   TextInput,
+  Modal,
+  ActivityIndicator,
+  Keyboard,
 } from "react-native";
 import { Block, Text } from "galio-framework";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -19,7 +22,6 @@ import { Input } from "../components";
 import { argonTheme } from "../constants";
 import { AuthContext } from "../context/AuthContext";
 import { AppConst } from "../constants/AppConst";
-import LoadingScreen from "./LoadingScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CommunityGuidelinesModal, {
   COMMUNITY_TERMS_PROMPT_SEEN_KEY,
@@ -38,25 +40,22 @@ const RegisterScreen = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRePassword, setShowRePassword] = useState(false);
   const [validateText, setValidateText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
+  const [registrationResult, setRegistrationResult] = useState(null);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [isTermsVisible, setTermsVisible] = useState(false);
 
-  const { register, isRegisterSuccess, isLoading } = useContext(AuthContext);
+  const { register, isLoading } = useContext(AuthContext);
 
-  useEffect(() => {
-    console.log("Active Screen  : RegisterScreen");
-    if (isRegisterSuccess) {
-      navigation.navigate(AppConst.ScreenConst.LOGIN_SCREEN);
-    }
-  }, [isRegisterSuccess, navigation]);
-
-  useEffect(() => {
-    if (!isLoading) {
-      setIsSubmitting(false);
-    }
-  }, [isLoading]);
+  const showRegistrationFailure = (message) => {
+    Keyboard.dismiss();
+    setValidateText(message);
+    setRegistrationResult({ success: false, message });
+  };
 
   const validateInput = (name, phone, pass, rePass) => {
     setValidateText("");
@@ -69,29 +68,42 @@ const RegisterScreen = ({ navigation }) => {
     return null;
   };
 
-  const handleRegister = useCallback(() => {
-    if (isSubmitting) return;
+  const handleRegister = useCallback(async () => {
+    if (submittingRef.current || registrationResult) return;
     if (!hasAcceptedTerms) {
-      setValidateText("Vui lòng đồng ý với điều khoản sử dụng ứng dụng.");
+      showRegistrationFailure("Vui lòng đồng ý với điều khoản sử dụng ứng dụng.");
       return;
     }
     const error = validateInput(fullName, phoneNumber, password, rePassword);
     if (error) {
-      setValidateText(error);
+      showRegistrationFailure(error);
       return;
     }
+    submittingRef.current = true;
     setIsSubmitting(true);
+    Keyboard.dismiss();
     AsyncStorage.multiSet([
       ["CommunityTermsVersion", COMMUNITY_TERMS_VERSION],
       [COMMUNITY_TERMS_PROMPT_SEEN_KEY, "true"],
     ]).catch(() => undefined);
-    register(phoneNumber.trim(), fullName.trim(), password, rePassword);
+    try {
+      const result = await register(phoneNumber.trim(), fullName.trim(), password, rePassword);
+      setRegistrationResult(result);
+    } catch {
+      setRegistrationResult({
+        success: false,
+        message: "Không thể đăng ký tài khoản. Vui lòng thử lại.",
+      });
+    } finally {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    }
   }, [
     fullName,
     phoneNumber,
     password,
     rePassword,
-    isSubmitting,
+    registrationResult,
     register,
     hasAcceptedTerms,
   ]);
@@ -111,7 +123,54 @@ const RegisterScreen = ({ navigation }) => {
           visible={isTermsVisible}
           onClose={() => setTermsVisible(false)}
         />
-        {isLoading ? <LoadingScreen isVisible={isLoading} /> : null}
+        <Modal
+          visible={isSubmitting || registrationResult !== null}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
+            if (registrationResult && !registrationResult.success) {
+              setRegistrationResult(null);
+            }
+          }}
+        >
+          <View style={styles.resultOverlay}>
+            <View style={styles.resultCard} accessibilityViewIsModal>
+              {isSubmitting ? (
+                <>
+                  <ActivityIndicator size="large" color={argonTheme.COLORS.ERROR} />
+                  <Text style={styles.resultMessage}>Đang đăng ký tài khoản...</Text>
+                </>
+              ) : (
+                <>
+                  <Ionicons
+                    name={registrationResult?.success ? "checkmark-circle-outline" : "alert-circle-outline"}
+                    size={48}
+                    color={registrationResult?.success ? "#2D8A4E" : argonTheme.COLORS.ERROR}
+                  />
+                  <Text style={styles.resultTitle} accessibilityRole="header">
+                    {registrationResult?.success ? "Đăng ký thành công" : "Đăng ký thất bại"}
+                  </Text>
+                  <Text style={styles.resultMessage}>{registrationResult?.message}</Text>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    style={[styles.submitButton, styles.resultButton]}
+                    onPress={() => {
+                      const success = registrationResult?.success;
+                      setRegistrationResult(null);
+                      if (success) {
+                        navigation.navigate(AppConst.ScreenConst.LOGIN_SCREEN);
+                      }
+                    }}
+                  >
+                    <Text style={styles.submitButtonText}>
+                      {registrationResult?.success ? "Đăng nhập" : "Quay lại"}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
         <StatusBar translucent backgroundColor={argonTheme.COLORS.ERROR} />
         <ScrollView
           contentContainerStyle={[
@@ -175,12 +234,24 @@ const RegisterScreen = ({ navigation }) => {
                     placeholderTextColor={argonTheme.COLORS.MUTED}
                     value={password}
                     onChangeText={setPassword}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoCorrect={false}
                     textContentType="newPassword"
                     accessibilityLabel="Mật khẩu"
                   />
+                  <TouchableOpacity
+                    style={styles.passwordToggle}
+                    onPress={() => setShowPassword((visible) => !visible)}
+                    accessibilityRole="button"
+                    accessibilityLabel={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      size={22}
+                      color={argonTheme.COLORS.ICON}
+                    />
+                  </TouchableOpacity>
                 </View>
               </Block>
 
@@ -192,12 +263,24 @@ const RegisterScreen = ({ navigation }) => {
                     placeholderTextColor={argonTheme.COLORS.MUTED}
                     value={rePassword}
                     onChangeText={setRePassword}
-                    secureTextEntry
+                    secureTextEntry={!showRePassword}
                     autoCapitalize="none"
                     autoCorrect={false}
                     textContentType="newPassword"
                     accessibilityLabel="Nhập lại mật khẩu"
                   />
+                  <TouchableOpacity
+                    style={styles.passwordToggle}
+                    onPress={() => setShowRePassword((visible) => !visible)}
+                    accessibilityRole="button"
+                    accessibilityLabel={showRePassword ? "Ẩn mật khẩu xác nhận" : "Hiện mật khẩu xác nhận"}
+                  >
+                    <Ionicons
+                      name={showRePassword ? "eye-off-outline" : "eye-outline"}
+                      size={22}
+                      color={argonTheme.COLORS.ICON}
+                    />
+                  </TouchableOpacity>
                 </View>
               </Block>
 
@@ -274,6 +357,39 @@ const RegisterScreen = ({ navigation }) => {
 export default RegisterScreen;
 
 const styles = StyleSheet.create({
+  resultOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: 24,
+  },
+  resultCard: {
+    width: "100%",
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 24,
+    backgroundColor: "#fff",
+    alignItems: "center",
+  },
+  resultTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 12,
+    color: argonTheme.COLORS.HEADER,
+  },
+  resultMessage: {
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 12,
+    marginBottom: 20,
+    color: argonTheme.COLORS.HEADER,
+  },
+  resultButton: {
+    width: "100%",
+    backgroundColor: argonTheme.COLORS.ERROR,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: "#fff",
@@ -328,6 +444,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     height: "100%",
     paddingVertical: 0,
+  },
+  passwordToggle: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
   },
   passwordCheck: {
     paddingTop: 10,

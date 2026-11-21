@@ -1,4 +1,8 @@
-﻿using EFCoreMySQL.DataContext;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Net.WebSockets;
+using System.Security.Claims;
+using System.Text;
+using EFCoreMySQL.DataContext;
 using EFCoreMySQL.EntityModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -12,10 +16,6 @@ using Models.ViewModels;
 using MySqlConnector;
 using Newtonsoft.Json.Linq;
 using Repositories.Interface;
-using System.IdentityModel.Tokens.Jwt;
-using System.Net.WebSockets;
-using System.Security.Claims;
-using System.Text;
 
 namespace Repositories.Implement
 {
@@ -26,7 +26,13 @@ namespace Repositories.Implement
         private readonly IConfiguration _config;
         private readonly SIMCenterDbContext _context;
         private readonly LogActionRepository _logAction;
-        public AccountRepository(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration config, SIMCenterDbContext context)
+
+        public AccountRepository(
+            UserManager<AppUser> userManager,
+            SignInManager<AppUser> signInManager,
+            IConfiguration config,
+            SIMCenterDbContext context
+        )
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -35,7 +41,10 @@ namespace Repositories.Implement
             _logAction = new(context);
         }
 
-        public async Task<ResponseDataModel<UserInfoAPIModels>> AuthenticateAPI(LoginRequest request, bool isCMS = true)
+        public async Task<ResponseDataModel<UserInfoAPIModels>> AuthenticateAPI(
+            LoginRequest request,
+            bool isCMS = true
+        )
         {
             ResponseDataModel<UserInfoAPIModels> responseData = new();
             try
@@ -51,14 +60,19 @@ namespace Repositories.Implement
                 {
                     user = await _userManager.FindByNameAsync(request.Username);
                 }
-                if (user == null || user.IsStaff != isCMS)
+                if (user == null) // || user.IsStaff != isCMS)
                 {
                     responseData.Code = "-1";
                     responseData.Message = "Đăng nhập không thành công!";
                     return responseData;
                 }
 
-                var result = await _signInManager.PasswordSignInAsync(user, request.Password, request.RememberMe, true);
+                var result = await _signInManager.PasswordSignInAsync(
+                    user,
+                    request.Password,
+                    request.RememberMe,
+                    true
+                );
                 if (result.Succeeded)
                 {
                     var issuer = _config["Settings:Issuer"];
@@ -66,20 +80,22 @@ namespace Repositories.Implement
                     var key = Encoding.ASCII.GetBytes(_config["Settings:Key"]);
                     var tokenDescriptor = new SecurityTokenDescriptor
                     {
-                        Subject = new ClaimsIdentity(new[]
-                        {
-                            new Claim("Id", user.Id.ToString()),
-                            new Claim(JwtRegisteredClaimNames.Sub, user.UserName??""),
-                            new Claim(JwtRegisteredClaimNames.Email, user.Email??""),
-                            new Claim(JwtRegisteredClaimNames.Jti,
-                            Guid.NewGuid().ToString())
-                         }),
+                        Subject = new ClaimsIdentity(
+                            new[]
+                            {
+                                new Claim("Id", user.Id.ToString()),
+                                new Claim(JwtRegisteredClaimNames.Sub, user.UserName ?? ""),
+                                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
+                                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                            }
+                        ),
                         Expires = DateTime.UtcNow.AddHours(720),
                         Issuer = issuer,
                         Audience = audience,
-                        SigningCredentials = new SigningCredentials
-                        (new SymmetricSecurityKey(key),
-                        SecurityAlgorithms.HmacSha512Signature)
+                        SigningCredentials = new SigningCredentials(
+                            new SymmetricSecurityKey(key),
+                            SecurityAlgorithms.HmacSha512Signature
+                        ),
                     };
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -89,7 +105,7 @@ namespace Repositories.Implement
                     //Select data with join
                     //var query = from u in _context.Users
                     //            join ug in _context.UserGroups on u.Id equals ug.UserId
-                    //            join 
+                    //            join
                     //            select new { u, r };
 
                     //
@@ -106,22 +122,32 @@ namespace Repositories.Implement
                     userInfo.IsAgent = user.IsAgent;
                     userInfo.Token = stringToken;
 
-                    var roleLst = (from ur in _context.UserRoles
-                                   join r in _context.Roles on ur.RoleId equals r.Id
-                                   where ur.UserId == user.Id
-                                   select r.Name).ToList();
-                    if (roleLst.Count > 0) userInfo.Role = String.Join(",", roleLst);
-                    else userInfo.Role = "";
+                    var roleLst = (
+                        from ur in _context.UserRoles
+                        join r in _context.Roles on ur.RoleId equals r.Id
+                        where ur.UserId == user.Id
+                        select r.Name
+                    ).ToList();
+                    if (roleLst.Count > 0)
+                        userInfo.Role = String.Join(",", roleLst);
+                    else
+                        userInfo.Role = "";
                     //
-                    var agentOfUser = _context.CollaboratorsGroupUsers.FirstOrDefault(x => x.UserId == user.Id);
+                    var agentOfUser = _context.CollaboratorsGroupUsers.FirstOrDefault(x =>
+                        x.UserId == user.Id
+                    );
                     if (agentOfUser != null)
                     {
-                        var agent = _context.CollaboratorsGroups.FirstOrDefault(x => x.Id == agentOfUser.CollaboratorsGroupId);
+                        var agent = _context.CollaboratorsGroups.FirstOrDefault(x =>
+                            x.Id == agentOfUser.CollaboratorsGroupId
+                        );
                         if (agent != null)
                         {
                             userInfo.AgentID = agent.Id;
                             userInfo.AgentName = agent.Name;
-                            var discounts = _context.Discounts.Where(x => x.CollaboratorsGroupId == agent.Id).ToList();
+                            var discounts = _context
+                                .Discounts.Where(x => x.CollaboratorsGroupId == agent.Id)
+                                .ToList();
                             userInfo.Discount = new();
                             foreach (var item in discounts)
                             {
@@ -145,7 +171,8 @@ namespace Repositories.Implement
                 else if (result.IsLockedOut)
                 {
                     responseData.Code = "0";
-                    responseData.Message = "Tài khoản của bạn đã bị khóa, liên hệ admin để được hỗ trợ.";
+                    responseData.Message =
+                        "Tài khoản của bạn đã bị khóa, liên hệ admin để được hỗ trợ.";
                     return responseData;
                 }
                 else
@@ -162,7 +189,11 @@ namespace Repositories.Implement
                 return responseData;
             }
         }
-        public async Task<ResponseDataModel<UserInfoModels>> Authenticate(LoginRequest request, bool isCMS = true)
+
+        public async Task<ResponseDataModel<UserInfoModels>> Authenticate(
+            LoginRequest request,
+            bool isCMS = true
+        )
         {
             ResponseDataModel<UserInfoModels> responseData = new();
             try
@@ -184,7 +215,12 @@ namespace Repositories.Implement
                     return responseData;
                 }
 
-                var result = await _signInManager.PasswordSignInAsync(user, request.Password, request.RememberMe, true);
+                var result = await _signInManager.PasswordSignInAsync(
+                    user,
+                    request.Password,
+                    request.RememberMe,
+                    true
+                );
                 if (result.Succeeded)
                 {
                     var role = await _userManager.GetRolesAsync(user);
@@ -195,17 +231,21 @@ namespace Repositories.Implement
                         //new Claim(ClaimTypes.Surname, user.FullName),
                         //new Claim(ClaimTypes.Email, user.Email),
                         //new Claim(ClaimTypes.MobilePhone, user.PhoneNumber),
-                        new Claim(ClaimTypes.Role, string.Join(";", role))
+                        new Claim(ClaimTypes.Role, string.Join(";", role)),
                     };
 
-                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Settings:Key"]));
+                    var key = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(_config["Settings:Key"])
+                    );
                     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-                    var token = new JwtSecurityToken(_config["Settings:Issuer"],
+                    var token = new JwtSecurityToken(
+                        _config["Settings:Issuer"],
                         _config["Settings:Issuer"],
                         claim,
                         expires: DateTime.Now.AddDays(1),
-                        signingCredentials: creds);
+                        signingCredentials: creds
+                    );
 
                     //
                     UserInfoModels userInfo = new();
@@ -224,12 +264,16 @@ namespace Repositories.Implement
                     userInfo.IsAgent = user.IsAgent;
                     userInfo.Token = new JwtSecurityTokenHandler().WriteToken(token);
 
-                    var roleLst = (from ur in _context.UserRoles
-                                   join r in _context.Roles on ur.RoleId equals r.Id
-                                   where ur.UserId == user.Id
-                                   select r.Name).ToList();
-                    if (roleLst.Count > 0) userInfo.Role = String.Join(",", roleLst);
-                    else userInfo.Role = "";
+                    var roleLst = (
+                        from ur in _context.UserRoles
+                        join r in _context.Roles on ur.RoleId equals r.Id
+                        where ur.UserId == user.Id
+                        select r.Name
+                    ).ToList();
+                    if (roleLst.Count > 0)
+                        userInfo.Role = String.Join(",", roleLst);
+                    else
+                        userInfo.Role = "";
                     //
                     responseData.Code = "1";
                     responseData.Message = "Đăng nhập thành công!";
@@ -239,7 +283,8 @@ namespace Repositories.Implement
                 else if (result.IsLockedOut)
                 {
                     responseData.Code = "0";
-                    responseData.Message = "Tài khoản của bạn đã bị khóa, liên hệ admin để được hỗ trợ.";
+                    responseData.Message =
+                        "Tài khoản của bạn đã bị khóa, liên hệ admin để được hỗ trợ.";
                     return responseData;
                 }
                 else
@@ -261,7 +306,9 @@ namespace Repositories.Implement
         {
             try
             {
-                var user = _signInManager.UserManager.Users.FirstOrDefault(x => x.Id == request.id && x.IsActive);
+                var user = _signInManager.UserManager.Users.FirstOrDefault(x =>
+                    x.Id == request.id && x.IsActive
+                );
                 if (user == null)
                 {
                     return new ResponseDataModel<string>()
@@ -287,7 +334,10 @@ namespace Repositories.Implement
                 //        Message = "Thông tin bạn nhập chưa chính xác.",
                 //    };
                 //}
-                var passCheckResult = await _signInManager.UserManager.CheckPasswordAsync(user, request.current_user_pass);
+                var passCheckResult = await _signInManager.UserManager.CheckPasswordAsync(
+                    user,
+                    request.current_user_pass
+                );
                 if (passCheckResult)
                 {
                     var hasher = new PasswordHasher<AppUser>();
@@ -328,7 +378,6 @@ namespace Repositories.Implement
                     Message = "Có lỗi trong quá trình cập nhật mật khẩu.",
                 };
             }
-
         }
 
         public Task<bool> ForgotPassword(ForgotPassRequest request)
@@ -355,7 +404,10 @@ namespace Repositories.Implement
                 }
                 _context.SaveChanges();
 
-                return _context.CountIPLogins.Where(x => x.IPLogin == ip).FirstOrDefault().CountLogin;
+                return _context
+                    .CountIPLogins.Where(x => x.IPLogin == ip)
+                    .FirstOrDefault()
+                    .CountLogin;
             }
             catch (Exception e)
             {
@@ -379,8 +431,8 @@ namespace Repositories.Implement
             {
                 return -1;
             }
-
         }
+
         //
         public ResponseDataModel<string> Create(UserCreateRequest request, bool isCMS = true)
         {
@@ -388,7 +440,9 @@ namespace Repositories.Implement
             try
             {
                 //
-                var dataChecking = _context.Users.Where(x => x.UserName == request.Username).ToList();
+                var dataChecking = _context
+                    .Users.Where(x => x.UserName == request.Username)
+                    .ToList();
                 if (dataChecking.Count > 0)
                     return new ResponseDataModel<string>()
                     {
@@ -415,28 +469,31 @@ namespace Repositories.Implement
                     IsConsignmentAgent = request.IsConsignmentAgent,
                     IsStaff = isCMS,
                     DiscountForSimSellersId = request.DiscountForSimSellersId,
-                    IsActive = true
+                    IsActive = true,
                 };
                 _context.Users.Add(dataEntity);
                 _context.SaveChanges();
                 if (request.GroupId != null)
                 {
                     //Add Group
-                    _context.UserGroups.Add(new AppUserGroup()
-                    {
-                        GroupId = request.GroupId ?? 0,
-                        UserId = dataEntity.Id
-                    });
+                    _context.UserGroups.Add(
+                        new AppUserGroup()
+                        {
+                            GroupId = request.GroupId ?? 0,
+                            UserId = dataEntity.Id,
+                        }
+                    );
 
                     //Add Role
-                    var roleIds = _context.RoleGroups.Where(x => x.GroupId == request.GroupId).Select(x => x.RoleId).ToList();
+                    var roleIds = _context
+                        .RoleGroups.Where(x => x.GroupId == request.GroupId)
+                        .Select(x => x.RoleId)
+                        .ToList();
                     foreach (var roleId in roleIds)
                     {
-                        _context.UserRoles.Add(new IdentityUserRole<Guid>()
-                        {
-                            UserId = dataEntity.Id,
-                            RoleId = roleId
-                        });
+                        _context.UserRoles.Add(
+                            new IdentityUserRole<Guid>() { UserId = dataEntity.Id, RoleId = roleId }
+                        );
                     }
                 }
                 if (request.AgentGroupId != null)
@@ -444,7 +501,7 @@ namespace Repositories.Implement
                     CollaboratorsGroupUser agentUser = new()
                     {
                         UserId = dataEntity.Id,
-                        CollaboratorsGroupId = request.AgentGroupId ?? 0
+                        CollaboratorsGroupId = request.AgentGroupId ?? 0,
                     };
                     _context.CollaboratorsGroupUsers.Add(agentUser);
                 }
@@ -464,14 +521,17 @@ namespace Repositories.Implement
                     Message = "Có lỗi trong quá trình tạo tài khoản.",
                 };
             }
-        }//
+        } //
+
         public ResponseDataModel<string> CreateUserMobile(UserMobileCreateRequest request)
         {
             ResponseDataModel<string> result = new ResponseDataModel<string>();
             try
             {
                 //
-                var dataChecking = _context.Users.Where(x => x.UserName == request.Username).ToList();
+                var dataChecking = _context
+                    .Users.Where(x => x.UserName == request.Username)
+                    .ToList();
                 if (dataChecking.Count > 0)
                     return new ResponseDataModel<string>()
                     {
@@ -493,7 +553,7 @@ namespace Repositories.Implement
                     PhoneNumber = request.Username,
                     IsStaff = false,
                     IsAgent = false,
-                    IsActive = true
+                    IsActive = true,
                 };
                 _context.Users.Add(dataEntity);
 
@@ -501,20 +561,21 @@ namespace Repositories.Implement
                 //Add Group
                 if (request.GroupId != 0)
                 {
-                    _context.UserGroups.Add(new AppUserGroup()
-                    {
-                        GroupId = request.GroupId,
-                        UserId = dataEntity.Id
-                    });
+                    _context.UserGroups.Add(
+                        new AppUserGroup() { GroupId = request.GroupId, UserId = dataEntity.Id }
+                    );
 
                     //Add Role
-                    var roleIds = _context.RoleGroups.Where(x => x.GroupId == request.GroupId).Select(x => x.RoleId).ToList();
+                    var roleIds = _context
+                        .RoleGroups.Where(x => x.GroupId == request.GroupId)
+                        .Select(x => x.RoleId)
+                        .ToList();
                     foreach (var roleId in roleIds)
                     {
                         var _dataRoleUser = new IdentityUserRole<Guid>()
                         {
                             UserId = dataEntity.Id,
-                            RoleId = roleId
+                            RoleId = roleId,
                         };
                         _context.UserRoles.Add(_dataRoleUser);
                     }
@@ -572,7 +633,7 @@ namespace Repositories.Implement
                     CreateTime = DateTime.Now,
                     IpAddressUser = null,
                     NewData = "",
-                    OldData = ""
+                    OldData = "",
                 };
                 return new ResponseDataModel<string>()
                 {
@@ -598,9 +659,10 @@ namespace Repositories.Implement
         public ResponseDataViewModel<UserViewModel> GetAllPaging(GetPagingRequest request)
         {
             //Select data with join
-            var query = from u in _context.Users
-                        where u.IsStaff == true && u.UserName.Contains(request.keyword ?? "") && u.IsActive
-                        select new { u };
+            var query =
+                from u in _context.Users
+                where u.IsStaff == true && u.UserName.Contains(request.keyword ?? "") && u.IsActive
+                select new { u };
 
             //filter data with keyword
             //if (!string.IsNullOrEmpty(request.keyword))
@@ -609,39 +671,54 @@ namespace Repositories.Implement
             //Paging
             int totalRecords = query.Count();
             int totalPages = (int)(totalRecords / request.pageSize) + 1;
-            var dataPaging = query.Skip((request.pageIndex - 1) * request.pageSize)
-                .Take(request.pageSize).ToList();
+            var dataPaging = query
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
             var dataUserView = new List<UserViewModel>();
             foreach (var item in dataPaging)
             {
-                var groupLst = (from ug in _context.UserGroups
-                                join g in _context.Groups on ug.GroupId equals g.ID
-                                where ug.UserId == item.u.Id
-                                select g.Name).ToList();
+                var groupLst = (
+                    from ug in _context.UserGroups
+                    join g in _context.Groups on ug.GroupId equals g.ID
+                    where ug.UserId == item.u.Id
+                    select g.Name
+                ).ToList();
                 var groups = string.Empty;
-                if (groupLst.Count > 0) groups = String.Join(",", groupLst);
+                if (groupLst.Count > 0)
+                    groups = String.Join(",", groupLst);
 
-                dataUserView.Add(new UserViewModel
-                {
-                    Id = item.u.Id,
-                    Address = item.u.Address ?? "",
-                    Birthday = item.u.Birthday ?? new DateTime(),
-                    Email = item.u.Email ?? "",
-                    FullName = item.u.FullName ?? "",
-                    IsActive = item.u.IsActive,
-                    IsStaff = item.u.IsStaff,
-                    PhoneNumber = item.u.PhoneNumber ?? "",
-                    Remark = item.u.Remark ?? "",
-                    Username = item.u.UserName ?? "",
-                    Role = groups
-                });
+                dataUserView.Add(
+                    new UserViewModel
+                    {
+                        Id = item.u.Id,
+                        Address = item.u.Address ?? "",
+                        Birthday = item.u.Birthday ?? new DateTime(),
+                        Email = item.u.Email ?? "",
+                        FullName = item.u.FullName ?? "",
+                        IsActive = item.u.IsActive,
+                        IsStaff = item.u.IsStaff,
+                        PhoneNumber = item.u.PhoneNumber ?? "",
+                        Remark = item.u.Remark ?? "",
+                        Username = item.u.UserName ?? "",
+                        Role = groups,
+                    }
+                );
             }
 
             //
             return new ResponseDataViewModel<UserViewModel>()
             {
-                Pager = new Pager(new PagingRequestBase() { keyword = request.keyword, pageIndex = request.pageIndex, pageSize = request.pageSize }, query.Count()),
-                Data = dataUserView
+                Pager = new Pager(
+                    new PagingRequestBase()
+                    {
+                        keyword = request.keyword,
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
+                    },
+                    query.Count()
+                ),
+                Data = dataUserView,
             };
         }
 
@@ -691,21 +768,28 @@ namespace Repositories.Implement
                     if (request.GroupId != 0)
                     {
                         //Add Group
-                        _context.UserGroups.Add(new AppUserGroup()
-                        {
-                            GroupId = request.GroupId ?? 0,
-                            UserId = dataEntity.Id
-                        });
+                        _context.UserGroups.Add(
+                            new AppUserGroup()
+                            {
+                                GroupId = request.GroupId ?? 0,
+                                UserId = dataEntity.Id,
+                            }
+                        );
 
                         //Add Role
-                        var roleIds = _context.RoleGroups.Where(x => x.GroupId == request.GroupId).Select(x => x.RoleId).ToList();
+                        var roleIds = _context
+                            .RoleGroups.Where(x => x.GroupId == request.GroupId)
+                            .Select(x => x.RoleId)
+                            .ToList();
                         foreach (var roleId in roleIds)
                         {
-                            _context.UserRoles.Add(new IdentityUserRole<Guid>()
-                            {
-                                UserId = dataEntity.Id,
-                                RoleId = roleId
-                            });
+                            _context.UserRoles.Add(
+                                new IdentityUserRole<Guid>()
+                                {
+                                    UserId = dataEntity.Id,
+                                    RoleId = roleId,
+                                }
+                            );
                         }
                     }
                     _context.SaveChanges();
@@ -713,7 +797,9 @@ namespace Repositories.Implement
 
                 if (request.AgentGroupId != null && request.AgentGroupId != 0)
                 {
-                    var agentUserData = _context.CollaboratorsGroupUsers.FirstOrDefault(x => x.UserId == request.Id);
+                    var agentUserData = _context.CollaboratorsGroupUsers.FirstOrDefault(x =>
+                        x.UserId == request.Id
+                    );
                     if (agentUserData != null)
                     {
                         _context.CollaboratorsGroupUsers.Remove(agentUserData);
@@ -721,7 +807,7 @@ namespace Repositories.Implement
                     CollaboratorsGroupUser agentUser = new()
                     {
                         UserId = dataEntity.Id,
-                        CollaboratorsGroupId = request.AgentGroupId ?? 0
+                        CollaboratorsGroupId = request.AgentGroupId ?? 0,
                     };
                     _context.CollaboratorsGroupUsers.Add(agentUser);
                     _context.SaveChanges();
@@ -746,7 +832,7 @@ namespace Repositories.Implement
                 {
                     Code = "1",
                     Message = "Cập nhật tài khoản thành công.",
-                    Data = userInfo
+                    Data = userInfo,
                 };
             }
             catch (Exception ex)
@@ -763,7 +849,8 @@ namespace Repositories.Implement
         {
             var result = new UserEditRequest();
             var dataEntity = _context.Users.FirstOrDefault(x => x.Id == Id);
-            if (dataEntity == null) return null;
+            if (dataEntity == null)
+                return null;
 
             double oldDebt = 0;
             var debtOfUser = _context.DebtAgents.Where(x => x.AgentId == Id).ToList();
@@ -785,14 +872,17 @@ namespace Repositories.Implement
             result.Address = dataEntity.Address;
             result.Avatar = dataEntity.Avatar;
             var group = _context.UserGroups.FirstOrDefault(x => x.UserId == Id);
-            if (group != null) result.GroupId = group.GroupId;
+            if (group != null)
+                result.GroupId = group.GroupId;
             result.Website = dataEntity.Website;
             result.IsActive = dataEntity.IsActive;
             result.IsAgent = dataEntity.IsAgent;
             result.IsConsignmentAgent = dataEntity.IsConsignmentAgent;
             result.DiscountForSimSellersId = dataEntity.DiscountForSimSellersId;
             result.OldDebt = oldDebt;
-            result.AgentGroupId = _context.CollaboratorsGroupUsers.FirstOrDefault(x => x.UserId == Id)?.CollaboratorsGroupId;
+            result.AgentGroupId = _context
+                .CollaboratorsGroupUsers.FirstOrDefault(x => x.UserId == Id)
+                ?.CollaboratorsGroupId;
 
             return result;
         }
@@ -801,7 +891,8 @@ namespace Repositories.Implement
         {
             var result = new UserInfoAPIModels();
             var dataEntity = _context.Users.FirstOrDefault(x => x.Id == Id);
-            if (dataEntity == null) return null;
+            if (dataEntity == null)
+                return null;
             //
             result.Id = dataEntity.Id;
             result.Username = dataEntity.UserName;
@@ -815,22 +906,32 @@ namespace Repositories.Implement
             result.Avatar = dataEntity.Avatar;
             result.IsAgent = dataEntity.IsAgent;
 
-            var roleLst = (from ur in _context.UserRoles
-                           join r in _context.Roles on ur.RoleId equals r.Id
-                           where ur.UserId == dataEntity.Id
-                           select r.Name).ToList();
-            if (roleLst.Count > 0) result.Role = String.Join(",", roleLst);
-            else result.Role = "";
+            var roleLst = (
+                from ur in _context.UserRoles
+                join r in _context.Roles on ur.RoleId equals r.Id
+                where ur.UserId == dataEntity.Id
+                select r.Name
+            ).ToList();
+            if (roleLst.Count > 0)
+                result.Role = String.Join(",", roleLst);
+            else
+                result.Role = "";
             //
-            var agentOfUser = _context.CollaboratorsGroupUsers.FirstOrDefault(x => x.UserId == dataEntity.Id);
+            var agentOfUser = _context.CollaboratorsGroupUsers.FirstOrDefault(x =>
+                x.UserId == dataEntity.Id
+            );
             if (agentOfUser != null)
             {
-                var agent = _context.CollaboratorsGroups.FirstOrDefault(x => x.Id == agentOfUser.CollaboratorsGroupId);
+                var agent = _context.CollaboratorsGroups.FirstOrDefault(x =>
+                    x.Id == agentOfUser.CollaboratorsGroupId
+                );
                 if (agent != null)
                 {
                     result.AgentID = agent.Id;
                     result.AgentName = agent.Name;
-                    var discounts = _context.Discounts.Where(x => x.CollaboratorsGroupId == agent.Id).ToList();
+                    var discounts = _context
+                        .Discounts.Where(x => x.CollaboratorsGroupId == agent.Id)
+                        .ToList();
                     result.Discount = new();
                     foreach (var item in discounts)
                     {
@@ -856,7 +957,9 @@ namespace Repositories.Implement
             {
                 foreach (var item in _data)
                 {
-                    result.Add(new SelectListItem() { Value = item.Id.ToString(), Text = item.UserName });
+                    result.Add(
+                        new SelectListItem() { Value = item.Id.ToString(), Text = item.UserName }
+                    );
                 }
             }
             return result;
@@ -865,169 +968,250 @@ namespace Repositories.Implement
         public ResponseDataViewModel<AgentViewModel> GetAgentList(AgentFilterRequest request)
         {
             //Select data with join
-            var query = (from u in _context.Users
-                         where u.UserName.Contains(request.agentAcc ?? "") && !u.IsStaff && u.IsAgent && u.IsActive
-                         select new { u }).ToList();
+            var query = (
+                from u in _context.Users
+                where
+                    u.UserName.Contains(request.agentAcc ?? "")
+                    && !u.IsStaff
+                    && u.IsAgent
+                    && u.IsActive
+                select new { u }
+            ).ToList();
             //
 
             //filter data with agent user
             if (request.agentGroup.Count > 0)
             {
-                var userIdsInAgentGroup = _context.CollaboratorsGroupUsers.Where(x => request.agentGroup.Contains(x.CollaboratorsGroupId)).Select(x => x.UserId).ToList();
+                var userIdsInAgentGroup = _context
+                    .CollaboratorsGroupUsers.Where(x =>
+                        request.agentGroup.Contains(x.CollaboratorsGroupId)
+                    )
+                    .Select(x => x.UserId)
+                    .ToList();
                 query = query.Where(x => userIdsInAgentGroup.Contains(x.u.Id)).ToList();
             }
 
             //Paging
             int totalRecords = query.Count();
             int totalPages = (int)(totalRecords / request.pageSize) + 1;
-            var dataPaging = query.Skip((request.pageIndex - 1) * request.pageSize)
-                .Take(request.pageSize).ToList();
+            var dataPaging = query
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
             var dataUserView = new List<AgentViewModel>();
             foreach (var item in dataPaging)
             {
-                var agentGroupLst = (from cgu in _context.CollaboratorsGroupUsers
-                                     join cg in _context.CollaboratorsGroups on cgu.CollaboratorsGroupId equals cg.Id
-                                     where cgu.UserId == item.u.Id
-                                     select cg.Name).ToList();
+                var agentGroupLst = (
+                    from cgu in _context.CollaboratorsGroupUsers
+                    join cg in _context.CollaboratorsGroups on cgu.CollaboratorsGroupId equals cg.Id
+                    where cgu.UserId == item.u.Id
+                    select cg.Name
+                ).ToList();
                 var groups = string.Empty;
-                if (agentGroupLst.Count > 0) groups = String.Join(",", agentGroupLst);
+                if (agentGroupLst.Count > 0)
+                    groups = String.Join(",", agentGroupLst);
                 //var simNum = _context.SIMDetails.Where(x => x.Owner == item.u.Id).Count();
                 //Call stored procedure
                 FormattableString stored_procedure_query = $"call CountSimOfAgent({item.u.Id})";
                 var simNum = 0;
                 if (request.isAgent)
                     simNum = _context.Database.SqlQuery<int>(stored_procedure_query).ToList()[0];
-                dataUserView.Add(new AgentViewModel
-                {
-                    Id = item.u.Id,
-                    Address = item.u.Address ?? "",
-                    Email = item.u.Email ?? "",
-                    FullName = item.u.FullName ?? "",
-                    PhoneNumber = item.u.PhoneNumber ?? "",
-                    Remark = item.u.Remark ?? "",
-                    Username = item.u.UserName ?? "",
-                    AgentGroup = groups,
-                    SimNumber = simNum.ToString()
-                });
+                dataUserView.Add(
+                    new AgentViewModel
+                    {
+                        Id = item.u.Id,
+                        Address = item.u.Address ?? "",
+                        Email = item.u.Email ?? "",
+                        FullName = item.u.FullName ?? "",
+                        PhoneNumber = item.u.PhoneNumber ?? "",
+                        Remark = item.u.Remark ?? "",
+                        Username = item.u.UserName ?? "",
+                        AgentGroup = groups,
+                        SimNumber = simNum.ToString(),
+                    }
+                );
             }
 
             //
             return new ResponseDataViewModel<AgentViewModel>()
             {
-                Pager = new Pager(new PagingRequestBase() { keyword = request.agentAcc ?? "", pageIndex = request.pageIndex, pageSize = request.pageSize }, query.Count()),
-                Data = dataUserView
+                Pager = new Pager(
+                    new PagingRequestBase()
+                    {
+                        keyword = request.agentAcc ?? "",
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
+                    },
+                    query.Count()
+                ),
+                Data = dataUserView,
             };
         }
 
-        public ResponseDataViewModel<AgentViewModel> GetConsignmentAgentLst(AgentFilterRequest request)
+        public ResponseDataViewModel<AgentViewModel> GetConsignmentAgentLst(
+            AgentFilterRequest request
+        )
         {
             //Select data with join
-            var query = (from u in _context.Users
-                         where u.UserName.Contains(request.agentAcc ?? "") && !u.IsStaff && u.IsConsignmentAgent == true && u.IsActive == true
-                         select new { u }).ToList();
+            var query = (
+                from u in _context.Users
+                where
+                    u.UserName.Contains(request.agentAcc ?? "")
+                    && !u.IsStaff
+                    && u.IsConsignmentAgent == true
+                    && u.IsActive == true
+                select new { u }
+            ).ToList();
 
             //filter data with agent user
             if (request.agentGroup.Count > 0)
             {
-                var userIdsInAgentGroup = _context.CollaboratorsGroupUsers.Where(x => request.agentGroup.Contains(x.CollaboratorsGroupId)).Select(x => x.UserId).ToList();
+                var userIdsInAgentGroup = _context
+                    .CollaboratorsGroupUsers.Where(x =>
+                        request.agentGroup.Contains(x.CollaboratorsGroupId)
+                    )
+                    .Select(x => x.UserId)
+                    .ToList();
                 query = query.Where(x => userIdsInAgentGroup.Contains(x.u.Id)).ToList();
             }
 
             //Paging
             int totalRecords = query.Count();
             int totalPages = (int)(totalRecords / request.pageSize) + 1;
-            var dataPaging = query.Skip((request.pageIndex - 1) * request.pageSize)
-                .Take(request.pageSize).ToList();
+            var dataPaging = query
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
             var dataUserView = new List<AgentViewModel>();
             foreach (var item in dataPaging)
             {
-                var agentGroupLst = (from cgu in _context.CollaboratorsGroupUsers
-                                     join cg in _context.CollaboratorsGroups on cgu.CollaboratorsGroupId equals cg.Id
-                                     where cgu.UserId == item.u.Id
-                                     select cg.Name).ToList();
+                var agentGroupLst = (
+                    from cgu in _context.CollaboratorsGroupUsers
+                    join cg in _context.CollaboratorsGroups on cgu.CollaboratorsGroupId equals cg.Id
+                    where cgu.UserId == item.u.Id
+                    select cg.Name
+                ).ToList();
                 var groups = string.Empty;
-                if (agentGroupLst.Count > 0) groups = String.Join(",", agentGroupLst);
+                if (agentGroupLst.Count > 0)
+                    groups = String.Join(",", agentGroupLst);
                 //var simNum = _context.SIMDetails.Where(x => x.Owner == item.u.Id).Count();
                 //Call stored procedure
                 FormattableString stored_procedure_query = $"call CountSimOfAgent({item.u.Id})";
                 var simNum = 0;
                 if (request.isAgent)
                     simNum = _context.Database.SqlQuery<int>(stored_procedure_query).ToList()[0];
-                dataUserView.Add(new AgentViewModel
-                {
-                    Id = item.u.Id,
-                    Address = item.u.Address ?? "",
-                    Email = item.u.Email ?? "",
-                    FullName = item.u.FullName ?? "",
-                    PhoneNumber = item.u.PhoneNumber ?? "",
-                    Remark = item.u.Remark ?? "",
-                    Username = item.u.UserName ?? "",
-                    AgentGroup = groups,
-                    SimNumber = simNum.ToString()
-                });
+                dataUserView.Add(
+                    new AgentViewModel
+                    {
+                        Id = item.u.Id,
+                        Address = item.u.Address ?? "",
+                        Email = item.u.Email ?? "",
+                        FullName = item.u.FullName ?? "",
+                        PhoneNumber = item.u.PhoneNumber ?? "",
+                        Remark = item.u.Remark ?? "",
+                        Username = item.u.UserName ?? "",
+                        AgentGroup = groups,
+                        SimNumber = simNum.ToString(),
+                    }
+                );
             }
 
             //
             return new ResponseDataViewModel<AgentViewModel>()
             {
-                Pager = new Pager(new PagingRequestBase() { keyword = request.agentAcc ?? "", pageIndex = request.pageIndex, pageSize = request.pageSize }, query.Count()),
-                Data = dataUserView
+                Pager = new Pager(
+                    new PagingRequestBase()
+                    {
+                        keyword = request.agentAcc ?? "",
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
+                    },
+                    query.Count()
+                ),
+                Data = dataUserView,
             };
         }
 
         public ResponseDataViewModel<AgentViewModel> GetCustomerLst(AgentFilterRequest request)
         {
             //Select data with join
-            var query = (from u in _context.Users
-                         where u.UserName.Contains(request.agentAcc ?? "") && !u.IsStaff && !u.IsConsignmentAgent && !u.IsAgent && u.IsActive
-                         select new { u }).ToList();
+            var query = (
+                from u in _context.Users
+                where
+                    u.UserName.Contains(request.agentAcc ?? "")
+                    && !u.IsStaff
+                    && !u.IsConsignmentAgent
+                    && !u.IsAgent
+                    && u.IsActive
+                select new { u }
+            ).ToList();
 
             //filter data with agent user
             if (request.agentGroup.Count > 0)
             {
-                var userIdsInAgentGroup = _context.CollaboratorsGroupUsers.Where(x => request.agentGroup.Contains(x.CollaboratorsGroupId)).Select(x => x.UserId).ToList();
+                var userIdsInAgentGroup = _context
+                    .CollaboratorsGroupUsers.Where(x =>
+                        request.agentGroup.Contains(x.CollaboratorsGroupId)
+                    )
+                    .Select(x => x.UserId)
+                    .ToList();
                 query = query.Where(x => userIdsInAgentGroup.Contains(x.u.Id)).ToList();
             }
 
             //Paging
             int totalRecords = query.Count();
             int totalPages = (int)(totalRecords / request.pageSize) + 1;
-            var dataPaging = query.Skip((request.pageIndex - 1) * request.pageSize)
-                .Take(request.pageSize).ToList();
+            var dataPaging = query
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
             var dataUserView = new List<AgentViewModel>();
             foreach (var item in dataPaging)
             {
-                var agentGroupLst = (from cgu in _context.CollaboratorsGroupUsers
-                                     join cg in _context.CollaboratorsGroups on cgu.CollaboratorsGroupId equals cg.Id
-                                     where cgu.UserId == item.u.Id
-                                     select cg.Name).ToList();
+                var agentGroupLst = (
+                    from cgu in _context.CollaboratorsGroupUsers
+                    join cg in _context.CollaboratorsGroups on cgu.CollaboratorsGroupId equals cg.Id
+                    where cgu.UserId == item.u.Id
+                    select cg.Name
+                ).ToList();
                 var groups = string.Empty;
-                if (agentGroupLst.Count > 0) groups = String.Join(",", agentGroupLst);
+                if (agentGroupLst.Count > 0)
+                    groups = String.Join(",", agentGroupLst);
                 //var simNum = _context.SIMDetails.Where(x => x.Owner == item.u.Id).Count();
                 //Call stored procedure
                 FormattableString stored_procedure_query = $"call CountSimOfAgent({item.u.Id})";
                 var simNum = 0;
                 if (request.isAgent)
                     simNum = _context.Database.SqlQuery<int>(stored_procedure_query).ToList()[0];
-                dataUserView.Add(new AgentViewModel
-                {
-                    Id = item.u.Id,
-                    Address = item.u.Address ?? "",
-                    Email = item.u.Email ?? "",
-                    FullName = item.u.FullName ?? "",
-                    PhoneNumber = item.u.PhoneNumber ?? "",
-                    Remark = item.u.Remark ?? "",
-                    Username = item.u.UserName ?? "",
-                    AgentGroup = groups,
-                    SimNumber = simNum.ToString()
-                });
+                dataUserView.Add(
+                    new AgentViewModel
+                    {
+                        Id = item.u.Id,
+                        Address = item.u.Address ?? "",
+                        Email = item.u.Email ?? "",
+                        FullName = item.u.FullName ?? "",
+                        PhoneNumber = item.u.PhoneNumber ?? "",
+                        Remark = item.u.Remark ?? "",
+                        Username = item.u.UserName ?? "",
+                        AgentGroup = groups,
+                        SimNumber = simNum.ToString(),
+                    }
+                );
             }
 
             //
             return new ResponseDataViewModel<AgentViewModel>()
             {
-                Pager = new Pager(new PagingRequestBase() { keyword = request.agentAcc ?? "", pageIndex = request.pageIndex, pageSize = request.pageSize }, query.Count()),
-                Data = dataUserView
+                Pager = new Pager(
+                    new PagingRequestBase()
+                    {
+                        keyword = request.agentAcc ?? "",
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
+                    },
+                    query.Count()
+                ),
+                Data = dataUserView,
             };
         }
 
@@ -1037,39 +1221,51 @@ namespace Repositories.Implement
             var data = _context.Users.Where(x => x.IsAgent == true && x.IsActive).ToList();
             foreach (var item in data)
             {
-                selectListItems.Add(new SelectListItem
-                {
-                    Text = item.FullName + " (" + item.UserName + ")",
-                    Value = item.Id.ToString(),
-                });
+                selectListItems.Add(
+                    new SelectListItem
+                    {
+                        Text = item.FullName + " (" + item.UserName + ")",
+                        Value = item.Id.ToString(),
+                    }
+                );
             }
             return selectListItems;
         }
+
         public List<SelectListItem> GetAgentConsigmentForCombo()
         {
             List<SelectListItem> selectListItems = new List<SelectListItem>();
-            var data = _context.Users.Where(x => x.IsConsignmentAgent == true && x.IsActive).ToList();
+            var data = _context
+                .Users.Where(x => x.IsConsignmentAgent == true && x.IsActive)
+                .ToList();
             foreach (var item in data)
             {
-                selectListItems.Add(new SelectListItem
-                {
-                    Text = item.FullName + " (" + item.UserName + ")",
-                    Value = item.Id.ToString(),
-                });
+                selectListItems.Add(
+                    new SelectListItem
+                    {
+                        Text = item.FullName + " (" + item.UserName + ")",
+                        Value = item.Id.ToString(),
+                    }
+                );
             }
             return selectListItems;
         }
+
         public List<SelectListItem> GetAgentAndAgentConsigmentForCombo()
         {
             List<SelectListItem> selectListItems = new List<SelectListItem>();
-            var data = _context.Users.Where(x => (x.IsConsignmentAgent || x.IsAgent) && x.IsActive).ToList();
+            var data = _context
+                .Users.Where(x => (x.IsConsignmentAgent || x.IsAgent) && x.IsActive)
+                .ToList();
             foreach (var item in data)
             {
-                selectListItems.Add(new SelectListItem
-                {
-                    Text = item.FullName + " (" + item.UserName + ")",
-                    Value = item.Id.ToString(),
-                });
+                selectListItems.Add(
+                    new SelectListItem
+                    {
+                        Text = item.FullName + " (" + item.UserName + ")",
+                        Value = item.Id.ToString(),
+                    }
+                );
             }
             return selectListItems;
         }
@@ -1080,11 +1276,13 @@ namespace Repositories.Implement
             var data = _context.Users.Where(x => x.IsActive).ToList();
             foreach (var item in data)
             {
-                selectListItems.Add(new SelectListItem
-                {
-                    Text = item.FullName + " (" + item.UserName + ")",
-                    Value = item.Id.ToString(),
-                });
+                selectListItems.Add(
+                    new SelectListItem
+                    {
+                        Text = item.FullName + " (" + item.UserName + ")",
+                        Value = item.Id.ToString(),
+                    }
+                );
             }
             return selectListItems;
         }
@@ -1095,11 +1293,13 @@ namespace Repositories.Implement
             var data = _context.Users.Where(x => x.IsStaff == true && x.IsActive).ToList();
             foreach (var item in data)
             {
-                selectListItems.Add(new SelectListItem
-                {
-                    Text = item.FullName + " (" + item.UserName + ")",
-                    Value = item.Id.ToString(),
-                });
+                selectListItems.Add(
+                    new SelectListItem
+                    {
+                        Text = item.FullName + " (" + item.UserName + ")",
+                        Value = item.Id.ToString(),
+                    }
+                );
             }
             return selectListItems;
         }
@@ -1114,7 +1314,7 @@ namespace Repositories.Implement
                     {
                         Code = "0",
                         Message = "Thông tin không đúng.",
-                        Data = ""
+                        Data = "",
                     };
                 string resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
                 if (string.IsNullOrEmpty(resetToken))
@@ -1122,7 +1322,7 @@ namespace Repositories.Implement
                     {
                         Code = "0",
                         Message = "Error while generating reset token.",
-                        Data = ""
+                        Data = "",
                     };
                 var newPassword = Commons.Helper.OtherHelper.GenerateRandomString(10);
                 var result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
@@ -1131,14 +1331,14 @@ namespace Repositories.Implement
                     {
                         Code = "1",
                         Message = "Reset password thành công.",
-                        Data = "newPassword"
+                        Data = "newPassword",
                     };
                 else
                     return new ResponseDataModel<string>
                     {
                         Code = "0",
                         Message = "Reset password không thành công.",
-                        Data = ""
+                        Data = "",
                     };
             }
             catch (Exception ex)
@@ -1147,7 +1347,7 @@ namespace Repositories.Implement
                 {
                     Code = "-1",
                     Message = "Reset password không thành công.",
-                    Data = ex.Message
+                    Data = ex.Message,
                 };
             }
         }

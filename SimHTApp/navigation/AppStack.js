@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   createNavigationContainerRef,
   NavigationContainer,
@@ -592,6 +593,7 @@ const AuctionFilterStack = () => {
 };
 
 const BottomStack = () => {
+  const insets = useSafeAreaInsets();
   const { GetUnreadMessageCount, unReadMessageCount, RegisterChatReceiver } =
     useContext(SendBirdContext);
   const { requireLogin } = useLoginRequired();
@@ -604,7 +606,6 @@ const BottomStack = () => {
 
   return (
     <BottomTab.Navigator
-      style={{ height: 200 }}
       initialRouteName={AppConst.ScreenConst.HOME_SCREEN}
       screenOptions={({ route }) => ({
         headerShown: false,
@@ -612,8 +613,9 @@ const BottomStack = () => {
         tabBarStyle: {
           paddingHorizontal: 10,
           paddingTop: 8,
-          paddingBottom: 10,
-          height: 58,
+          // Keep the menu's content above Android navigation buttons / iOS home indicator.
+          paddingBottom: 10 + insets.bottom,
+          height: 58 + insets.bottom,
         },
         tabBarActiveTintColor: argonTheme.COLORS.ERROR,
         tabBarInactiveTintColor: "grey",

@@ -1,11 +1,30 @@
 ﻿@{
-    var IsMobile = ViewBag.IsMobile;
     ViewData["Title"] = "Giỏ hàng - Đặt mua sim số đẹp online";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<style>
+    #createOrderBtn {
+        background-color: #E14021;
+        border-color: #E14021;
+        color: #fff;
+    }
+
+        #createOrderBtn:hover:not(:disabled),
+        #createOrderBtn:focus:not(:disabled) {
+            background-color: #C73519;
+            border-color: #C73519;
+            color: #fff;
+        }
+
+        #createOrderBtn:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+        }
+</style>
+
 <div class="block row border-radius-3">
-    <form method="post" id="ordered" action="" class="form" onsubmit="return OrderSim();">
+    <form method="post" id="ordered" action="" class="form" onsubmit="return OrderSim(event);">
         <input type="hidden" id="eSimPrice" value="@ViewBag.eSimPrice" />
         <div class="block-body p-3">
             <div class="box-order mt-15">
@@ -101,42 +120,37 @@
                         <div class="custom-control custom-radio custom-control-inline"><input type="radio" name="pay_method" value="Thanh toán khi nhận sim" class="custom-control-input" id="pay_method1"><label class="custom-control-label mx-2" for="pay_method1"> Thanh toán khi nhận sim</label></div>
                         <div class="custom-control custom-radio custom-control-inline"><input type="radio" name="pay_method" value="Chuyển khoản ngân hàng" class="custom-control-input" id="pay_method2"><label class="custom-control-label mx-2" for="pay_method2"> Chuyển khoản ngân hàng</label></div>
                         <span>
-                            (Số tài khoản : <strong>1210924420</strong></br>
-                            Chủ tài khoản : <strong>CÔNG TY TNHH VIỄN THÔNG CÔNG NGHỆ HÀ THÀNH</strong></br>
-                            Ngân hàng: <strong>Ngân hàng TMCP Đầu tư và Phát triển Việt Nam (BIDV). CN Hai Bà Trưng)</strong></br>
+                            (Số tài khoản : <strong>1210924420</strong><br />
+                            Chủ tài khoản : <strong>CÔNG TY TNHH VIỄN THÔNG CÔNG NGHỆ HÀ THÀNH</strong><br />
+                            Ngân hàng: <strong>Ngân hàng TMCP Đầu tư và Phát triển Việt Nam (BIDV). CN Hai Bà Trưng)</strong><br />
                         </span>
                     </div>
                 </div>
                 <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" value="" id="agreePolicy" onclick="checkAgreePolice();">
+                    <input class="form-check-input" type="checkbox" value="" id="agreePolicy">
                     <label class="form-check-label" for="agreePolicy">
                         Tôi đồng ý với <a class="font-italic" href="/p/chinh-sach-bao-mat">Chính sách bảo mật</a>
                     </label>
                 </div>
                 <div class="form-group row mt-2">
-                    <div class="col-12 text-center"><button id="createOrderBtn" type="button" class="btn btn-warning btn-sm text-uppercase font-weight-bold px-5" onclick="OrderSim();">Đặt mua</button></div>
+                    <div class="col-12 text-center"><button id="createOrderBtn" type="submit" class="btn btn-warning btn-sm text-uppercase font-weight-bold px-5" disabled><span class="order-btn-label">Đặt mua</span><span class="order-btn-loading d-none" role="status" aria-live="polite"><span class="spinner-border spinner-border-sm mr-1" aria-hidden="true"></span> Đang xử lý...</span></button></div>
                 </div>
             </div>
             <div class="content-box mt-3">
                 <p style="text-align: center;"><strong><img alt="" class="img-responsive img-fluid" height="240" src="~/img/photos/a5.png" width="600"></strong></p>
                 <p>
                     <span style="font-size:14px;">
-                        <strong><strong><strong><strong><strong><strong><strong><strong>✅ <a href="https://simhathanh.vn">Giao sim nhanh</a> </strong></strong></strong></strong></strong></strong></strong></strong>2h đồng hồ sau có sim luôn<br>
+                        <strong>✅ <a href="https://simhathanh.vn">Giao sim nhanh</a></strong>2h đồng hồ sau có sim luôn<br>
                         (sim từ 1tr trở lên) (Sim nhỏ &lt; 300k. Phí cod + 30k)<br>
                         ✅ Khách hàng đặt sim&nbsp;vui lòng điền đầy đủ thông tin<br>
                         ✅ Shop sẽ gọi lại sau 5 - 10p (time: 8 - 21h)<br>
                         ✅ Sau 21h. Sáng mai shop sẽ gọi lại sớm ạ.<br>
                         ✅ 100% là đăng ký chính chủ. An toàn. uy tín chuyên nghiệp<br>
                         ✅ Được kiểm tra sim trước khi thanh toán, rất yên tâm<br>
-                        ✅ Cảm ơn&nbsp;quý khách!<strong>
-                            <strong>
-                                <br>
-                                ----------------------
-                            </strong>
-                        </strong><br>■Phương châm:<br>
+                        ✅ Cảm ơn&nbsp;quý khách!<br>----------------------<br>■Phương châm:<br>
                         ✅Nhanh - Chuẩn - An Toàn - Chuyên Nghiệp<br>
                         ☎️0812345789<br>
-                        ✅Giaosimnhanh.vn sự lựa chọn đáng tin cậy của bạn.<strong><strong></strong></strong>
+                        ✅Giaosimnhanh.vn sự lựa chọn đáng tin cậy của bạn.
                     </span>
                 </p>
             </div>
@@ -147,88 +161,218 @@
 
 
 <script>
-    $(function () {
-        checkAgreePolice();
-        renderCartList("cartContainer");
-    });
-    function checkAgreePolice() {
-        var agreePolicy = document.getElementById('agreePolicy');
-        var createOrderBtn = document.getElementById('createOrderBtn');
+    // Khóa ngay khi bắt đầu gửi để chặn double-click/submit bằng Enter.
+    let isOrderSubmitting = false;
 
-        if (agreePolicy.checked === true) {
-            createOrderBtn.disabled = false;
-        } else {
-            createOrderBtn.disabled = true;
-        }
-    }
-    function OrderSim() {
-        var ItemInCarts = getCart();
-        var CusName = $("#fullname").val();
-        var CusPhone = $("#phone").val();
-        var CusAddress = $("#address").val();
-        var CusProvince = $("#city").val();
-        var CusNote = $("#note").val();
-        var PaymentMethod = 0;
-        if (document.getElementById("pay_method2").checked) {
-            PaymentMethod = 1;
-        }
-        if (ItemInCarts.lenght == 0 || CusName == "" || CusPhone == "" || CusAddress == "" || CusProvince == "") {
-            alert("Bạn chưa nhập đủ dữ liệu đặt sim");
+    $(function () {
+        $('#agreePolicy').on('change', checkAgreePolice);
+        checkAgreePolice();
+        showCartItems();
+    });
+
+    // Ưu tiên renderer gốc của /js/cart.js để giữ đúng giao diện và cấu trúc.
+    // Nếu cart.js thiếu/lỗi/không tạo HTML thì dùng giao diện dự phòng an toàn.
+    function showCartItems() {
+        const $container = $('#cartContainer').empty();
+        let cart = [];
+        try {
+            if (typeof window.getCart !== 'function') {
+                $container.text('Chưa tải được dữ liệu giỏ hàng (/js/cart.js). Vui lòng tải lại trang.');
+                console.error('getCart() is missing: /js/cart.js');
+                return;
+            }
+            cart = window.getCart();
+            if (!Array.isArray(cart)) throw new Error('getCart() phải trả về một mảng');
+        } catch (error) {
+            console.error('Không đọc được giỏ hàng:', error);
+            $container.text('Không đọc được dữ liệu giỏ hàng. Vui lòng tải lại trang.');
             return;
         }
-        var dataReq = {
-            "ItemInCarts": ItemInCarts,
-            "CusName": CusName,
-            "CusPhone": CusPhone,
-            "CusAddress": CusAddress,
-            "CusProvince": CusProvince,
-            "CusNote": CusNote,
-            "PaymentMethod": PaymentMethod,
+
+        if (cart.length === 0) {
+            $container.append($('<div>', {
+                class: 'alert alert-light text-center mb-0',
+                text: 'Giỏ hàng đang trống.'
+            }));
+            return;
         }
-        $.ajax({
-            url: '@Url.Action("CreateOrderInCart","Home")',
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(dataReq),
-                xhrFields: {
-                    withCredentials: true // Gửi kèm cookie (nếu bạn đang dùng cookie auth)
-                },
-            success: function (data) {
-                if (data != undefined) {
-                    if (data.code == "1") {
-                        clearCart();
-                        alert("Đơn hàng đã tạo thành công, chúng tôi sẽ liên hệ sớm với bạn để giao hàng, hãy giữ liên lạc nhé.");
-                        window.location.href = '@Url.Action("Index","Home")';
-                    }
-                    else if (data.code == "-2") {
-                        alert(data.message);
-                    }
-                    else {
-                        alert("Có lỗi trong quá trình đặt sim, liên hệ trực tiếp theo số hỗ trợ để được đặt sim nhanh nhé.");
-                    }
-                }
-                else {
-                    alert('Có lỗi trong quá trình tạo đơn. Liên hệ với chúng tôi để đặt sim trực tiếp.');
-                }
-            },
-            error: function (xhr) {
-                console.log(xhr);
+
+        if (typeof window.renderCartList === 'function') {
+            try {
+                window.renderCartList('cartContainer');
+                if ($container.children().length > 0 || $container.text().trim()) return;
+                console.warn('renderCartList() không tạo nội dung, chuyển sang giao diện dự phòng.');
+            } catch (error) {
+                console.error('renderCartList() lỗi; chuyển sang giao diện dự phòng:', error);
             }
-        });
-    }
-    function DeleteItem(id, type){
-        deleteItem(id, type);
-        UpdateCartIconAmount();
-        renderCartList("cartContainer");
-    }
-    function OnClickESim(id, type){
-        var chkVal = document.getElementById(id.toString() + type.toString());
-        const cart = getCart();
-        const item = cart.find(i => i.id === id && i.type === type);
-        if (item) {
-            item.esim = chkVal.checked;
-            saveCart(cart);
-            renderCartList("cartContainer");
+        } else {
+            console.warn('Thiếu renderCartList() trong /js/cart.js; dùng giao diện dự phòng.');
         }
+
+        // Không sửa cấu trúc giỏ hàng: chỉ đọc các thuộc tính có thể có.
+        renderCartFallback($container, cart);
+    }
+
+    function renderCartFallback($container, cart) {
+        $container.empty();
+        const formatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
+        const $list = $('<div>', { class: 'list-group' });
+        let total = 0;
+
+        cart.forEach(function (item) {
+            if (!item) return;
+            const id = item.id ?? item.Id;
+            const type = Number(item.type ?? item.Type ?? 0);
+            const name = item.name ?? item.Name ?? item.simNumber ?? item.SimNumber ?? item.number ?? item.Number ?? 'SIM ' + String(id ?? '');
+            const price = Number(item.price ?? item.Price ?? 0);
+            const qty = Number(item.qty ?? item.Qty ?? item.quantity ?? item.Quantity ?? 1);
+            const safePrice = Number.isFinite(price) ? price : 0;
+            const safeQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
+            total += safePrice * safeQty;
+            const label = type === 0 ? 'SIM số' : type === 1 ? 'SIM Data' : 'SIM du lịch';
+            const $row = $('<div>', { class: 'list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2' });
+            const $info = $('<div>', { class: 'flex-grow-1' });
+            $info.append($('<div>', { class: 'fw-bold', text: String(name) }));
+            $info.append($('<div>', { class: 'small text-muted', text: label + ' · SL: ' + safeQty }));
+            $info.append($('<div>', { class: 'fw-semibold', text: formatter.format(safePrice * safeQty) + ' đ' }));
+            const $remove = $('<button>', {
+                type: 'button', class: 'btn btn-outline-danger btn-sm',
+                text: 'Xóa', 'aria-label': 'Xóa ' + name + ' khỏi giỏ hàng'
+            }).on('click', function () {
+                if (isOrderSubmitting) return;
+                if (typeof window.deleteItem !== 'function') {
+                    alert('Chức năng xóa giỏ hàng chưa được tải.');
+                    return;
+                }
+                DeleteItem(id, type);
+            });
+            $row.append($info, $remove);
+            $list.append($row);
+        });
+        $container.append($list);
+        $container.append($('<div>', {
+            class: 'text-end fw-bold mt-3',
+            text: 'Tạm tính: ' + formatter.format(total) + ' đ'
+        }));
+    }
+
+    function checkAgreePolice() {
+        $('#createOrderBtn').prop('disabled', isOrderSubmitting || !$('#agreePolicy').prop('checked'));
+    }
+
+    function setOrderSubmitting(submitting) {
+        isOrderSubmitting = submitting;
+        const $button = $('#createOrderBtn');
+        $button.prop('disabled', submitting || !$('#agreePolicy').prop('checked'));
+        $button.find('.order-btn-label').toggleClass('d-none', submitting);
+        $button.find('.order-btn-loading').toggleClass('d-none', !submitting);
+        $button.attr('aria-busy', submitting ? 'true' : 'false');
+    }
+
+    function OrderSim(event) {
+        if (event) event.preventDefault();
+        if (isOrderSubmitting) return false;
+
+        const form = document.getElementById('ordered');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return false;
+        }
+        if (!$('#agreePolicy').prop('checked')) {
+            alert('Bạn cần đồng ý với Chính sách bảo mật.');
+            return false;
+        }
+
+        let itemInCarts;
+        try {
+            itemInCarts = window.getCart();
+        } catch (error) {
+            console.error('getCart() lỗi:', error);
+            alert('Không đọc được giỏ hàng. Vui lòng tải lại trang.');
+            return false;
+        }
+        const cusName = $('#fullname').val().trim();
+        const cusPhone = $('#phone').val().trim();
+        const cusAddress = $('#address').val().trim();
+        const cusProvince = $('#city').val();
+        const cusNote = $('#note').val().trim();
+        const paymentMethod = $('#pay_method2').prop('checked') ? 1 : 0;
+
+        if (!Array.isArray(itemInCarts) || itemInCarts.length === 0) {
+            alert('Giỏ hàng đang trống. Vui lòng chọn sim trước khi đặt mua.');
+            return false;
+        }
+        if (!cusName || !cusPhone || !cusAddress || !cusProvince || cusProvince === '0') {
+            alert('Bạn chưa nhập đủ thông tin đặt sim.');
+            return false;
+        }
+
+        const dataReq = {
+            ItemInCarts: itemInCarts,
+            CusName: cusName,
+            CusPhone: cusPhone,
+            CusAddress: cusAddress,
+            CusProvince: cusProvince,
+            CusNote: cusNote,
+            PaymentMethod: paymentMethod
+        };
+
+        // Khóa trước khi gọi AJAX (không chờ đến callback).
+        setOrderSubmitting(true);
+
+        $.ajax({
+            url: '@Url.Action("CreateOrderInCart", "Home")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(dataReq),
+            timeout: 30000,
+            xhrFields: { withCredentials: true }
+        }).done(function (data) {
+            if (data && String(data.code) === '1') {
+                clearCart();
+                window.location.href = '@Url.Action("OrderSuccess", "Home")';
+                // Giữ nút bị khóa khi đang chuyển trang.
+                return;
+            }
+
+            if (data && String(data.code) === '-2') {
+                alert(data.message || 'Không thể đặt sim. Vui lòng kiểm tra lại đơn hàng.');
+            } else {
+                alert('Có lỗi trong quá trình đặt sim. Vui lòng liên hệ số hỗ trợ để được tư vấn.');
+            }
+            setOrderSubmitting(false);
+        }).fail(function (xhr, status) {
+            console.error('CreateOrderInCart failed:', status, xhr);
+            alert(status === 'timeout'
+                ? 'Yêu cầu đã quá thời gian chờ. Vui lòng kiểm tra đơn hàng trước khi thử lại để tránh đặt trùng.'
+                : 'Không thể kết nối để đặt sim. Vui lòng kiểm tra đơn hàng trước khi thử lại.');
+            setOrderSubmitting(false);
+        });
+
+        return false;
+    }
+
+    function DeleteItem(id, type) {
+        if (isOrderSubmitting) return;
+        if (typeof window.deleteItem !== 'function') return;
+        window.deleteItem(id, type);
+        if (typeof window.UpdateCartIconAmount === 'function') window.UpdateCartIconAmount();
+        showCartItems();
+    }
+
+    function OnClickESim(id, type) {
+        if (isOrderSubmitting) return;
+        const checkbox = document.getElementById(String(id) + String(type));
+        if (!checkbox) return;
+
+        if (typeof window.getCart !== 'function' || typeof window.saveCart !== 'function') return;
+        const cart = window.getCart();
+        if (!Array.isArray(cart)) return;
+        const item = cart.find(i => String(i.id ?? i.Id) === String(id) && String(i.type ?? i.Type) === String(type));
+        if (!item) return;
+
+        item.esim = checkbox.checked;
+        saveCart(cart);
+        showCartItems();
     }
 </script>

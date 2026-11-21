@@ -1,0 +1,196 @@
+﻿/* ==========================================
+   REGISTER SUCCESS PAGE - BOOTSTRAP 5
+========================================== */
+
+.register-success {
+    --success-primary: #E14021;
+    --success-primary-hover: #C73519;
+    --success-primary-light: #FFF4F0;
+
+    max-width: 600px;
+    color: #111;
+}
+
+/* ===== HEADER ===== */
+
+.register-success .success-header {
+    margin-bottom: 42px;
+}
+
+.register-success .success-icon {
+    display: block;
+    width: 105px;
+    height: 105px;
+    margin: 0 auto 10px;
+}
+
+.register-success .success-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    color: #111;
+}
+
+/* ===== CARD ===== */
+
+.register-success .success-card {
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+
+    box-shadow:
+        0 4px 25px rgba(225, 64, 33, 0.12) !important;
+}
+
+/* ===== LABEL ===== */
+
+.register-success .info-label {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+/* ===== ORDER NUMBER ===== */
+
+.register-success .order-number {
+    font-size: 23px;
+    line-height: 1.3;
+    font-weight: 700;
+    color: var(--success-primary);
+    overflow-wrap: anywhere;
+}
+
+/* ===== PRICE ===== */
+
+.register-success .order-price {
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 700;
+    color: var(--success-primary);
+}
+
+/* ===== ORDER DETAILS ===== */
+
+.register-success .order-details {
+    padding-top: 4px;
+}
+
+.register-success .detail-row {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+
+    font-size: 12px;
+    line-height: 1.5;
+
+    margin-bottom: 12px;
+}
+
+.register-success .detail-label {
+    color: #555;
+    flex-shrink: 0;
+}
+
+/* ===== CARD FOOTER ===== */
+
+.register-success .success-card-footer {
+    padding: 18px 24px 22px;
+    border-top: 1px solid #F5E5E0;
+
+    font-size: 11px;
+    line-height: 2;
+}
+
+/* ===== PAGE FOOTER ===== */
+
+.register-success .success-page-footer {
+    margin-top: 25px;
+}
+
+.register-success .thank-you {
+    font-size: 13px;
+    margin-bottom: 18px;
+}
+
+.register-success .contact-info {
+    font-size: 11px;
+    color: #555;
+}
+
+.register-success .contact-info a {
+    color: var(--success-primary);
+    text-decoration: none;
+}
+
+.register-success .contact-info a:hover {
+    color: var(--success-primary-hover);
+    text-decoration: underline;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 767.98px) {
+
+    .register-success {
+        max-width: 100%;
+    }
+
+    .register-success .success-header {
+        margin-bottom: 30px;
+    }
+
+    .register-success .success-icon {
+        width: 95px;
+        height: 95px;
+    }
+
+    .register-success .success-title {
+        font-size: 15px;
+    }
+
+    .register-success .order-number {
+        font-size: 21px;
+    }
+
+    .register-success .order-price {
+        font-size: 22px;
+    }
+
+    .register-success .order-details {
+        margin-top: 22px;
+    }
+
+    .register-success .success-card-footer {
+        padding: 15px 20px;
+    }
+
+}
+/* Button Trang chủ */
+.btn-home {
+    background-color: #E14021;
+    border: 1px solid #E14021;
+    color: #fff;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+    /* Hover */
+    .btn-home:hover {
+        background-color: #C73519;
+        border-color: #C73519;
+        color: #fff;
+    }
+
+    /* Focus */
+    .btn-home:focus,
+    .btn-home:active {
+        background-color: #C73519;
+        border-color: #C73519;
+        color: #fff;
+        box-shadow: 0 0 0 0.2rem rgba(225, 64, 33, 0.25);
+    }

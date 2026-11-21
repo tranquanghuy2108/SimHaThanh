@@ -42,58 +42,43 @@ export const AuthProvider = ({ children }) => {
   const SetUserTokenByStorage = (userToken) => {
     setUserToken(userToken);
   };
-  const login = (phoneNumber, password, rememberMe) => {
+  const login = async (phoneNumber, password, rememberMe) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      axios
-        .post(
-          Config.BASE_URL + "/api/account/authenticate",
-          {
-            username: phoneNumber,
-            password: password,
-            rememberMe: rememberMe,
-          },
-          {
-            headers: {
-              Accept: "*/*",
-              "Content-Type": "application/json",
-            },
-          },
-        )
-        .then((res) => {
-          const response = res.data;
-
-          if (response.code === "1") {
-            ToastAndroid.showWithGravity(
-              `${response.message}`,
-              ToastAndroid.SHORT,
-              ToastAndroid.BOTTOM,
-            );
-            var token = response.data.token;
-            setUserToken(token);
-            AsyncStorage.setItem("UserToken", JSON.stringify(token));
-            //
-            var uInfo = response.data;
-            setUserInfos(uInfo);
-            AsyncStorage.setItem("UserInfo", JSON.stringify(uInfo));
-          } else {
-            ToastAndroid.showWithGravity(
-              `${response.message}`,
-              ToastAndroid.LONG,
-              ToastAndroid.BOTTOM,
-            );
-          }
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          setIsLoading(false);
-          ToastAndroid.showWithGravity(
-            `${error.response.data.message}`,
-            ToastAndroid.LONG,
-            ToastAndroid.BOTTOM,
-          );
-        });
-    } catch (ex) {}
+      const { data: response } = await axios.post(
+        Config.BASE_URL + "/api/account/authenticate",
+        { username: phoneNumber, password, rememberMe },
+        { headers: { Accept: "*/*", "Content-Type": "application/json" } },
+      );
+      const userInfo = response?.data;
+      if (String(response?.code) !== "1" || isEmptyAuthValue(userInfo?.token)) {
+        return {
+          success: false,
+          message:
+            typeof response?.message === "string" && response.message.trim()
+              ? response.message
+              : "Số điện thoại hoặc mật khẩu không đúng. Vui lòng thử lại.",
+        };
+      }
+      await AsyncStorage.multiSet([
+        ["UserToken", JSON.stringify(userInfo.token)],
+        ["UserInfo", JSON.stringify(userInfo)],
+      ]);
+      setUserToken(userInfo.token);
+      setUserInfos(userInfo);
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message;
+      return {
+        success: false,
+        message:
+          typeof message === "string" && message.trim()
+            ? message
+            : "Không thể đăng nhập. Vui lòng kiểm tra kết nối mạng và thử lại.",
+      };
+    } finally {
+      setIsLoading(false);
+    }
   };
   const logout = () => {
     setIsLoading(false);
@@ -114,37 +99,43 @@ export const AuthProvider = ({ children }) => {
     setUserToken(null);
   };
 
-  const register = (phoneNumber, fullName, password, rePassword) => {
+  const register = async (phoneNumber, fullName, password, rePassword) => {
     setIsLoading(true);
-    axios
-      .post(Config.BASE_URL + "/api/account/register", {
+    SetRegisterState(false);
+    try {
+      const response = await axios.post(Config.BASE_URL + "/api/account/register", {
         username: phoneNumber,
-        fullName: fullName,
-        password: password,
-        rePassword: rePassword,
+        fullName,
+        password,
+        rePassword,
         groupId: 0,
         isStaff: false,
-      })
-      .then((response) => {
-        setIsLoading(false);
-        ToastAndroid.showWithGravity(
-          "Đăng ký thành công!",
-          ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
-        );
-        SetRegisterState(true);
-        return true;
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        ToastAndroid.showWithGravity(
-          `Đăng ký thất bại. ${error.response.data.message}`,
-          ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
-        );
-        SetRegisterState(false);
-        return false;
       });
+      const data = response.data;
+      // Some responses use the API's code envelope; others only use HTTP status.
+      const success = data?.code == null || String(data.code) === "1";
+      SetRegisterState(success);
+      return {
+        success,
+        message:
+          typeof data?.message === "string" && data.message.trim()
+            ? data.message
+            : success
+              ? "Tài khoản của bạn đã được tạo. Vui lòng đăng nhập để tiếp tục."
+              : "Không thể đăng ký tài khoản. Vui lòng kiểm tra thông tin và thử lại.",
+      };
+    } catch (error) {
+      const message = error.response?.data?.message;
+      return {
+        success: false,
+        message:
+          typeof message === "string" && message.trim()
+            ? message
+            : "Không thể đăng ký tài khoản. Vui lòng kiểm tra kết nối mạng và thử lại.",
+      };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const DeleteAccount = () => {

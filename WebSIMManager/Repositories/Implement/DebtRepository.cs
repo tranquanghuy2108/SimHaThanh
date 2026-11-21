@@ -17,6 +17,7 @@ using Models.ViewModels;
 using MySqlConnector;
 using Newtonsoft.Json;
 using Repositories.Interface;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Repositories.Implement
 {
@@ -1613,9 +1614,12 @@ namespace Repositories.Implement
                     .Where(x => request.RemittersIds.Contains(x.RemittersId.ToString()))
                     .ToList();
             }
-
+            var pagingData = dataEntity
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
             var data = new List<TransferMoneyViewModel>();
-            foreach (var item in dataEntity)
+            foreach (var item in pagingData)
             {
                 var receiver = _context.Users.FirstOrDefault(x => x.Id == item.ReceiverId);
                 var remitters = _context.Users.FirstOrDefault(x => x.Id == item.RemittersId);
@@ -1648,8 +1652,8 @@ namespace Repositories.Implement
                     new PagingRequestBase()
                     {
                         keyword = "",
-                        pageIndex = 1,
-                        pageSize = 100,
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
                     },
                     dataEntity.Count()
                 ),
@@ -2011,8 +2015,12 @@ namespace Repositories.Implement
             else
                 dataEntity = _context.Receipts.ToList();
 
+            var pagingData = dataEntity
+                .Skip((request.pageIndex - 1) * request.pageSize)
+                .Take(request.pageSize)
+                .ToList();
             var data = new List<ReceiptViewModel>();
-            foreach (var item in dataEntity)
+            foreach (var item in pagingData)
             {
                 var approvedBy = _context.Users.FirstOrDefault(x => x.Id == item.approvedBy);
                 var createBy = _context.Users.FirstOrDefault(x => x.Id == item.CreateBy);
@@ -2054,8 +2062,8 @@ namespace Repositories.Implement
                     new PagingRequestBase()
                     {
                         keyword = "",
-                        pageIndex = 1,
-                        pageSize = 100,
+                        pageIndex = request.pageIndex,
+                        pageSize = request.pageSize,
                     },
                     dataEntity.Count()
                 ),

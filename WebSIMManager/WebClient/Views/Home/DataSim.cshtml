@@ -2,35 +2,24 @@
 @model Models.Requests.GetSIMRequest
 @{
     ViewData["Title"] = "Sim data";
-    var IsMobile = ViewBag.IsMobile;
+    bool isMobile = ViewBag.IsMobile is bool mobileFlag && mobileFlag;
 }
 <div class="block mt-15">
     <div class="block-head">SIM DATA</div>
 
     <div class="block-body p-3">
         <div class="card m-3 p-1">
-            <div class="row">
-                <div class="col-4">
-                    <label></label>
-                </div>
-                <div class="col-4">
-                    <label>Chọn loại gói cần mua</label>
-                    </select>
-                </div>
-                <div class="col-4">
-                    <label></label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-4">
+            <div class="text-center mb-2 fw-semibold">Chọn loại gói cần mua</div>
+            <div class="row g-2 align-items-center">
+                <div class="col-12 col-md-4">
                     <input id="simNumber" type="text" class="form-control" placeholder="Tìm sim theo số">
                 </div>
-                <div class="col-4">
-                    <select type="text" class="form-select" id="productTypeId" asp-items="@ViewBag.ProductTypes">
+                <div class="col-12 col-md-4">
+                    <select class="form-select" id="productTypeId" asp-items="@ViewBag.ProductTypes">
                     </select>
                 </div>
-                <div class="col-4">
-                    <button type="button" class="col-12 btn btn-warning" width="300px" onclick="SearchSim(1);">Lấy danh sách sim</button>
+                <div class="col-12 col-md-4">
+                    <button type="button" class="w-100 btn btn-warning" onclick="SearchSim(1);">Lấy danh sách sim</button>
                 </div>
             </div>
         </div>
@@ -41,23 +30,22 @@
                     <div class="row">
                         @foreach (var item in @ViewBag.SimData)
                         {
-                            <div class="col-6 col-xl-6">
+                            <div class="col-12 col-md-6">
                                 <div class="card m-3">
                                     <div class="card-header text-center" style="background-color: #e14021;color: white;">
                                         <h3 class="fw-bold">@item.Name</h3>
                                     </div>
                                     <div class="card-body">
-                                        <div id="sim-desc" class="">
+                                        <div class="sim-package-desc">
                                             @Html.Raw(@item.Summary)
                                         </div>
-                                        <div class="card-text"><span id="sim-number" class="fw-bold text-warning"></span></div>
-                                        <p class="card-text"><i class="fa fa-tag" aria-hidden="true"></i>  Giá chỉ từ: <span id="sim-price" class="fw-bold text-danger">@item.Price.ToString("#,##0") đ/tháng</span></p>
+                                        <p class="card-text"><i class="fa fa-tag" aria-hidden="true"></i>  Giá chỉ từ: <span class="fw-bold text-danger">@item.Price.ToString("#,##0") đ/tháng</span></p>
 
                                         <div class="card-footer text-center">
                                             <div class="input-group mb-3">
-                                                <input type="number" class="form-control" id="@(item.Id + item.Name)" placeholder="Số lượng" oninput="if (this.value.length > 4) this.value = this.value.slice(0, 4);">
-                                                <button onclick="AddSimData(@item.Id, '@item.Name', @item.Price);" class="btn btn-warning">
-                                                     <i class="bi bi-cart-plus"></i>
+                                                <input type="number" class="form-control js-package-qty" data-package-id="@item.Id" min="1" max="9999" step="1" inputmode="numeric" placeholder="Số lượng" aria-label="Số lượng sim">
+                                                <button type="button" class="btn btn-warning js-add-package" data-package-id="@item.Id" data-package-name="@item.Name" data-package-price="@item.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)" aria-label="Thêm gói vào giỏ">
+                                                    <i class="bi bi-cart-plus"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -75,7 +63,7 @@
         </div>
 
         <div id="simNumberArea" class="sim-table--body col-12 px-0 hidden">
-            @if (!IsMobile)
+            @if (!isMobile)
             {
                 <div class="block mt-15">
                     <div class="block-body p-3">
@@ -84,7 +72,7 @@
                                 <table id="myTable" class="table table-striped table-bordered" style="width:100%">
                                     <thead>
                                         <tr>
-@*                                             <th>
+                                            @*                                             <th>
                                                 <input type="checkbox" value="" id="checkAll" onclick="OnClickCheckAll()">
                                                 <input type="hidden" id="lstOrder">
                                             </th> *@
@@ -187,215 +175,383 @@
     </div>
 </div>
 
+<style>
+    /* Các nút sử dụng btn-warning của Bootstrap; chỉ tùy chỉnh trong trang SIM Data. */
+    #simNumberArea .js-add-sim {
+        cursor: pointer;
+    }
+
+    #simNumberArea .sim-item {
+        height: 100%;
+    }
+
+    #simNumberArea .sim-item--number {
+        overflow-wrap: anywhere;
+    }
+
+    #simNumberArea .item-result {
+        margin-bottom: 12px;
+    }
+
+    #simNumberArea .table-action {
+        text-align: center;
+    }
+
+    #simNumberArea .js-add-sim:disabled {
+        opacity: .55;
+        cursor: wait;
+    }
+</style>
+
 <script>
-    window.onload = function () {
-        var menuTop = document.getElementById("sim-data");
-        menuTop.classList.add("active");
-    };
-    var lstOrder = [];
-    function SearchSim(pageIndex) {
-        $('#simPackageArea').addClass("hidden");
-        $('#simNumberArea').removeClass("hidden");
+    (() => {
+        'use strict';
 
-        var productTypeId = $("#productTypeId").val();
-        productTypeIds = [];
-        productTypeIds.push(parseFloat(productTypeId));
-        var keyword = $("#simNumber").val();
-        var dataReq = {
-            "keyword": keyword,
-            "productTypeIds": productTypeIds,
-            "pageIndex": pageIndex,
-            "pageSize": 50,
-            "isPaged": true,
-            "sortBy": 0
-        }
-        $.ajax({
-            url: '@Url.Action("SearchSIMData", "Home")',
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(dataReq),
-            xhrFields: {
-                withCredentials: true // Gửi kèm cookie (nếu bạn đang dùng cookie auth)
-            },
-            success: function (data) {
-                window.scrollTo(0, 0);
-                if (data != undefined) {
-                    if (data.data.length > 0) {
-                        var isMobile = @IsMobile.ToString().ToLower();
-                        if (!isMobile) {
-                            var simdata = document.getElementById("simdata");
-                            simdata.classList.remove("hidden");
+        // Razor xuất boolean dưới dạng JSON đúng kiểu JavaScript.
+        const isMobile = @(isMobile ? "true" : "false");
+        const searchUrl = '@Url.Action("SearchSIMData", "Home")';
+        const selectedSimIds = new Set(); // Các SIM đã thêm thành công trong lượt xem này.
+        const addingSimIds = new Set();
+        const numberFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
+        let lastSearch = null;
+        let latestSearchId = 0;
+        let searchInProgress = null;
 
-                            //Write table tbody
-                            var tbody = $("#myTable tbody")
-                            tbody.children().remove();
-                            var newBody = "";
-                            data.data.forEach((el) => {
-                                newBody += '<tr>'
-                                    //+ '<td><input type="checkbox" value="' + el.id + '" id="' + el.id + '" onclick="OnClickCheckBox(' + el.id + ')"></td>'
-                                    + '<td>'
-                                    + '<a href="javascript:void(0)" onclick="AddSimToCart('+el.id+', \''+el.simNumber+'\', '+el.simPrice+')">'
-                                    + '<span class="tb-sim-num">' + el.simNumber + '</span>'
-                                    + '</a>'
-                                    + '</td>'
-                                    + '<td><span class="tb-sim-price">' + formatNumber(el.simPrice.toString()) + ' đ</span></td>'
-                                    + '<td><span class="tb-sim-network">' + el.network + '</span></td>'
-                                    + '<td><span class="tb-sim-type">' + (el.simType ? el.simType : "") + '</span></td>'
-                                    + '<td class="table-action">'
-                                    + '<a class="btn btn-warning" href="javascript:void(0)" onclick="AddSimToCart('+el.id+', \''+el.simNumber+'\', '+el.simPrice+')" style="font-size: 12px;"><i class="bi bi-cart-plus"></i></a>'
-                                    + '</td>'
-                                    + '</tr>';
-                            });
-                            tbody.append(newBody);
-                            //write paging
-                            var paging = $("#paging .pagination")
-                            paging.children().remove();
-                            var pagingItem = "";
-                            if (data.pager.totalPages > 0) {
-                                if (data.pager.currentPage > 1) {
-                                    pagingItem += '<li class="page-item" ><a class="page-link" onclick="SearchSim(1)" >Trang đầu</a></li>'
-                                };
-                                for (var pge = data.pager.startPage; pge <= data.pager.endPage; pge++) {
-                                    if (pge == data.pager.currentPage)
-                                        pagingItem += '<li class="page-item active"><a class="page-link" onclick="SearchSim(' + pge + ')" >' + pge + '</a></li>'
-                                    else
-                                        pagingItem += '<li class="page-item "><a class="page-link" onclick="SearchSim(' + pge + ')" >' + pge + '</a></li>'
-                                }
-                                if (data.pager.currentPage < data.pager.totalPages) {
-                                    pagingItem += '<li class="page-item" ><a class="page-link" onclick="SearchSim(' + data.pager.totalPages + ')" >Trang cuối</a></li>'
-                                };
-                            }
-                            paging.append(pagingItem);
-                        }
-                        else {
-                            var tbody = $("#datamobileresult")
-                            tbody.children().remove();
-                            var newBody = "";
+        $(function () {
+            $('#sim-data').addClass('active');
 
+            $('#simNumberArea').on('click', '.js-add-sim', function (event) {
+                event.preventDefault();
+                addSimFromButton(this);
+            });
 
-                            data.data.forEach((el) => {
-                                var imgSrc = "";
+            $('#simNumberArea').on('click', '.js-page', function (event) {
+                event.preventDefault();
+                const page = Number($(this).attr('data-page'));
+                if (Number.isInteger(page) && page > 0) SearchSim(page);
+            });
 
-                                switch (el.network.toLowerCase()) {
-                                    case "viettel":
-                                        imgSrc = "/assets/img/network/sim-vietel.png";
-                                        break;
-                                    case "vinaphone":
-                                        imgSrc = "/assets/img/network/sim-vina.png";
-                                        break;
-                                    case "mobiphone":
-                                        imgSrc = "/assets/img/network/sim-mobi.png";
-                                        break;
-                                    case "vietnamobile":
-                                        imgSrc = "/assets/img/network/sim-vina.png";
-                                        break;
-                                    case "gmobile":
-                                        imgSrc = "/assets/img/network/sim-gmobile.png";
-                                        break;
-                                    case "itelecom":
-                                        imgSrc = "/assets/img/network/sim-itel.png";
-                                        break;
-                                }
-                                newBody += '<div class="col-6 col-xl-4 pl-0 item-result">'
-                                    + '<div class="container sim-item sim-hot">'
-                                    + '<a href="#" onclick="AddSimToCard(' + el.id + ',' + el.simNumber + el.simPrice + ');" >'
-                                    + '<div class="row">'
-                                    + '<div class="col-4" style="max-width: 55px;">'
-                                    + '<img class="lazy" src="' + imgSrc + '" style="width: 50px;height: auto;padding-top: 5px;" />'
-                                    + '</div>'
-                                    + '<div class="col-8"  style="max-width: 130px;">'
-                                    + '<span class="sim-item--number">' + el.simNumber + '</span><br>'
-                                    + '<span class="sim-item--price">' + formatNumber(el.simPrice.toString()) + 'đ</span>'
-                                    + '</div>'
-                                    + '</div>'
-                                    + '</a>'
-                                    + '</div>'
-                                    + '</div>';
-                            });
-                            tbody.append(newBody);
+            $('#simPackageArea').on('click', '.js-add-package', function () {
+                addPackage(this);
+            });
 
-                            //datamobilenextpage
-                            //<button class="btn btn-danger" onclick = "ShowMore()" id = "showmore" > Xem thêm ...</button>
-                            var paging = $("#datamobilenextpage")
-                            paging.children().remove();
-                            var pagingItem = "";
-                            if (data.pager.totalPages > 0) {
-                                if (pageIndex < data.pager.totalPages) {
-                                    pagingItem += '<button class="btn btn-danger" onclick = "SearchSim(' + (pageIndex + 1) + ')" id = "showmore" > Xem thêm ...</button>'
-                                };
-                            }
-                            paging.append(pagingItem);
-                        }
-                    }
-                    else {
-                        $('#simPackageArea').addClass("hidden");
-                        var simnotfound = document.getElementById("simnotfound");
-                        simnotfound.classList.remove("hidden");
-                    }
+            $('#simNumber').on('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    SearchSim(1);
                 }
-                else {
-                    $('#simPackageArea').addClass("hidden");
-                    var simnotfound = document.getElementById("simnotfound");
-                    simnotfound.classList.remove("hidden");
-                }
-            },
-            error: function (xhr) {
-                console.log(xhr);
-            }
+            });
         });
-    }
-    function OnClickCheckAll() {
-        var chkVal = document.getElementById('checkAll');
-        if (chkVal.checked === true) {
-            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
-            lstOrder = [];
-            $('tr td input').each(function () {
-                var orderId = parseInt($(this).val());
-                lstOrder.push(orderId);
-                document.getElementById(orderId).checked = true;
-            })
-            console.log('result ' + lstOrder);
-        } else {
-            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
-            $('tr td input').each(function () {
-                var orderId = parseInt($(this).val());
-                document.getElementById(orderId).checked = false;
-            })
-            lstOrder = [];
-            console.log('result ' + lstOrder);
+
+        function formatPrice(value) {
+            const n = Number(value);
+            return Number.isFinite(n) ? numberFormatter.format(n) : '0';
         }
-    }
-    function OnClickCheckBox(orderId) {
-        var chkVal = document.getElementById(orderId);
-        if (chkVal.checked === true) {
-            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
-            lstOrder.push(orderId);
-            console.log('result ' + lstOrder);
-        } else {
-            console.log("Checkbox is checked - boolean value: ", chkVal.checked);
-            const index = lstOrder.indexOf(orderId);
-            if (index > -1) {
-                lstOrder.splice(index, 1);
+
+        function showNoResults(show) {
+            $('#simnotfound').toggleClass('hidden', !show);
+        }
+
+        function showMessage(message) {
+            alert(message);
+        }
+
+        // Dùng DOM/jQuery text() thay vì nối dữ liệu máy chủ vào HTML để tránh XSS / lỗi dấu nháy.
+        function createAddButton(sim, classNames, label) {
+            return $('<button>', {
+                type: 'button',
+                class: classNames + ' js-add-sim',
+                'aria-label': label
+            })
+                .attr('data-sim-id', String(sim.id))
+                .attr('data-sim-number', String(sim.simNumber ?? ''))
+                .attr('data-sim-price', String(sim.simPrice ?? 0));
+        }
+
+        function getNetworkImage(network) {
+            const images = {
+                'viettel': '/assets/img/network/sim-vietel.png',
+                'vinaphone': '/assets/img/network/sim-vina.png',
+                'mobiphone': '/assets/img/network/sim-mobi.png',
+                'mobifone': '/assets/img/network/sim-mobi.png',
+                'vietnamobile': '/assets/img/network/sim-vina.png',
+                'gmobile': '/assets/img/network/sim-gmobile.png',
+                'itelecom': '/assets/img/network/sim-itel.png'
+            };
+            return images[String(network ?? '').toLowerCase()] || '';
+        }
+
+        function renderDesktop(sims, pager, selectedTypeName) {
+            const $tbody = $('#myTable tbody').empty();
+            sims.forEach(sim => {
+                const $tr = $('<tr>', { class: 'js-sim-entry' }).attr('data-sim-id', String(sim.id));
+                const $number = createAddButton(sim, 'btn btn-link p-0 text-decoration-none', 'Thêm SIM ' + sim.simNumber + ' vào giỏ');
+                $number.append($('<span>', { class: 'tb-sim-num', text: String(sim.simNumber ?? '') }));
+                $tr.append($('<td>').append($number));
+                $tr.append($('<td>').append($('<span>', { class: 'tb-sim-price', text: formatPrice(sim.simPrice) + ' đ' })));
+                $tr.append($('<td>').append($('<span>', { class: 'tb-sim-network', text: String(sim.network ?? '') })));
+                $tr.append($('<td>').append($('<span>', { class: 'tb-sim-type', text: selectedTypeName })));
+                $tr.append($('<td>', { class: 'table-action' }).append(
+                    createAddButton(sim, 'btn btn-warning btn-sm', 'Thêm vào giỏ')
+                        .append($('<i>', { class: 'bi bi-cart-plus' }))
+                ));
+                $tbody.append($tr);
+            });
+            $('#simdata').removeClass('hidden');
+            const $pagination = $('#paging .pagination').empty();
+            if (!pager || !pager.totalPages) return;
+
+            const addPage = (text, page, active) => {
+                const $link = $('<button>', { type: 'button', class: 'page-link js-page', text })
+                    .attr('data-page', page);
+                $pagination.append($('<li>', { class: 'page-item' + (active ? ' active' : '') }).append($link));
+            };
+            if (pager.currentPage > 1) addPage('Trang đầu', 1, false);
+            for (let p = pager.startPage; p <= pager.endPage; p++) {
+                addPage(String(p), p, p === pager.currentPage);
             }
-            console.log('result ' + lstOrder);
+            if (pager.currentPage < pager.totalPages) addPage('Trang cuối', pager.totalPages, false);
         }
-    }
-    function CreateOrderSimData() {
-        if (lstOrder.length > 0) {
-            var productTypeId = parseFloat($("#productTypeId").val());
-            var simIds = lstOrder.join(',');
-            window.location.href = '@Url.Action("CreateOrderSimData", "Home")?id='+ productTypeId +'&simIds=' + simIds;
-        } else {
-            alert('Bạn chưa chọn item');
+
+        function renderMobile(sims, pager, pageIndex, selectedTypeName) {
+            const $result = $('#datamobileresult');
+            if (pageIndex === 1) $result.empty();
+
+            sims.forEach(sim => {
+                $result.find('.js-sim-entry').filter(function () {
+                    return $(this).attr('data-sim-id') === String(sim.id);
+                }).remove();
+                // Đặt data-attributes riêng cho từng nút: không nối số điện thoại và giá.
+                const $column = $('<div>', { class: 'col-6 col-xl-4 item-result js-sim-entry' })
+                    .attr('data-sim-id', String(sim.id));
+                const $card = $('<div>', { class: 'container sim-item sim-hot' });
+                const $button = createAddButton(sim, 'btn p-0 w-100 text-start',
+                    'Thêm SIM ' + sim.simNumber + ' vào giỏ');
+                const $row = $('<div>', { class: 'row g-1 align-items-center' });
+                const imageSrc = getNetworkImage(sim.network);
+                const $imageCol = $('<div>', { class: 'col-4' });
+                if (imageSrc) {
+                    $imageCol.append($('<img>', {
+                        src: imageSrc, alt: String(sim.network ?? 'Nhà mạng'),
+                        loading: 'lazy', class: 'img-fluid'
+                    }).css({ maxWidth: '50px', height: 'auto' }));
+                }
+                const $textCol = $('<div>', { class: 'col-8' });
+                $textCol.append($('<span>', { class: 'sim-item--number', text: String(sim.simNumber ?? '') }));
+                $textCol.append('<br>');
+                $textCol.append($('<span>', { class: 'sim-item--price', text: formatPrice(sim.simPrice) + 'đ' }));
+                $textCol.append($('<div>', { class: 'sim-item--type small text-muted', text: 'Loại SIM: ' + selectedTypeName }));
+                $row.append($imageCol, $textCol);
+                $button.append($row);
+                $card.append($button);
+                $column.append($card);
+                $result.append($column);
+            });
+            const $next = $('#datamobilenextpage').empty();
+            if (pager && pageIndex < Number(pager.totalPages || 0)) {
+                const $more = $('<button>', {
+                    type: 'button',
+                    class: 'btn btn-warning js-page',
+                    text: 'Xem thêm ...'
+                }).attr('data-page', pageIndex + 1);
+                $next.append($more);
+            }
         }
-    }
-    function AddSimData(id, type, price){
-        debugger;
-        var qty = $('#'+id+type).val();
-        if(qty > 0){
-            AddSimDataToCart(id, type, price, qty);
-        } else {
-            alert('Bạn chưa nhập số lượng sim cần mua!')
+
+        window.SearchSim = function (pageIndex) {
+            const page = Math.max(1, Number.parseInt(pageIndex, 10) || 1);
+            const productTypeId = Number($('#productTypeId').val());
+            // Ghi nhận đúng tên loại SIM được chọn ở thời điểm gửi yêu cầu tìm kiếm.
+            const selectedTypeName = $('#productTypeId option:selected').text().trim() || 'SIM Data';
+            if (!Number.isFinite(productTypeId) || productTypeId < 0) {
+                showMessage('Vui lòng chọn loại gói cần mua.');
+                return;
+            }
+
+            const keyword = String($('#simNumber').val() ?? '').trim();
+            const filters = JSON.stringify({ keyword, productTypeId });
+            // Nếu bộ lọc thay đổi, luôn quay về trang đầu để không ghép kết quả khác bộ lọc.
+            const targetPage = lastSearch !== null && lastSearch !== filters ? 1 : page;
+            lastSearch = filters;
+
+            $('#simPackageArea').addClass('hidden');
+            $('#simNumberArea').removeClass('hidden');
+            showNoResults(false);
+            if (!isMobile) $('#simdata').addClass('hidden');
+
+            const requestId = ++latestSearchId;
+            if (searchInProgress && searchInProgress.readyState !== 4) {
+                searchInProgress.abort();
+            }
+            const $searchBtn = $('#simPackageArea button[onclick^="SearchSim"]');
+            $searchBtn.prop('disabled', true);
+
+            const request = {
+                keyword,
+                productTypeIds: [productTypeId],
+                pageIndex: targetPage,
+                pageSize: 50,
+                isPaged: true,
+                sortBy: 0
+            };
+
+            searchInProgress = $.ajax({
+                url: searchUrl,
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(request),
+                timeout: 30000,
+                success: function (response) {
+                    if (requestId !== latestSearchId) return;
+                    if (!response || !Array.isArray(response.data)) {
+                        showMessage('Dữ liệu trả về không hợp lệ. Vui lòng thử lại.');
+                        return;
+                    }
+
+                    const visibleSims = response.data.filter(s => s && s.id != null &&
+                        !selectedSimIds.has(String(s.id)));
+
+                    if (isMobile) {
+                        renderMobile(visibleSims, response.pager, targetPage, selectedTypeName);
+                    } else {
+                        renderDesktop(visibleSims, response.pager, selectedTypeName);
+                    }
+
+                    const hasAny = isMobile
+                        ? $('#datamobileresult .item-result').length > 0
+                        : $('#myTable tbody tr').length > 0;
+                    showNoResults(!hasAny);
+                    if (!isMobile && !hasAny) $('#simdata').addClass('hidden');
+                    if (targetPage === 1) window.scrollTo(0, 0);
+                },
+                error: function (xhr, status) {
+                    if (requestId !== latestSearchId || status === 'abort') return;
+                    showMessage(status === 'timeout'
+                        ? 'Tìm kiếm quá thời gian. Vui lòng thử lại.'
+                        : 'Không thể tải danh sách SIM. Vui lòng thử lại.');
+                },
+                complete: function () {
+                    if (requestId === latestSearchId) $searchBtn.prop('disabled', false);
+                }
+            });
+        };
+
+        // cart.js lưu item qua addToCart(id, name, type, price, qty, esim).
+        // type=0 là SIM số; name có thể không phải simNumber, vì vậy kiểm tra id + type.
+        function simIsInCart(id) {
+            if (typeof window.getCart !== 'function') return null;
+            try {
+                const cart = window.getCart();
+                if (!Array.isArray(cart)) return null;
+                return cart.some(item => item &&
+                    String(item.id ?? item.Id) === String(id) &&
+                    Number(item.type ?? item.Type ?? 0) === 0);
+            } catch (error) {
+                console.error('Không đọc được giỏ hàng:', error);
+                return null;
+            }
         }
-    }
+
+        async function addSimFromButton(button) {
+            const $button = $(button);
+            const id = $button.attr('data-sim-id');
+            const simNumber = $button.attr('data-sim-number');
+            const price = Number($button.attr('data-sim-price'));
+            if (!id || !simNumber || !Number.isFinite(price)) {
+                showMessage('Thông tin SIM không hợp lệ.');
+                return;
+            }
+            if (addingSimIds.has(id)) return;
+            if (typeof window.AddSimToCart !== 'function') {
+                showMessage('Chức năng giỏ hàng chưa được tải. Vui lòng tải lại trang.');
+                return;
+            }
+
+            if (simIsInCart(id) === true) {
+                showMessage('SIM này đã có trong giỏ hàng.');
+                selectedSimIds.add(id);
+                $('#simNumberArea .js-sim-entry').filter(function () {
+                    return $(this).attr('data-sim-id') === id;
+                }).remove();
+                return;
+            }
+
+            addingSimIds.add(id);
+            const $buttons = $('#simNumberArea .js-add-sim').filter(function () {
+                return $(this).attr('data-sim-id') === id;
+            });
+            $buttons.prop('disabled', true);
+            try {
+                // Tận dụng hàm giỏ hàng đang được sử dụng trong _Layout / JS chung.
+                const numericId = Number(id);
+                const cartId = Number.isSafeInteger(numericId) ? numericId : id;
+                const result = window.AddSimToCart(cartId, simNumber, price);
+                const resolved = result && typeof result.then === 'function' ? await result : result;
+                if (resolved === false) {
+                    showMessage('Không thể thêm SIM vào giỏ hàng.');
+                    return;
+                }
+
+                // Chỉ ẩn SIM khi đã có trong giỏ, hoặc hàm thêm trả về true rõ ràng.
+                // Không tự tạo đối tượng giỏ hàng mới: giữ đúng schema của JS chung.
+                const inCart = simIsInCart(id);
+                if (inCart !== true && resolved !== true) {
+                    showMessage('Không xác nhận được SIM đã thêm vào giỏ hàng. Kiểm tra hàm AddSimToCart trong JavaScript dùng chung.');
+                    return;
+                }
+
+                selectedSimIds.add(id);
+                $('#simNumberArea .js-sim-entry').filter(function () {
+                    return $(this).attr('data-sim-id') === id;
+                }).remove();
+
+                const anyDesktop = $('#myTable tbody tr').length;
+                const anyMobile = $('#datamobileresult .item-result').length;
+                showNoResults(isMobile ? !anyMobile : !anyDesktop);
+                if (typeof window.UpdateCartIconAmount === 'function') {
+                    window.UpdateCartIconAmount();
+                }
+            } catch (error) {
+                console.error('AddSimToCart failed:', error);
+                showMessage('Không thể thêm SIM vào giỏ hàng. Vui lòng thử lại.');
+            } finally {
+                addingSimIds.delete(id);
+                $buttons.prop('disabled', false);
+            }
+        }
+
+        async function addPackage(button) {
+            const $button = $(button);
+            const id = $button.attr('data-package-id');
+            const name = $button.attr('data-package-name');
+            const price = Number($button.attr('data-package-price'));
+            const $qty = $('#simPackageArea .js-package-qty').filter(function () {
+                return $(this).attr('data-package-id') === id;
+            });
+            const qty = Number($qty.val());
+            if (!Number.isInteger(qty) || qty < 1 || qty > 9999) {
+                showMessage('Vui lòng nhập số lượng nguyên từ 1 đến 9999.');
+                $qty.trigger('focus');
+                return;
+            }
+            if (typeof window.AddSimDataToCart !== 'function') {
+                showMessage('Chức năng thêm gói vào giỏ chưa được tải.');
+                return;
+            }
+            if ($button.prop('disabled')) return;
+            $button.prop('disabled', true);
+            try {
+                // ID và giá phải đúng kiểu số như cách gọi cũ từ Razor.
+                const numericId = Number(id);
+                const cartId = Number.isSafeInteger(numericId) ? numericId : id;
+                const result = window.AddSimDataToCart(cartId, name, price, qty);
+                if (result && typeof result.then === 'function') await result;
+            } catch (error) {
+                console.error('AddSimDataToCart failed:', error);
+                showMessage('Không thể thêm gói vào giỏ hàng.');
+            } finally {
+                $button.prop('disabled', false);
+            }
+        }
+    })();
 </script>

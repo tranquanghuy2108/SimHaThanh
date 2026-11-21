@@ -25,6 +25,10 @@ class ArInput extends React.Component {
         placeholderTextColor={argonTheme.COLORS.MUTED}
         style={inputStyles}
         color={argonTheme.COLORS.HEADER}
+        viewPass={this.props.password}
+        {...(this.props.password
+          ? { autoCapitalize: "none", autoCorrect: false }
+          : {})}
         iconContent={
           <Icon
             size={14}

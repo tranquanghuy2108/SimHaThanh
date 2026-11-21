@@ -1,4 +1,4 @@
-import React, { useContext, useState, useCallback, useEffect } from "react";
+import React, { useContext, useState, useCallback, useEffect, useRef } from "react";
 import { useFocusEffect } from '@react-navigation/native';
 import {
   StyleSheet,
@@ -8,6 +8,9 @@ import {
   TouchableOpacity,
   Image,
   View,
+  Modal,
+  ActivityIndicator,
+  Keyboard,
 } from "react-native";
 import { Block, Text } from "galio-framework";
 
@@ -15,7 +18,6 @@ import { Input } from "../components";
 import { argonTheme } from "../constants";
 import { AuthContext } from "../context/AuthContext";
 import { AppConst } from "../constants/AppConst";
-import LoadingScreen from "./LoadingScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CommunityGuidelinesModal, {
   COMMUNITY_TERMS_PROMPT_SEEN_KEY,
@@ -35,17 +37,14 @@ const LoginScreen = ({ navigation }) => {
   );
   const [phoneNumber, setPhoneNumber] = useState(null);
   const [password, setPassword] = useState(null);
-  const [validateText, setValidateText] = useState(null);
+  const [loginError, setLoginError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [isTermsVisible, setTermsVisible] = useState(false);
 
-  const { login, SetRegister, isLoading, isAuthenticated } = useContext(AuthContext);
-
-  useEffect(() => {
-    if (isAuthenticated && navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [isAuthenticated, navigation]);
+  const { login, SetRegister, isLoading } = useContext(AuthContext);
+  const isBusy = isSubmitting || isLoading;
 
   useEffect(() => {
     AsyncStorage.multiGet([
@@ -78,12 +77,41 @@ const LoginScreen = ({ navigation }) => {
     setTermsVisible(false);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    if (submittingRef.current || isLoading || loginError) return;
+    Keyboard.dismiss();
     if (!hasAcceptedTerms) {
       setTermsVisible(true);
       return;
     }
-    login(phoneNumber, password, true);
+    if (!phoneNumber?.trim() || !password) {
+      setLoginError("Vui lòng nhập số điện thoại và mật khẩu.");
+      return;
+    }
+    submittingRef.current = true;
+    setIsSubmitting(true);
+    try {
+      const result = await login(phoneNumber.trim(), password, true);
+      if (result.success) {
+        navigation.reset({
+          index: 0,
+          routes: [{
+            name: AppConst.StackConst.BOTTOM_STACK,
+            params: {
+              screen: AppConst.BottomScreenConst.HOME_BOTTOM_SCREEN,
+              params: { screen: AppConst.ScreenConst.HOME_SCREEN },
+            },
+          }],
+        });
+      } else {
+        setLoginError(result.message);
+      }
+    } catch {
+      setLoginError("Không thể đăng nhập. Vui lòng thử lại.");
+    } finally {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -94,7 +122,39 @@ const LoginScreen = ({ navigation }) => {
         onClose={closeTerms}
         acceptLabel="Đồng ý để tiếp tục"
       />
-      {isLoading ? <LoadingScreen isVisible={isLoading} /> : null}
+      <Modal
+        visible={isSubmitting || loginError !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!isSubmitting) setLoginError(null);
+        }}
+      >
+        <View style={styles.resultOverlay}>
+          <View style={styles.resultCard} accessibilityViewIsModal>
+            {isSubmitting ? (
+              <>
+                <ActivityIndicator size="large" color={argonTheme.COLORS.ERROR} />
+                <Text style={styles.resultMessage}>Đang đăng nhập...</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.resultTitle} accessibilityRole="header">
+                  Đăng nhập thất bại
+                </Text>
+                <Text style={styles.resultMessage}>{loginError}</Text>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  style={styles.resultButton}
+                  onPress={() => setLoginError(null)}
+                >
+                  <Text style={styles.resultButtonText}>Quay lại</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
       <StatusBar translucent backgroundColor={argonTheme.COLORS.ERROR} />
       <View className="items-center">
         <Image
@@ -138,27 +198,17 @@ const LoginScreen = ({ navigation }) => {
             />
           </Block>
 
-          <Block row style={styles.passwordCheck}>
-            <Text
-              size={12}
-              color={argonTheme.COLORS.ERROR}
-              value={validateText}
-            ></Text>
-          </Block>
-
           <TouchableOpacity
             className="bg-black justify-center items-center rounded"
-            disabled={isLoading}
+            disabled={isBusy}
             style={{
               height: 40,
               backgroundColor: argonTheme.COLORS.ERROR,
-              opacity: isLoading ? 0.7 : 1,
+              opacity: isBusy ? 0.7 : 1,
             }}
-            onPress={() => {
-              handleLogin();
-            }}
+            onPress={handleLogin}
           >
-            <Text className="color-white font-bold">ĐĂNG NHẬP</Text>
+            <Text className="color-white font-bold">{isBusy ? "ĐANG XỬ LÝ..." : "ĐĂNG NHẬP"}</Text>
           </TouchableOpacity>
 
           <Block
@@ -191,6 +241,47 @@ const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  resultOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: 24,
+  },
+  resultCard: {
+    width: "100%",
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 24,
+    backgroundColor: "#fff",
+    alignItems: "center",
+  },
+  resultTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: argonTheme.COLORS.HEADER,
+  },
+  resultMessage: {
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 12,
+    marginBottom: 20,
+    color: argonTheme.COLORS.HEADER,
+  },
+  resultButton: {
+    width: "100%",
+    minHeight: 44,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    backgroundColor: argonTheme.COLORS.ERROR,
+  },
+  resultButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
   container: {
     width: width * 0.9,
     height: height * 0.875,

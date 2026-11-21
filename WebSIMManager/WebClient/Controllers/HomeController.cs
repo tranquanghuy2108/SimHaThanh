@@ -155,13 +155,13 @@ namespace WebClient.Controllers
             switch (timSimRequest.searchType)
             {
                 case SearchType.gia:
-                    var priceFrom = Int32.Parse(
+                    var priceFrom = Double.Parse(
                         timSimRequest
                             .keyword.Substring(0, timSimRequest.keyword.IndexOf("den"))
                             .Replace("-", "")
                             .Replace("tu", "")
                     );
-                    var priceTo = Int32.Parse(
+                    var priceTo = Double.Parse(
                         timSimRequest
                             .keyword.Substring(timSimRequest.keyword.IndexOf("den"))
                             .Replace("den", "")
@@ -850,6 +850,14 @@ namespace WebClient.Controllers
                     RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
                 }
             );
+        }
+
+        [Route("dat-hang-thanh-cong")]
+        public IActionResult OrderSuccess()
+        {
+            GetNavMenuInfo();
+            ViewBag.eSimPrice = eSimPrice;
+            return View();
         }
     }
 }

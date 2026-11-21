@@ -81,6 +81,7 @@ namespace WebSIMAPI.Controllers
         }
 
         //
+        [AllowAnonymous]
         [HttpPost("create-order")]
         public ResponseDataModel<int> CreateSimOrder([FromBody] SIMOrderModel request)
         {

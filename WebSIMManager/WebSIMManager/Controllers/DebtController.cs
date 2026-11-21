@@ -478,6 +478,7 @@ namespace WebSIMManager.Controllers
             var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
                 ClaimTypes.NameIdentifier
             );
+            ViewBag.Agents = _AccountRepository.GetAgentAndAgentConsigmentForCombo();
             if (request.keyword == null)
                 request.keyword = "";
             if (request.pageIndex == 0)
@@ -636,6 +637,7 @@ namespace WebSIMManager.Controllers
             var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(
                 ClaimTypes.NameIdentifier
             );
+            ViewBag.Agents = _AccountRepository.GetAgentAndAgentConsigmentForCombo();
             if (request.keyword == null)
                 request.keyword = "";
             if (request.pageIndex == 0)
