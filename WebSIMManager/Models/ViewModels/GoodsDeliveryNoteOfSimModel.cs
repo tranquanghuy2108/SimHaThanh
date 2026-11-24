@@ -146,6 +146,8 @@ namespace Models.ViewModels
         public string simNumber { get; set; } = "";
         public string code { get; set; } = "";
         public string codCode { get; set; } = "";
+        public DateTime? fromDate { get; set; }
+        public DateTime? toDate { get; set; }
         public bool pxSimData { get; set; } = false;
         public ApprovedStatus? apprStatus { get; set; }
         public List<string?> agentIds { get; set; }

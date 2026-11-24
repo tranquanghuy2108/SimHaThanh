@@ -1,17 +1,16 @@
 ﻿@using Commons.Enums;
 @model Models.Requests.SearchSIMRequest
 @{
-    bool IsMobile = ViewBag.IsMobile;
+    bool isMobile = ViewBag.IsMobile as bool? ?? false;
     ViewData["Title"] = "Tìm kiếm";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-
 <input type="hidden" value="@ViewBag.SearchType" id="SearchType" />
 <input type="hidden" value="@ViewBag.slug" id="slug" />
-<input type="hidden" value="@IsMobile" id="IsMobile" />
+<input type="hidden" value="@(isMobile ? "true" : "false")" id="IsMobile" />
 
-@if (!IsMobile)
+@if (!isMobile)
 {
     <div class="block mt-15">
         <div class="block-head">Tìm sim số đẹp</div>
@@ -28,14 +27,12 @@
                                 <th style="width:17%">Đặt mua</th>
                             </tr>
                         </thead>
-                        <tbody>
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
                 <div id="paging" class="px-3">
                     <nav aria-label="Page navigation example">
-                        <ul class="pagination pagination-md">
-                        </ul>
+                        <ul class="pagination pagination-md"></ul>
                     </nav>
                 </div>
             </div>
@@ -46,29 +43,26 @@
                     Quý khách có nhu cầu sử dụng số này, hãy liên hệ với chúng tôi để được hỗ trợ nhanh nhất!
                 </p>
                 <div class="mt-3 mb-0 d-flex flex-wrap justify-content-center">
-                    <br>
                     <div class="support-btn support-btn--zalo d-inline mx-2">
-                        <a target="_blank" href="//zalo.me/" class="color-white">
-                            <img class="support-icon--img nt-rotate" src="/assets/img/zalo-icon.png" alt="">
+                        <a target="_blank" rel="noopener noreferrer" href="https://zalo.me/0911929999" class="color-white">
+                            <img class="support-icon--img nt-rotate" src="~/assets/img/zalo-icon.png" alt="Zalo">
                             <span>Chat Zalo</span>
                         </a>
                     </div>
                     <div class="support-btn support-btn--fb d-inline mx-2">
-                        <a target="_blank" href="//m.me/0911.92.9999" class="color-white">
-                            <img class="support-icon--img nt-rotate" src="~/assets/img/messenger-icon.png" alt="">
+                        <a target="_blank" rel="noopener noreferrer" href="https://m.me/0911.92.9999" class="color-white">
+                            <img class="support-icon--img nt-rotate" src="~/assets/img/messenger-icon.png" alt="Facebook">
                             <span>Chat Facebook</span>
                         </a>
                     </div>
                     <div class="support-btn d-inline mx-2">
-                        <a target="_blank" href="tel:0911.92.9999">
-                            <img class="support-icon--img nt-rotate" src="~/assets/img/tel-icon.png" alt="">
+                        <a href="tel:0911929999">
+                            <img class="support-icon--img nt-rotate" src="~/assets/img/tel-icon.png" alt="Hotline">
                             <span>0911.92.9999</span>
                         </a>
                     </div>
-
                 </div>
             </div>
-
         </div>
     </div>
 }
@@ -80,36 +74,32 @@ else
         <div class="block-body pt-3 px-0 pb-0">
             <div class="sim-table--body col-12 px-0">
                 <div class="sim-table--wrap">
-                    <div class="row" id="datamobileresult">
-                    </div>
-                    <div class="col-12 p-3 m3 text-center" id="datamobilenextpage">
-                    </div>
+                    <div class="row" id="datamobileresult"></div>
+                    <div class="col-12 p-3 m3 text-center" id="datamobilenextpage"></div>
                     <div class="hidden" id="simnotfound">
                         <p class="align-middle mb-0">Sim dạng hiện vẫn chưa được cập nhật lên web</p>
                         <p class="align-middle mb-0">
                             Quý khách có nhu cầu sử dụng số dạng này, hãy liên hệ với chúng tôi để được hỗ trợ nhanh nhất!
                         </p>
                         <div class="mt-3 mb-0 d-flex flex-wrap justify-content-center">
-                            <br>
                             <div class="support-btn support-btn--zalo d-inline mx-2">
-                                <a target="_blank" href="//zalo.me/" class="color-white">
-                                    <img class="support-icon--img nt-rotate" src="/assets/img/zalo-icon.png" alt="">
+                                <a target="_blank" rel="noopener noreferrer" href="https://zalo.me/0911929999" class="color-white">
+                                    <img class="support-icon--img nt-rotate" src="~/assets/img/zalo-icon.png" alt="Zalo">
                                     <span>Chat Zalo</span>
                                 </a>
                             </div>
                             <div class="support-btn support-btn--fb d-inline mx-2">
-                                <a target="_blank" href="//m.me/0911.92.9999" class="color-white">
-                                    <img class="support-icon--img nt-rotate" src="~/assets/img/messenger-icon.png" alt="">
+                                <a target="_blank" rel="noopener noreferrer" href="https://m.me/0911.92.9999" class="color-white">
+                                    <img class="support-icon--img nt-rotate" src="~/assets/img/messenger-icon.png" alt="Facebook">
                                     <span>Chat Facebook</span>
                                 </a>
                             </div>
                             <div class="support-btn d-inline mx-2">
-                                <a target="_blank" href="tel:0911.92.9999">
-                                    <img class="support-icon--img nt-rotate" src="~/assets/img/tel-icon.png" alt="">
+                                <a href="tel:0911929999">
+                                    <img class="support-icon--img nt-rotate" src="~/assets/img/tel-icon.png" alt="Hotline">
                                     <span>0911.92.9999</span>
                                 </a>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -117,8 +107,8 @@ else
         </div>
     </div>
 }
+
 <style>
-    /* Giữ nguyên bố cục bảng PC và thẻ SIM Mobile của website */
     #myTable .js-add-search-sim {
         cursor: pointer;
     }
@@ -141,16 +131,17 @@ else
             outline-offset: -2px;
         }
 </style>
+
 <script>
     (function ($) {
         'use strict';
 
-        const isMobile = String($('#IsMobile').val()).toLowerCase() === 'true';
+        const isMobile = $('#IsMobile').val() === 'true';
         const addedSimIds = new Set();
         const pendingSimIds = new Set();
+        const mobileLoadedPages = new Set();
         let currentRequest = null;
         let searchSequence = 0;
-        let mobileLoadedPages = new Set();
         let currentPage = 1;
         const pageSize = 50;
 
@@ -159,7 +150,7 @@ else
             vinaphone: '/assets/img/network/sim-vina.png',
             mobifone: '/assets/img/network/sim-mobi.png',
             mobiphone: '/assets/img/network/sim-mobi.png',
-            vietnamobile: '/assets/img/network/sim-vina.png',
+            vietnamobile: '/assets/img/network/sim-vietnamobile.png', // Kiểm tra lại đúng tên file ảnh trên server
             gmobile: '/assets/img/network/sim-gmobile.png',
             itelecom: '/assets/img/network/sim-itel.png'
         };
@@ -184,13 +175,14 @@ else
         }
 
         function isInCart(id, cart) {
-            if (!Array.isArray(cart)) return false;
-            return cart.some(item => itemId(item) === id && id !== '');
+            if (!id || !Array.isArray(cart)) return false;
+            return cart.some(function (item) {
+                return itemId(item) === id;
+            });
         }
 
         function hidePurchasedSim(id) {
             addedSimIds.add(id);
-            // Xóa mọi bản hiển thị của cùng một SIM, kể cả khi dữ liệu được render lại.
             $('.js-search-sim-item').filter(function () {
                 return normalizedId($(this).attr('data-sim-id')) === id;
             }).remove();
@@ -204,91 +196,127 @@ else
         function simButton(sim, asMobile) {
             const $button = $('<button>', {
                 type: 'button',
-                class: asMobile ? 'js-add-search-sim' : 'btn btn-warning js-add-search-sim',
+                class: asMobile ? 'js-add-search-sim border-0 bg-transparent p-0 text-start' : 'btn btn-warning js-add-search-sim',
                 'aria-label': 'Thêm SIM ' + sim.simNumber + ' vào giỏ hàng'
             }).attr({
                 'data-sim-id': sim.id,
                 'data-sim-number': sim.simNumber,
                 'data-sim-price': sim.simPrice
             });
-            if (asMobile) {
-                $button.addClass('border-0 bg-transparent p-0 text-start');
-            } else {
+
+            if (!asMobile) {
                 $button.css('font-size', '12px').append($('<i>', { class: 'bi bi-cart-plus' }));
             }
             return $button;
         }
 
+        function simRows(sims) {
+            const cart = cartItems();
+            return (Array.isArray(sims) ? sims : []).filter(function (sim) {
+                if (!sim || sim.id == null || sim.simNumber == null) return false;
+                const id = normalizedId(sim.id);
+                return id !== '' && !addedSimIds.has(id) && !pendingSimIds.has(id) && !isInCart(id, cart);
+            });
+        }
+
         function renderDesktop(sims, pager) {
             const $tbody = $('#myTable tbody').empty();
-            simRows(sims).forEach(function (sim) {
-                const $row = $('<tr>', { class: 'js-search-sim-item' })
-                    .attr('data-sim-id', sim.id);
+            const visibleSims = simRows(sims);
+            const rows = [];
+
+            visibleSims.forEach(function (sim) {
+                const $row = $('<tr>', { class: 'js-search-sim-item' }).attr('data-sim-id', sim.id);
+
                 $('<td>').append(
-                    simButton(sim, false).removeClass('btn btn-warning').addClass('border-0 bg-transparent p-0 text-start')
-                        .empty().append($('<span>', { class: 'tb-sim-num', text: sim.simNumber }))
+                    simButton(sim, false)
+                        .removeClass('btn btn-warning')
+                        .addClass('border-0 bg-transparent p-0 text-start')
+                        .empty()
+                        .append($('<span>', { class: 'tb-sim-num', text: sim.simNumber }))
                 ).appendTo($row);
+
                 $('<td>').append($('<span>', { class: 'tb-sim-price', text: formattedPrice(sim.simPrice) + ' đ' })).appendTo($row);
                 $('<td>').append($('<span>', { class: 'tb-sim-network', text: sim.network || '' })).appendTo($row);
                 $('<td>').append($('<span>', { class: 'tb-sim-type', text: sim.simType || '' })).appendTo($row);
                 $('<td>', { class: 'table-action' }).append(simButton(sim, false)).appendTo($row);
-                $tbody.append($row);
+
+                rows.push($row);
             });
 
+            if (rows.length > 0) {
+                $tbody.append(rows);
+            }
+
             const $pagination = $('#paging .pagination').empty();
-            if (!pager || !Number.isFinite(Number(pager.totalPages))) return;
+            if (!pager || !Number.isFinite(Number(pager.totalPages))) return visibleSims.length;
+
             const total = Number(pager.totalPages);
             const current = Number(pager.currentPage) || currentPage;
             const start = Math.max(1, Number(pager.startPage) || 1);
             const end = Math.min(total, Number(pager.endPage) || total);
+            const pageItems = [];
 
-            function appendPage(label, page, active) {
+            function createPageItem(label, page, active) {
                 const $li = $('<li>', { class: 'page-item' + (active ? ' active' : '') });
                 $('<button>', { type: 'button', class: 'page-link', text: label })
-                    .attr('data-page', page).appendTo($li);
-                $pagination.append($li);
+                    .attr('data-page', page)
+                    .appendTo($li);
+                return $li;
             }
-            if (current > 1) appendPage('Trang đầu', 1, false);
-            for (let page = start; page <= end; page++) appendPage(String(page), page, page === current);
-            if (current < total) appendPage('Trang cuối', total, false);
+
+            if (current > 1) pageItems.push(createPageItem('Trang đầu', 1, false));
+            for (let page = start; page <= end; page++) {
+                pageItems.push(createPageItem(String(page), page, page === current));
+            }
+            if (current < total) pageItems.push(createPageItem('Trang cuối', total, false));
+
+            $pagination.append(pageItems);
+            return visibleSims.length;
         }
 
         function renderMobile(sims, append) {
             const $container = $('#datamobileresult');
             if (!append) $container.empty();
-            const previouslyRendered = new Set($container.find('.js-search-sim-item').map(function () {
-                return normalizedId($(this).attr('data-sim-id'));
-            }).get());
+
+            const previouslyRendered = new Set(
+                $container.find('.js-search-sim-item').map(function () {
+                    return normalizedId($(this).attr('data-sim-id'));
+                }).get()
+            );
+
+            const items = [];
             simRows(sims).forEach(function (sim) {
-                if (previouslyRendered.has(normalizedId(sim.id))) return;
-                previouslyRendered.add(normalizedId(sim.id));
+                const id = normalizedId(sim.id);
+                if (previouslyRendered.has(id)) return;
+                previouslyRendered.add(id);
+
                 const logo = networkLogos[String(sim.network || '').trim().toLowerCase()];
                 const $wrapper = $('<div>', { class: 'col-6 col-xl-4 pl-0 item-result js-search-sim-item' })
                     .attr('data-sim-id', sim.id);
                 const $button = simButton(sim, true);
                 const $row = $('<div>', { class: 'row' });
+
                 const $logoCol = $('<div>', { class: 'col-4' }).css('max-width', '55px');
                 if (logo) {
                     $('<img>', { src: logo, alt: sim.network || 'Nhà mạng', loading: 'lazy', class: 'lazy' })
-                        .css({ width: '50px', height: 'auto', paddingTop: '5px' }).appendTo($logoCol);
+                        .css({ width: '50px', height: 'auto', paddingTop: '5px' })
+                        .appendTo($logoCol);
                 }
+
                 const $infoCol = $('<div>', { class: 'col-8' }).css('max-width', '130px');
                 $('<span>', { class: 'sim-item--number', text: sim.simNumber }).appendTo($infoCol);
                 $('<br>').appendTo($infoCol);
                 $('<span>', { class: 'sim-item--price', text: formattedPrice(sim.simPrice) + 'đ' }).appendTo($infoCol);
+
                 $row.append($logoCol, $infoCol);
                 $button.append($row);
                 $wrapper.append($('<div>', { class: 'container sim-item sim-hot' }).append($button));
-                $container.append($wrapper);
+                items.push($wrapper);
             });
-        }
 
-        function simRows(sims) {
-            return (Array.isArray(sims) ? sims : []).filter(function (sim) {
-                if (!sim || sim.id == null || sim.simNumber == null) return false;
-                const id = normalizedId(sim.id);
-                return id !== '' && !addedSimIds.has(id) && !pendingSimIds.has(id);
-            });
+            if (items.length > 0) {
+                $container.append(items);
+            }
         }
 
         function addSim(button) {
@@ -312,9 +340,8 @@ else
             const $relatedButtons = $('.js-add-search-sim').filter(function () {
                 return normalizedId($(this).attr('data-sim-id')) === id;
             }).prop('disabled', true);
+
             try {
-                // Dùng đúng giao thức giỏ hàng gốc: id, số SIM, loại 0, giá, số lượng 1, eSIM false.
-                // Không gọi AddSimToCart của Layout vì hàm đó ẩn phần tử trước khi xác nhận lưu.
                 const result = window.addToCart(id, number, 0, price, 1, false);
                 if (result && typeof result.then === 'function') {
                     throw new Error('addToCart trả Promise; cần xử lý bất đồng bộ theo cart.js');
@@ -343,20 +370,30 @@ else
 
         window.SearchSim = function (pageIndex) {
             const page = Math.max(1, Number.parseInt(pageIndex, 10) || 1);
-            // Mobile: tải thêm vào danh sách, PC: thay trang.
-            if (isMobile && mobileLoadedPages.has(page)) return;
+
+            if (isMobile) {
+                if (page === 1) {
+                    mobileLoadedPages.clear();
+                } else if (mobileLoadedPages.has(page)) {
+                    return;
+                }
+            }
+
             const sequence = ++searchSequence;
             if (currentRequest && currentRequest.readyState !== 4) currentRequest.abort();
             currentPage = page;
+
             const $more = $('#datamobilenextpage button').prop('disabled', true);
+            const parsedSearchType = Number($('#SearchType').val());
+
             currentRequest = $.ajax({
                 url: '@Url.Action("TimSim", "Home")',
                 type: 'POST',
                 contentType: 'application/json',
                 dataType: 'json',
                 data: JSON.stringify({
-                    keyword: $('#slug').val(),
-                    searchType: Number($('#SearchType').val()),
+                    keyword: $('#slug').val() || '',
+                    searchType: Number.isFinite(parsedSearchType) ? parsedSearchType : 0,
                     pageIndex: page,
                     pageSize: pageSize
                 }),
@@ -365,20 +402,25 @@ else
                 if (sequence !== searchSequence) return;
                 const sims = Array.isArray(response && response.data) ? response.data : [];
                 const pager = response && response.pager ? response.pager : {};
+
                 if (isMobile) {
                     mobileLoadedPages.add(page);
                     renderMobile(sims, page > 1);
+
                     const totalPages = Number(pager.totalPages) || 0;
                     const $next = $('#datamobilenextpage').empty();
                     if (page < totalPages) {
                         $('<button>', { type: 'button', class: 'btn btn-warning', text: 'Xem thêm ...' })
-                            .attr('data-page', page + 1).appendTo($next);
+                            .attr('data-page', page + 1)
+                            .appendTo($next);
                     }
-                    $('#simnotfound').toggleClass('hidden', $('#datamobileresult .js-search-sim-item').length > 0 || page < totalPages);
+                    const hasItems = $('#datamobileresult .js-search-sim-item').length > 0;
+                    $('#simnotfound').toggleClass('hidden', hasItems || page < totalPages);
                 } else {
-                    renderDesktop(sims, pager);
-                    $('#simdata').removeClass('hidden');
-                    $('#simnotfound').toggleClass('hidden', sims.length > 0);
+                    const visibleCount = renderDesktop(sims, pager);
+                    const hasData = visibleCount > 0 || sims.length > 0;
+                    $('#simdata').toggleClass('hidden', !hasData);
+                    $('#simnotfound').toggleClass('hidden', hasData);
                     window.scrollTo(0, 0);
                 }
             }).fail(function (xhr, status) {
@@ -395,11 +437,13 @@ else
                 event.preventDefault();
                 addSim(this);
             });
+
             $(document).on('click', '#paging .page-link, #datamobilenextpage button[data-page]', function (event) {
                 event.preventDefault();
                 const page = $(this).attr('data-page');
                 if (page) window.SearchSim(page);
             });
+
             window.SearchSim(1);
         });
     })(jQuery);

@@ -2409,27 +2409,42 @@ namespace Repositories.Implement
         public double CheckOldDebtOfAgent(DebtOfAgentRequest request)
         {
             double oldDebt = 0;
-            var debtOfUser = _context
-                .DebtAgents.Where(x =>
-                    x.AgentId.ToString() == request.AgentId
-                    && request.receiptDate > x.CreateTime
-                    && x.approvedStatus == ApprovedStatus.Approved
-                )
-                .ToList();
-            if (debtOfUser.Count > 0)
+            try
             {
-                oldDebt = debtOfUser.Sum(x => x.FinalDebt);
+                List<CustomerDebtReportModel> data = new();
+
+                // Chuẩn bị tên và câu lệnh của stored procedure
+                string storedProcedureName = "GetCustomerDebtReport";
+                string query =
+                    $"CALL {storedProcedureName}(@IsPaged, @PageIndex, @PageSize, @AgentId, @StartDate, @EndDate)";
+
+                // Tạo các đối tượng MySqlParameter từ các giá trị trong request
+                var parameters = new List<MySqlParameter>
+                {
+                    new("@IsPaged", 0),
+                    new("@PageIndex", 1),
+                    new("@PageSize", 50),
+                    new("@AgentId", request.AgentId),
+                    new("@StartDate", null),
+                    new("@EndDate", null),
+                };
+
+                // Thực hiện truy vấn sử dụng FromSqlRaw
+                var dataExec = _context
+                    .Set<CustomerDebtReportModel>()
+                    .FromSqlRaw(query, parameters.ToArray())
+                    .ToList();
+
+                // Thêm dữ liệu vào danh sách data
+                data.AddRange(dataExec);
+
+                oldDebt = data.Sum(x => x.IncidentalDebt) ?? 0;
             }
-            var receiptOfUser = _context
-                .Receipts.Where(x =>
-                    x.AgentId.ToString() == request.AgentId
-                    && request.receiptDate > x.CreateTime
-                    && x.approvedStatus == ApprovedStatus.Approved
-                )
-                .ToList();
-            if (receiptOfUser.Count > 0)
+            catch (Exception ex)
             {
-                oldDebt += receiptOfUser.Sum(x => x.Receivables);
+                // Ghi log lỗi và trả về ResponseDataViewModel rỗng
+                Console.WriteLine("Error: " + ex);
+                return 0;
             }
             return oldDebt;
         }

@@ -16,6 +16,7 @@ using Models.ViewModels;
 using MySqlConnector;
 using Newtonsoft.Json.Linq;
 using Repositories.Interface;
+using Telegram.Bot.Requests.Abstractions;
 
 namespace Repositories.Implement
 {
@@ -853,16 +854,34 @@ namespace Repositories.Implement
                 return null;
 
             double oldDebt = 0;
-            var debtOfUser = _context.DebtAgents.Where(x => x.AgentId == Id).ToList();
-            if (debtOfUser.Count > 0)
+            List<CustomerDebtReportModel> data = new();
+
+            // Chuẩn bị tên và câu lệnh của stored procedure
+            string storedProcedureName = "GetCustomerDebtReport";
+            string query =
+                $"CALL {storedProcedureName}(@IsPaged, @PageIndex, @PageSize, @AgentId, @StartDate, @EndDate)";
+
+            // Tạo các đối tượng MySqlParameter từ các giá trị trong request
+            var parameters = new List<MySqlParameter>
             {
-                oldDebt = debtOfUser.Sum(x => x.FinalDebt);
-            }
-            var receiptOfUser = _context.Receipts.Where(x => x.AgentId == Id).ToList();
-            if (receiptOfUser.Count > 0)
-            {
-                oldDebt += receiptOfUser.Sum(x => x.Receivables);
-            }
+                new("@IsPaged", 0),
+                new("@PageIndex", 1),
+                new("@PageSize", 50),
+                new("@AgentId", Id.ToString()),
+                new("@StartDate", null),
+                new("@EndDate", null),
+            };
+
+            // Thực hiện truy vấn sử dụng FromSqlRaw
+            var dataExec = _context
+                .Set<CustomerDebtReportModel>()
+                .FromSqlRaw(query, parameters.ToArray())
+                .ToList();
+
+            // Thêm dữ liệu vào danh sách data
+            data.AddRange(dataExec);
+
+            oldDebt = data.Sum(x => x.IncidentalDebt) ?? 0;
 
             result.Id = dataEntity.Id;
             result.Username = dataEntity.UserName;

@@ -77,6 +77,21 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="form-group col-12 row">
+                    <div class="col-2">
+                        <label class="form-label">Từ ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="fromDate" type="date" class="form-control" placeholder="Nhập ngày bắt đầu" />
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">Đến ngày</label>
+                        <div class="col-12 p-0">
+                            <input id="toDate" type="date" class="form-control" placeholder="Nhập ngày kết thúc" />
+                        </div>
+                    </div>
+                </div>
                 <div class="col-4">
                     <button class="btn btn-primary" onclick="filter(1)">Tìm kiếm</button>
                     <button class="btn btn-warning mx-4" onclick="exportReport()">Xuất Excel</button>
@@ -161,7 +176,9 @@
         var agent = $('#agentIds').val();
         var staff = $('#staffIds').val();
         var status = $('#status').val();
-        var data = { "debtPrefix": "PXSCN", "simNumber": simNumber, "code": code, "codCode": "", "apprStatus": parseInt(status), "staffIds": staff, "agentIds": agent, "pageIndex": page, "pageSize": 20, "pxSimData": false };
+        var fromDate = $('#fromDate').val() || null;
+        var toDate = $('#toDate').val() || null;
+        var data = { "debtPrefix": "PXSCN", "simNumber": simNumber, "code": code, "codCode": "", "apprStatus": parseInt(status), "staffIds": staff, "agentIds": agent, "pageIndex": page, "pageSize": 20, "pxSimData": false, "fromDate" :fromDate, "toDate" : toDate };
         $.ajax({
             url: '@Url.Action("SearchPhieuXuatSim","SIMOrder")',
             type: "POST",

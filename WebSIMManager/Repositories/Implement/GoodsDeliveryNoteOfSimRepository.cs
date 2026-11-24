@@ -1129,37 +1129,28 @@ namespace Repositories.Implement
             GoodsDeliveryNoteOfSimFilterRequest request
         )
         {
-            var dataEntity = _context
-                .GoodsDeliveryNoteOfSim.OrderBy(x => x.approvedStatus)
-                .ThenByDescending(x => x.UpdateTime)
-                .ToList();
+            var dataEntity = _context.GoodsDeliveryNoteOfSim.ToList();
             if (request.agentIds.Count > 0)
             {
                 dataEntity = dataEntity
                     .Where(x => request.agentIds.Contains(x.CustomerId.ToString()))
-                    .OrderBy(x => x.approvedStatus)
                     .ToList();
             }
             if (!string.IsNullOrEmpty(request.userId))
             {
                 dataEntity = dataEntity
                     .Where(x => x.CreateBy.ToString() == request.userId)
-                    .OrderBy(x => x.approvedStatus)
                     .ToList();
             }
             else if (request.staffIds.Count > 0)
             {
                 dataEntity = dataEntity
                     .Where(x => request.staffIds.Contains(x.CreateBy.ToString()))
-                    .OrderBy(x => x.approvedStatus)
                     .ToList();
             }
             if (request.apprStatus != null && ((int)request.apprStatus).ToString() != "0")
             {
-                dataEntity = dataEntity
-                    .Where(x => x.approvedStatus == request.apprStatus)
-                    .OrderBy(x => x.approvedStatus)
-                    .ToList();
+                dataEntity = dataEntity.Where(x => x.approvedStatus == request.apprStatus).ToList();
             }
             if (!string.IsNullOrEmpty(request.simNumber))
             {
@@ -1168,26 +1159,32 @@ namespace Repositories.Implement
                         x.ListSimNumberInOrder.Replace(".", "")
                             .Contains(request.simNumber.Replace(".", ""))
                     )
-                    .OrderBy(x => x.approvedStatus)
                     .ToList();
             }
             if (!string.IsNullOrEmpty(request.code))
             {
-                dataEntity = dataEntity
-                    .Where(x => x.Code.Contains(request.code))
-                    .OrderBy(x => x.approvedStatus)
-                    .ToList();
+                dataEntity = dataEntity.Where(x => x.Code.Contains(request.code)).ToList();
             }
 
             if (request.pxSimData)
             {
+                dataEntity = dataEntity.Where(x => x.HadSimData == true).ToList();
+            }
+            if (request.fromDate != null)
+            {
                 dataEntity = dataEntity
-                    .Where(x => x.HadSimData == true)
-                    .OrderBy(x => x.approvedStatus)
+                    .Where(x => x.CreateTime.Date >= request.fromDate?.Date)
                     .ToList();
             }
-
+            if (request.toDate != null)
+            {
+                dataEntity = dataEntity
+                    .Where(x => x.CreateTime.Date <= request.toDate?.Date)
+                    .ToList();
+            }
             var dataPaging = dataEntity
+                .OrderBy(x => x.approvedStatus)
+                .ThenByDescending(x => x.CreateTime)
                 .Skip((request.pageIndex - 1) * request.pageSize)
                 .Take(request.pageSize)
                 .ToList();
